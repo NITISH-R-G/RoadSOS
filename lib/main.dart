@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'database/app_database.dart';
+import 'services/hardware_trigger_service.dart';
+import 'services/emergency_orchestrator.dart';
 import 'ui/dashboard.dart';
 
 void main() async {
@@ -10,15 +12,15 @@ void main() async {
   runApp(const ProviderScope(child: RoadSOSApp()));
 }
 
+/// Global SOS state — toggled by hardware trigger or UI button.
 final isSOSActiveProvider = StateProvider<bool>((ref) => false);
-
-import 'services/hardware_trigger_service.dart';
 
 class RoadSOSApp extends ConsumerWidget {
   const RoadSOSApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Wire hardware trigger service so it listens even when dashboard isn't visible
     ref.watch(hardwareTriggerServiceProvider);
     final isSOSActive = ref.watch(isSOSActiveProvider);
 
@@ -28,7 +30,7 @@ class RoadSOSApp extends ConsumerWidget {
         ColorScheme darkScheme;
 
         if (isSOSActive) {
-          // Emergency Override Theme (High-Contrast Red/Black)
+          // Emergency Override Theme — high-contrast red/black for maximum readability
           lightScheme = const ColorScheme.light(
             primary: Colors.red,
             onPrimary: Colors.white,
@@ -48,9 +50,9 @@ class RoadSOSApp extends ConsumerWidget {
             lightScheme = lightDynamic.harmonized();
             darkScheme = darkDynamic.harmonized();
           } else {
-            lightScheme = ColorScheme.fromSeed(seedColor: Colors.blue);
+            lightScheme = ColorScheme.fromSeed(seedColor: const Color(0xFF1A73E8));
             darkScheme = ColorScheme.fromSeed(
-              seedColor: Colors.blue,
+              seedColor: const Color(0xFF1A73E8),
               brightness: Brightness.dark,
             );
           }
@@ -58,14 +60,18 @@ class RoadSOSApp extends ConsumerWidget {
 
         return MaterialApp(
           title: 'RoadSOS',
+          debugShowCheckedModeBanner: false,
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: lightScheme,
+            fontFamily: 'Roboto',
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
             colorScheme: darkScheme,
+            fontFamily: 'Roboto',
           ),
+          themeMode: ThemeMode.dark,
           home: const DashboardScreen(),
         );
       },

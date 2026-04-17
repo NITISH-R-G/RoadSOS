@@ -44,6 +44,7 @@ dependencies:
   url_launcher: ^6.3.2
   geolocator: ^14.0.2
   uuid: ^4.5.3
+  llamadart: ^0.6.10
 
 dev_dependencies:
   flutter_test:
