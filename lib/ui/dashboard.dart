@@ -19,6 +19,7 @@ import 'sos_side_effect_observer.dart';
 import 'mesh_chat_screen.dart';
 import 'vital_scan_screen.dart';
 import 'settings_screen.dart';
+import '../services/proactive_monitor_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -223,7 +224,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         children: [
           if (state.triageResult != null) TriageResultCard(result: state.triageResult!),
           const SizedBox(height: 16),
-          SizedBox(height: 300, child: MapWidget()),
+          SizedBox(height: 300, child: RoadSosMap(state: state)),
         ],
       ),
     );

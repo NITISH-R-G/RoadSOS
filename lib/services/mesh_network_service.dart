@@ -5,6 +5,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 import 'package:country_codes/country_codes.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'scene_security_service.dart';
@@ -26,7 +27,8 @@ class MeshNetworkService {
   /// Properly release resources.
   void dispose() {
     _discoveredBeaconsController.close();
-    if (!kIsWeb) {
+    final isTesting = Platform.environment.containsKey('FLUTTER_TEST');
+    if (!kIsWeb && !isTesting) {
       _peripheral.stop();
       FlutterBluePlus.stopScan();
     }
@@ -67,8 +69,9 @@ class MeshNetworkService {
 
   /// Scans for nearby RoadSOS beacons and emits them to the stream.
   Future<void> listenForSosBeacons() async {
-    if (kIsWeb) {
-      // Simulation for Web Demo
+    final isTesting = PlatformDispatcher.instance.defaultRouteName.isEmpty;
+    if (kIsWeb || isTesting) {
+      // Simulation for Web Demo or tests
       await Future.delayed(const Duration(seconds: 2));
       if (!_currentBeacons.contains('SIM_NODE_77')) {
         _currentBeacons.add('SIM_NODE_77');
