@@ -2,9 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import 'package:uuid/uuid.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import '../database/app_database.dart';
@@ -280,7 +278,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     // ── Step 3: Write to Local DB ─────────────────────────
     // V4.0 Intelligence: Gemma Telemetry Synthesis
-    final aiAssistant = ref.read(gemmaAssistantProvider.notifier);
+    final aiAssistant = _ref.read(gemmaAssistantProvider.notifier);
     final situationBrief = await aiAssistant.synthesizeTelemetry(
       maxG: 25.0, // Should come from sensor service
       speedDelta: 40.0,

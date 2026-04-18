@@ -27,6 +27,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _glowController;
+  late Animation<double> _pulseAnimation;
+
+  Future<void> _checkInitialPermissions() async {
+    // Permissions are handled lazily when SOS is triggered.
+  }
 
   @override
   void initState() {
