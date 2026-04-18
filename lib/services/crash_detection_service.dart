@@ -21,10 +21,12 @@ class CrashDetectionService {
 
   void startMonitoring() {
     _subscription?.cancel();
-    _subscription = userAccelerometerEvents.listen((UserAccelerometerEvent event) {
+    _subscription = userAccelerometerEventStream().listen((UserAccelerometerEvent event) {
       final double totalG = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
       
       if (totalG > crashThresholdG) {
+        // NOTE: In a real app, this simple threshold triggers false positives (e.g. dropping phone).
+        // You need to combine accelerometer with gyroscope (spin) and GPS (sudden deceleration).
         _handlePotentialCrash(totalG);
       }
     });

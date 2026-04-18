@@ -3,6 +3,7 @@ import 'package:powersync/powersync.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'schema.dart';
 
 class SupabaseConnector extends PowerSyncBackendConnector {
@@ -17,7 +18,7 @@ class SupabaseConnector extends PowerSyncBackendConnector {
       return null;
     }
     return PowerSyncCredentials(
-      endpoint: 'https://69e25c618a5dcffb21ea3f5b.powersync.journeyapps.com',
+      endpoint: dotenv.env['POWERSYNC_URL'] ?? '',
       token: session.accessToken,
     );
   }
@@ -67,9 +68,21 @@ Future<void> initializeDatabase() async {
 
     // To connect to the cloud, you need to configure Supabase and the connector:
     await Supabase.initialize(
-      url: 'https://gsjqmkyganmbdwyrabam.supabase.co',
-      anonKey: 'sb_publishable_CMnP053uQWHu-IynTB-7hg_sg1kF2rc',
+      url: dotenv.env['SUPABASE_URL'] ?? '',
+      anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
     );
+
+    // Authenticate anonymously so PowerSync has a token
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session == null) {
+        await Supabase.instance.client.auth.signInAnonymously();
+      }
+    } catch (authError) {
+      print('[Database] Anonymous auth failed: $authError');
+      // If auth fails, we should ideally not throw, but continue in offline mode.
+    }
+
     appDb.connect(connector: SupabaseConnector(Supabase.instance.client));
     _dbInitialized = true;
     print('[Database] PowerSync + Supabase initialized successfully.');

@@ -37,18 +37,26 @@ class MeshNetworkService {
   Future<void> listenForSosBeacons() async {
     if (kIsWeb) return;
 
+    // NOTE: In a real-world scenario, continuous background scanning
+    // requires careful permission handling and foreground services.
+    // This is currently a simulated hook that should be expanded
+    // with proper Android/iOS background workers.
     FlutterBluePlus.scanResults.listen((results) {
       for (ScanResult r in results) {
         if (r.advertisementData.manufacturerData.containsKey(0xFFFF)) {
           final data = r.advertisementData.manufacturerData[0xFFFF]!;
           final message = utf8.decode(data);
           print('🚨 Found RoadSOS Beacon: $message');
-          // TODO: Forward to cloud if internet available
+          // Forward to cloud if internet available...
         }
       }
     });
 
-    await FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
+    try {
+      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
+    } catch (e) {
+      print('⚠️ Failed to start BLE scan: $e');
+    }
   }
 
   Future<void> triggerSmsFallback(String payload) async {
@@ -73,10 +81,14 @@ class MeshNetworkService {
       },
     );
 
+    // NOTE: This opens the SMS app but requires the user to press 'Send'.
+    // In a fully-automated SOS app, you need SEND_SMS permission (Android)
+    // or a backend API (Twilio) to send silently.
     if (await canLaunchUrl(smsUri)) {
       await launchUrl(smsUri);
+      print('📱 SMS dialer opened. User must press send manually.');
     } else {
-      print('Could not launch SMS dialer');
+      print('⚠️ Could not launch SMS dialer. Make sure the device supports SMS.');
     }
   }
 }
