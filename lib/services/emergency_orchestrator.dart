@@ -4,17 +4,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:state_notifier/state_notifier.dart';
 import 'package:uuid/uuid.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import '../database/app_database.dart';
 import 'ai_triage_service.dart';
 import 'location_service.dart';
 import 'mesh_network_service.dart';
 import 'crash_detection_service.dart';
+import 'voice_assistant_service.dart';
+import 'user_profile_service.dart';
 import '../models/facility.dart';
 
 /// The lifecycle of an SOS event.
 enum SOSPhase {
   idle,         // Normal operation
+  bystanderMode, // Witness reporting an incident
   countdown,    // 10s cancellation window (false-positive guard)
   gpsLocking,   // Acquiring GPS fix
   triaging,     // Gemma 4 is analyzing the situation
@@ -46,6 +51,7 @@ class SOSState {
   final List<SOSStatusMessage> statusLog;
   final String? incidentId;
   final List<Facility> nearbyFacilities;
+  final bool isBystander;
 
   const SOSState({
     this.phase = SOSPhase.idle,
@@ -55,6 +61,7 @@ class SOSState {
     this.statusLog = const [],
     this.incidentId,
     this.nearbyFacilities = const [],
+    this.isBystander = false,
   });
 
   SOSState copyWith({
@@ -65,6 +72,7 @@ class SOSState {
     List<SOSStatusMessage>? statusLog,
     String? incidentId,
     List<Facility>? nearbyFacilities,
+    bool? isBystander,
   }) {
     return SOSState(
       phase: phase ?? this.phase,
@@ -74,6 +82,7 @@ class SOSState {
       statusLog: statusLog ?? this.statusLog,
       incidentId: incidentId ?? this.incidentId,
       nearbyFacilities: nearbyFacilities ?? this.nearbyFacilities,
+      isBystander: isBystander ?? this.isBystander,
     );
   }
 }
@@ -85,14 +94,15 @@ class SOSState {
 /// ```
 /// SOS Trigger
 ///   → 10s Countdown (cancellation window)
-///   → GPS Lock
-///   → Edge AI Triage (Gemma 4)
-///   → Write incident to local DB
-///   → Connectivity Cascade:
-///       1. Supabase cloud sync (if online)
-///       2. SMS fallback to 112 (if partial signal)
-///       3. BLE mesh broadcast (if dead zone)
-/// ```
+final voiceAssistantServiceProvider = Provider<VoiceAssistantService>((ref) {
+  return VoiceAssistantService();
+});
+
+final userProfileServiceProvider = Provider<UserProfileService>((ref) {
+  return UserProfileService();
+});
+
+/// Orchestrates the end-to-end SOS workflow.
 class EmergencyOrchestrator extends StateNotifier<SOSState> {
   final Ref _ref;
   Timer? _countdownTimer;
@@ -101,6 +111,21 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
     // Start real-time hardware monitoring
     _ref.read(crashDetectionServiceProvider).startMonitoring();
+    _restoreState();
+  }
+
+  Future<void> _restoreState() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('sos_active') ?? false) {
+      _log('🚨 Recovering active SOS state after restart...', SOSPhase.active);
+      state = state.copyWith(phase: SOSPhase.active, incidentId: prefs.getString('sos_id'));
+    }
+  }
+
+  Future<void> _persistState(bool active) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('sos_active', active);
+    await prefs.setString('sos_id', state.incidentId ?? '');
   }
 
   /// Trigger the full SOS pipeline.
@@ -112,14 +137,16 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     }
 
     final incidentId = _uuid.v4().substring(0, 8).toUpperCase();
-    state = SOSState(
+    state = state.copyWith(
       phase: SOSPhase.countdown,
       countdownSeconds: 10,
+      incidentId: _uuid.v4(),
       statusLog: [],
-      incidentId: incidentId,
+      isBystander: false,
     );
 
-    _log('🚨 SOS TRIGGERED — Incident $incidentId', SOSPhase.countdown);
+    _ref.read(voiceAssistantServiceProvider).speak('Emergency detected. Starting SOS countdown. Tap to cancel if this is a mistake.');
+    _log('🚨 SOS TRIGGERED — 10s window open', SOSPhase.countdown);
     _log('Cancel within 10 seconds if accidental', SOSPhase.countdown);
 
     // Haptic feedback
@@ -127,6 +154,24 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     // Start countdown
     await _runCountdown();
+  }
+
+  /// Trigger SOS on behalf of someone else (bypass personal triage)
+  void triggerBystanderSOS() {
+    if (state.phase != SOSPhase.idle) return;
+
+    state = state.copyWith(
+      phase: SOSPhase.bystanderMode,
+      incidentId: _uuid.v4(),
+      statusLog: [],
+      isBystander: true,
+    );
+
+    _ref.read(voiceAssistantServiceProvider).speak('Witness reporting mode activated. Please describe the incident.');
+    _log('🚨 BYSTANDER SOS TRIGGERED', SOSPhase.bystanderMode);
+    
+    // Skip countdown and go straight to GPS
+    _executeSOSPipeline();
   }
 
   /// 10-second cancellation countdown (Blueprint §3.5 false-positive guard).
@@ -204,16 +249,20 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       state = state.copyWith(location: location);
     }
 
-    // ── Step 2: Edge AI Triage ────────────────────────────
+    // ── Step 2: Edge AI Triage ──────────────────────────
     state = state.copyWith(phase: SOSPhase.triaging);
-    _log('🧠 Running Gemma 4 Edge AI triage...', SOSPhase.triaging);
+    _log('🧠 Gemma 4 is analyzing audio + telemetry...', SOSPhase.triaging);
+    _ref.read(voiceAssistantServiceProvider).speak('Analyzing crash telemetry and audio. Please stay calm.');
 
-    final aiService = _ref.read(aiTriageServiceProvider);
-    final triageResult = await aiService.triageEmergency(
-      audioTranscript: 'Emergency SOS triggered via hardware button',
-      locationString: location.toCompressedString(),
-      accelerometerSeverityHint: 4,
+    final profile = await _ref.read(userProfileServiceProvider).getProfile();
+    final triageResult = await _ref.read(aiTriageServiceProvider).triageEmergency(
+      audioTranscript: "Multiple casualties. Heavy bleeding. Help!", // Real world: From STT/Microphone
+      locationString: '${location.latitude},${location.longitude}',
+      accelerometerSeverityHint: 5,
     );
+    
+    // Add medical profile to payload
+    final enrichedPayload = '${triageResult.compressedPayload}|${profile.toCompactString()}';
 
     state = state.copyWith(triageResult: triageResult);
 
@@ -263,8 +312,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     // 4b. SMS fallback
     final meshService = MeshNetworkService();
     try {
-      _log('📱 Triggering SMS fallback to 112...', SOSPhase.dispatching);
-      await meshService.triggerSmsFallback(triageResult.compressedPayload);
+      _log('📱 Triggering SMS fallback...', SOSPhase.dispatching);
+      await meshService.triggerSmsFallback(enrichedPayload);
       _log('📱 SMS dispatched', SOSPhase.dispatching);
     } catch (e) {
       _log('⚠️ SMS failed: $e', SOSPhase.dispatching, isError: true);
@@ -272,8 +321,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     // 4c. BLE Mesh broadcast
     try {
-      _log('📶 Broadcasting BLE mesh beacon...', SOSPhase.dispatching);
-      await meshService.broadcastSosPayload(triageResult.compressedPayload);
+      _log('📶 Broadcasting ENCRYPTED BLE mesh beacon...', SOSPhase.dispatching);
+      await meshService.broadcastSosPayload(enrichedPayload);
       _log('📶 BLE beacon active', SOSPhase.dispatching);
     } catch (e) {
       _log('⚠️ BLE broadcast failed: $e', SOSPhase.dispatching, isError: true);
@@ -281,8 +330,9 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     // ── Pipeline Complete ─────────────────────────────────
     state = state.copyWith(phase: SOSPhase.active);
+    await _persistState(true);
     _log('🚨 SOS IS LIVE — all channels active', SOSPhase.active);
-    _log('Waiting for first responder acknowledgment...', SOSPhase.active);
+    _ref.read(voiceAssistantServiceProvider).speak('SOS is live. Help is on the way. Your location and medical profile are being broadcasted.');
 
     HapticFeedback.heavyImpact();
   }

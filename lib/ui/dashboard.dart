@@ -112,6 +112,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         return _buildIdleView();
       case SOSPhase.countdown:
         return _buildCountdownView(sosState);
+      case SOSPhase.bystanderMode:
       case SOSPhase.gpsLocking:
       case SOSPhase.triaging:
       case SOSPhase.dispatching:
@@ -248,6 +249,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   ),
                 ),
                 const SizedBox(width: 12),
+                Expanded(
+                  child: _InfoCard(
+                    icon: Icons.visibility,
+                    title: 'Witness SOS',
+                    subtitle: 'Report for others',
+                    color: Colors.amber,
+                    onTap: () {
+                       ref.read(emergencyOrchestratorProvider.notifier).triggerBystanderSOS();
+                    },
+                  ),
+                ),
                 Expanded(
                   child: _InfoCard(
                     icon: Icons.cloud_off,
@@ -591,45 +603,53 @@ class _InfoCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final VoidCallback? onTap;
 
   const _InfoCard({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.15)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withOpacity(0.12),
+            width: 1,
           ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withOpacity(0.4),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.white.withOpacity(0.4),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

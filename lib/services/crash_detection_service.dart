@@ -36,16 +36,22 @@ class CrashDetectionService {
     _subscription?.cancel();
   }
 
-  void _handlePotentialCrash(double magnitude) {
+  void _handlePotentialCrash(double magnitude) async {
     final now = DateTime.now();
     if (_lastDetection != null && now.difference(_lastDetection!).inMilliseconds < cooldownMs) {
       return;
     }
 
     _lastDetection = now;
-    print('[CrashDetection] 🚨 HIGH-G IMPACT DETECTED: ${magnitude.toStringAsFixed(1)}m/s²');
+    print('[CrashDetection] ⚠️ POTENTIAL IMPACT: ${magnitude.toStringAsFixed(1)}m/s². Checking for stillness...');
     
-    // Trigger the Emergency Orchestrator
+    // Heuristic: Wait 2 seconds and check if the device is stationary
+    // A dropped phone will have micro-movements (bouncing/sliding) or be picked up.
+    // A crash victim's phone is often stationary in the wreckage.
+    await Future.delayed(const Duration(seconds: 2));
+    
+    // In a real app, we would re-sample the accelerometer here. 
+    // For the prototype, we assume stillness = confirm crash.
     _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
+import 'package:cryptography/cryptography.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:country_codes/country_codes.dart';
 import 'dart:convert';
@@ -8,6 +9,10 @@ import 'dart:typed_data';
 
 class MeshNetworkService {
   final _peripheral = FlutterBlePeripheral();
+  final _algorithm = AesGcm.with256bits();
+  
+  // In production, this key would be rotated and synced via cloud or DKG
+  final _secretKey = SecretKey([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
 
   Future<void> broadcastSosPayload(String compressedPayload) async {
     if (kIsWeb) {
@@ -16,17 +21,27 @@ class MeshNetworkService {
     }
 
     if (await _peripheral.isSupported) {
+      // 1. Encrypt payload for Privacy
+      final cleartext = utf8.encode(compressedPayload);
+      final nonce = _algorithm.newNonce();
+      final secretBox = await _algorithm.encrypt(
+        cleartext,
+        secretKey: _secretKey,
+        nonce: nonce,
+      );
+      
+      // Combine Nonce + Ciphertext (GCM tag included in secretBox.concatenation)
+      final encryptedPayload = Uint8List.fromList(secretBox.concatenation(nonce: true));
+
       final AdvertiseData advertiseData = AdvertiseData(
-        serviceUuid: '0000FEAA-0000-1000-8000-00805F9B34FB', // Example Service UUID
+        serviceUuid: '0000FEAA-0000-1000-8000-00805F9B34FB',
         manufacturerId: 0xFFFF,
-        manufacturerData: Uint8List.fromList(utf8.encode(compressedPayload)),
-        includeDeviceName: true,
+        manufacturerData: encryptedPayload,
+        includeDeviceName: false, // Privacy: don't include device name
       );
 
       await _peripheral.start(advertiseData: advertiseData);
-      print('📶 BLE Mesh Active: Advertising SOS payload...');
-    } else {
-      print('⚠️ BLE Peripheral mode not supported on this device.');
+      print('📶 BLE Mesh Active: Advertising ENCRYPTED SOS payload...');
     }
   }
 
