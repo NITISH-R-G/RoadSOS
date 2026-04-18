@@ -9,6 +9,7 @@ import '../database/app_database.dart';
 import 'ai_triage_service.dart';
 import 'location_service.dart';
 import 'mesh_network_service.dart';
+import 'crash_detection_service.dart';
 import '../models/facility.dart';
 
 /// The lifecycle of an SOS event.
@@ -97,7 +98,10 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   Timer? _countdownTimer;
   final _uuid = const Uuid();
 
-  EmergencyOrchestrator(this._ref) : super(const SOSState());
+  EmergencyOrchestrator(this._ref) : super(const SOSState()) {
+    // Start real-time hardware monitoring
+    _ref.read(crashDetectionServiceProvider).startMonitoring();
+  }
 
   /// Trigger the full SOS pipeline.
   /// Called when hardware button sequence detected or SOS button tapped.

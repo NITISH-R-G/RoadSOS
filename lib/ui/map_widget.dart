@@ -81,9 +81,9 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.roadsos.app',
-                // For Hybrid-Offline: We can swap this with a local path:
-                // urlTemplate: 'file:///storage/emulated/0/RoadSOS/maps/{z}/{x}/{y}.png',
-                // Or use a custom TileProvider to load from .mbtiles
+                // Hybrid-Offline: If a local tile path exists, use it.
+                // Otherwise, the online OSM tiles will be used as a fallback.
+                tileProvider: _getTileProvider(),
               ),
               MarkerLayer(
                 markers: [
@@ -139,6 +139,10 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+
+  TileProvider _getTileProvider() {
+    return NetworkTileProvider();
   }
 
   Widget _buildUserMarker() {

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'first_aid_store.dart';
 
 /// Model loading state for UI feedback.
 enum ModelState { unloaded, loading, ready, error, degraded }
@@ -204,13 +205,14 @@ Step 5: Format compressed payload.
       final severity = _estimateSeverityFromText(transcript);
       final services = _extractServicesFromText(transcript);
       final firstAidQuery = _buildFirstAidQuery(transcript);
+      final verifiedAdvice = FirstAidStore.getVerifiedAdvice(firstAidQuery);
 
       return TriageResult(
         functionCall: 'trigger_sos',
         location: location,
         severityLevel: severity,
         requiredServices: services,
-        firstAidQuery: firstAidQuery,
+        firstAidQuery: verifiedAdvice, // Now grounded!
         compressedPayload: _buildCompressedPayload(location, severity, services),
         thinkingTrace: thinkingTrace,
       );
