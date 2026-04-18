@@ -14,6 +14,7 @@ import 'mesh_network_service.dart';
 import 'crash_detection_service.dart';
 import 'voice_assistant_service.dart';
 import 'user_profile_service.dart';
+import 'gemma_assistant_service.dart';
 import '../models/facility.dart';
 
 /// The lifecycle of an SOS event.
@@ -278,6 +279,15 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     await _fetchNearbyFacilities(location);
 
     // ── Step 3: Write to Local DB ─────────────────────────
+    // V4.0 Intelligence: Gemma Telemetry Synthesis
+    final aiAssistant = ref.read(gemmaAssistantProvider.notifier);
+    final situationBrief = await aiAssistant.synthesizeTelemetry(
+      maxG: 25.0, // Should come from sensor service
+      speedDelta: 40.0,
+      impactVector: 'Frontal',
+    );
+    print('[Orchestrator] 🧠 Gemma SITREP: $situationBrief');
+
     state = state.copyWith(phase: SOSPhase.dispatching);
     _log('💾 Writing incident to local database...', SOSPhase.dispatching);
 
