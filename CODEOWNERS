@@ -1,0 +1,15 @@
+# Core infrastructure and build pipelines
+/.github/ @roadsos/devops
+/scripts/ @roadsos/devops
+
+# Features
+/lib/features/emergency/ @roadsos/core-team
+/lib/features/triage/ @roadsos/ai-team
+/lib/features/map/ @roadsos/mapping-team
+
+# Core Flutter and Dart
+/lib/core/ @roadsos/core-team
+/pubspec.yaml @roadsos/core-team
+
+# Default fallback
+* @roadsos/staff-engineers
