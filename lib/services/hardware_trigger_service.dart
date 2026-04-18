@@ -16,7 +16,7 @@ final hardwareTriggerServiceProvider = Provider<HardwareTriggerService>((ref) {
 class HardwareTriggerService {
   static const MethodChannel _channel =
       MethodChannel('com.codestreak.roadsos/hardware_buttons');
-  final ProviderRef _ref;
+  final Ref _ref;
 
   HardwareTriggerService(this._ref) {
     _initChannel();

@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:state_notifier/state_notifier.dart';
 import 'package:uuid/uuid.dart';
 import '../main.dart';
 import '../database/app_database.dart';
 import 'ai_triage_service.dart';
 import 'location_service.dart';
 import 'mesh_network_service.dart';
+import '../models/facility.dart';
 
 /// The lifecycle of an SOS event.
 enum SOSPhase {
@@ -41,6 +44,7 @@ class SOSState {
   final TriageResult? triageResult;
   final List<SOSStatusMessage> statusLog;
   final String? incidentId;
+  final List<Facility> nearbyFacilities;
 
   const SOSState({
     this.phase = SOSPhase.idle,
@@ -49,6 +53,7 @@ class SOSState {
     this.triageResult,
     this.statusLog = const [],
     this.incidentId,
+    this.nearbyFacilities = const [],
   });
 
   SOSState copyWith({
@@ -58,6 +63,7 @@ class SOSState {
     TriageResult? triageResult,
     List<SOSStatusMessage>? statusLog,
     String? incidentId,
+    List<Facility>? nearbyFacilities,
   }) {
     return SOSState(
       phase: phase ?? this.phase,
@@ -66,6 +72,7 @@ class SOSState {
       triageResult: triageResult ?? this.triageResult,
       statusLog: statusLog ?? this.statusLog,
       incidentId: incidentId ?? this.incidentId,
+      nearbyFacilities: nearbyFacilities ?? this.nearbyFacilities,
     );
   }
 }
@@ -212,27 +219,35 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       _log('🧠 Triage complete — Severity: ${triageResult.severityLevel}/5', SOSPhase.triaging);
     }
     _log('Services: ${triageResult.requiredServices.join(", ")}', SOSPhase.triaging);
+    
+    // ── Step 2.5: Fetch Nearby Facilities ─────────────────
+    _log('🔍 Searching local DB for nearby facilities...', SOSPhase.triaging);
+    await _fetchNearbyFacilities(location);
 
     // ── Step 3: Write to Local DB ─────────────────────────
     state = state.copyWith(phase: SOSPhase.dispatching);
     _log('💾 Writing incident to local database...', SOSPhase.dispatching);
 
-    try {
-      await appDb.execute(
-        'INSERT INTO reported_incidents (id, latitude, longitude, severity, services_needed, status, reported_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [
-          state.incidentId,
-          location.latitude,
-          location.longitude,
-          triageResult.severityLevel,
-          triageResult.requiredServices.join(','),
-          'active',
-          DateTime.now().toIso8601String(),
-        ],
-      );
-      _log('💾 Incident written to local DB', SOSPhase.dispatching);
-    } catch (e) {
-      _log('⚠️ DB write failed: $e', SOSPhase.dispatching, isError: true);
+    if (isDatabaseInitialized) {
+      try {
+        await appDb.execute(
+          'INSERT INTO reported_incidents (id, latitude, longitude, severity, services_needed, status, reported_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [
+            state.incidentId,
+            location.latitude,
+            location.longitude,
+            triageResult.severityLevel,
+            triageResult.requiredServices.join(','),
+            'active',
+            DateTime.now().toIso8601String(),
+          ],
+        );
+        _log('💾 Incident written to local DB', SOSPhase.dispatching);
+      } catch (e) {
+        _log('⚠️ DB write failed: $e', SOSPhase.dispatching, isError: true);
+      }
+    } else {
+      _log('ℹ️ Local DB bypassed (Web/Dev mode)', SOSPhase.dispatching);
     }
 
     // ── Step 4: Connectivity Cascade ──────────────────────
@@ -277,6 +292,31 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     );
     state = state.copyWith(statusLog: [...state.statusLog, entry]);
     print('[EmergencyOrchestrator] $message');
+  }
+
+  /// Fetch nearby facilities from the PowerSync database.
+  Future<void> _fetchNearbyFacilities(LocationFix location) async {
+    if (!isDatabaseInitialized) return;
+
+    try {
+      // Simple bounding box search (approx 10km)
+      const double delta = 0.1; 
+      final results = await appDb.getAll(
+        'SELECT * FROM emergency_facilities WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ?',
+        [
+          location.latitude - delta,
+          location.latitude + delta,
+          location.longitude - delta,
+          location.longitude + delta,
+        ],
+      );
+
+      final facilities = results.map((r) => Facility.fromMap(r)).toList();
+      state = state.copyWith(nearbyFacilities: facilities);
+      _log('🔍 Found ${facilities.length} nearby facilities', SOSPhase.triaging);
+    } catch (e) {
+      _log('⚠️ Facility search failed: $e', SOSPhase.triaging, isError: true);
+    }
   }
 }
 

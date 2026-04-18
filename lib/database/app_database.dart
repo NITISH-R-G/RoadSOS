@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:powersync/powersync.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
@@ -46,18 +47,36 @@ class SupabaseConnector extends PowerSyncBackendConnector {
 }
 
 late PowerSyncDatabase appDb;
+bool _dbInitialized = false;
 
 Future<void> initializeDatabase() async {
-  final dir = await getApplicationDocumentsDirectory();
-  final path = join(dir.path, 'roadsos.sqlite');
-  
-  appDb = PowerSyncDatabase(schema: schema, path: path);
-  await appDb.initialize();
-  
-  // To connect to the cloud, you need to configure Supabase and the connector:
-  await Supabase.initialize(
-    url: 'https://gsjqmkyganmbdwyrabam.supabase.co', 
-    anonKey: 'sb_publishable_CMnP053uQWHu-IynTB-7hg_sg1kF2rc'
-  );
-  appDb.connect(connector: SupabaseConnector(Supabase.instance.client));
+  if (kIsWeb) {
+    // PowerSync with SQLite doesn't work on web — skip DB init.
+    // The app will still render; DB operations will be no-ops.
+    print('[Database] Running on Web — PowerSync/SQLite disabled.');
+    _dbInitialized = false;
+    return;
+  }
+
+  try {
+    final dir = await getApplicationDocumentsDirectory();
+    final path = join(dir.path, 'roadsos.sqlite');
+
+    appDb = PowerSyncDatabase(schema: schema, path: path);
+    await appDb.initialize();
+
+    // To connect to the cloud, you need to configure Supabase and the connector:
+    await Supabase.initialize(
+      url: 'https://gsjqmkyganmbdwyrabam.supabase.co',
+      anonKey: 'sb_publishable_CMnP053uQWHu-IynTB-7hg_sg1kF2rc',
+    );
+    appDb.connect(connector: SupabaseConnector(Supabase.instance.client));
+    _dbInitialized = true;
+    print('[Database] PowerSync + Supabase initialized successfully.');
+  } catch (e) {
+    print('[Database] Initialization failed: $e');
+    _dbInitialized = false;
+  }
 }
+
+bool get isDatabaseInitialized => _dbInitialized;

@@ -7,6 +7,7 @@ import '../services/ai_triage_service.dart';
 import 'status_indicator.dart';
 import 'sos_countdown_widget.dart';
 import 'triage_result_card.dart';
+import 'map_widget.dart';
 
 /// Production-quality emergency dashboard.
 ///
@@ -307,6 +308,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
           ),
           const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: RoadSosMap(state: state),
+          ),
+          const SizedBox(height: 16),
           Expanded(child: _buildStatusLog(state)),
         ],
       ),
@@ -361,6 +367,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   ),
                 ],
               ),
+            ),
+
+            // Map View
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: RoadSosMap(state: state),
             ),
 
             // Triage result card

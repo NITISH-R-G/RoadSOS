@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -74,6 +75,13 @@ class AiTriageService {
   /// If not found, enters degraded mode (still functional, just no AI reasoning).
   Future<void> initializeModel() async {
     _state = ModelState.loading;
+
+    if (kIsWeb) {
+      _state = ModelState.degraded;
+      _lastError = 'Edge AI (Gemma 4) is not supported on Web. Running in DEGRADED MODE.';
+      print('[AiTriageService] $lastError');
+      return;
+    }
 
     try {
       final docDir = await getApplicationDocumentsDirectory();
@@ -153,15 +161,16 @@ class AiTriageService {
   /// Full Gemma 4 inference with the <|think|> triage prompt.
   Future<TriageResult> _runFullInference(String transcript, String location) async {
     final systemPrompt = '''<bos><start_of_turn>system
+<|think|>
 You are the intelligence core of RoadSOS. Your environment is HIGH STRESS.
 Your goal is to parse chaotic audio transcripts from car crashes, extract critical data, and output a highly compressed emergency payload.
 
 CRITICAL RULES:
-1. You MUST use the <|think|> tags to reason step-by-step.
+1. You MUST reason step-by-step within the thought channel.
 2. If location or injury is ambiguous, state "UNKNOWN". NEVER guess.
 3. Classify severity from 1 (minor) to 5 (fatal).
-4. Output a valid JSON payload after your reasoning.
-5. Keep reasoning under 100 tokens — speed is life.
+4. Output a valid JSON payload after the thought channel.
+5. Keep reasoning concise — speed is life.
 <end_of_turn>''';
 
     final userPrompt = '''<start_of_turn>user
@@ -183,13 +192,13 @@ GPS: "$location"
       // Simulated inference (replace with actual llama.generate() call)
       await Future.delayed(const Duration(seconds: 2));
 
-      final thinkingTrace = '''<|think|>
+      final thinkingTrace = '''<|channel>thought
 Step 1: Extract Location. GPS provided: $location. High confidence.
-Step 2: Parse transcript for injury details.
-Step 3: Classify severity based on keywords.
-Step 4: Determine required services.
+Step 2: Parse transcript for injury details and mechanic needs.
+Step 3: Classify severity based on crash impact.
+Step 4: Determine required services (Ambulance, Towing, Puncture Shop).
 Step 5: Format compressed payload.
-</|think|>''';
+<channel|>''';
 
       // Parse injury keywords from transcript for realistic triage
       final severity = _estimateSeverityFromText(transcript);
@@ -248,7 +257,9 @@ Step 5: Format compressed payload.
     if (lower.contains('fire') || lower.contains('smoke') || lower.contains('burning')) services.add('fire_department');
     if (lower.contains('police') || lower.contains('hit and run') || lower.contains('drunk')) services.add('police');
     if (lower.contains('trapped') || lower.contains('stuck') || lower.contains('rescue')) services.add('rescue');
-    if (lower.contains('tow') || lower.contains('flat') || lower.contains('puncture')) services.add('towing');
+    if (lower.contains('tow') || lower.contains('towing')) services.add('towing');
+    if (lower.contains('puncture') || lower.contains('flat tire') || lower.contains('mechanic')) services.add('puncture_shop');
+    if (lower.contains('repair') || lower.contains('spare part') || lower.contains('showroom')) services.add('showroom');
     return services.toList();
   }
 
@@ -273,6 +284,8 @@ Step 5: Format compressed payload.
         case 'fire_department': return 'FIR';
         case 'rescue': return 'RES';
         case 'towing': return 'TOW';
+        case 'puncture_shop': return 'PUN';
+        case 'showroom': return 'SHR';
         default: return 'UNK';
       }
     }).join(',');
