@@ -61,6 +61,10 @@ dependencies:
   flutter_background_service: ^5.1.0
   flutter_local_notifications: ^21.0.0
   package_info_plus: ^9.0.1
+  flutter_sms: ^3.0.1
+  encrypt: ^5.0.3
+  crypto: ^3.0.7
+  flutter_secure_storage: ^10.0.0
 
 dev_dependencies:
   flutter_test:
