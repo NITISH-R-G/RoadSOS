@@ -8,8 +8,17 @@ import '../database/app_database.dart';
 /// and rescue services for the user's region, enabling full offline operation.
 class FacilitySyncService {
   static const String overpassUrl = 'https://overpass-api.de/api/interpreter';
+  static const int _syncCooldownMinutes = 30;
+  static DateTime? _lastSync;
 
   Future<void> syncLocalRegion(double lat, double lon, {double radiusKm = 20.0}) async {
+    final now = DateTime.now();
+    if (_lastSync != null && now.difference(_lastSync!).inMinutes < _syncCooldownMinutes) {
+      print('[FacilitySync] ⏳ Rate limiting active. Skipping Overpass query.');
+      return;
+    }
+    _lastSync = now;
+
     final double delta = radiusKm / 111.0; // Rough conversion: 1 degree approx 111km
     final south = lat - delta;
     final west = lon - delta;
