@@ -1,0 +1,7 @@
+# Core Infrastructure
+*       @NITISH-R-G
+
+# Specialized Modules
+/lib/services/ai_triage_service.dart      @NITISH-R-G
+/lib/services/mesh_network_service.dart   @NITISH-R-G
+/lib/database/                            @NITISH-R-G
