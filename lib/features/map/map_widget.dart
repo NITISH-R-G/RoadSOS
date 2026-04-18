@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
-import '../services/emergency_orchestrator.dart';
-import '../models/facility.dart';
+import '../emergency/services/emergency_orchestrator.dart';
+import '../../core/models/facility.dart';
+
 
 /// A robust, offline-capable Map widget for RoadSOS.
 ///
@@ -179,7 +180,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
         height: 30,
         child: _FacilityMarker(facility: facility),
       );
-    }).toList();
+    }).cast<Marker>().toList();
   }
 }
 

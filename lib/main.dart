@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'database/app_database.dart';
-import 'services/hardware_trigger_service.dart';
-import 'services/emergency_orchestrator.dart';
-import 'ui/dashboard.dart';
+import 'core/database/app_database.dart';
+import 'features/emergency/services/hardware_trigger_service.dart';
+
+import 'features/emergency/ui/dashboard.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    print('Failed to load .env, falling back to empty variables or .env.example');
+    try {
+      await dotenv.load(fileName: ".env.example");
+    } catch (_) {}
+  }
   await initializeDatabase();
   runApp(const ProviderScope(child: RoadSOSApp()));
 }

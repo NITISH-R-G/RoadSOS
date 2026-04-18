@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'emergency_orchestrator.dart';
+import '../services/emergency_orchestrator.dart';
 
 /// Listens for native hardware button SOS trigger via MethodChannel.
 ///

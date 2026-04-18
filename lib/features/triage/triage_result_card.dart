@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/ai_triage_service.dart';
+import 'ai_triage_service.dart';
 
 /// Card showing AI triage results with severity badge, services, and first-aid guidance.
 class TriageResultCard extends StatelessWidget {

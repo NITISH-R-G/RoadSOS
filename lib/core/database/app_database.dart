@@ -67,23 +67,30 @@ Future<void> initializeDatabase() async {
     await appDb.initialize();
 
     // To connect to the cloud, you need to configure Supabase and the connector:
-    await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL'] ?? '',
-      anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-    );
+    final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
+    final supabaseKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
-    // Authenticate anonymously so PowerSync has a token
-    try {
-      final session = Supabase.instance.client.auth.currentSession;
-      if (session == null) {
-        await Supabase.instance.client.auth.signInAnonymously();
+    if (supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty) {
+      await Supabase.initialize(
+        url: supabaseUrl,
+        anonKey: supabaseKey,
+      );
+
+      // Authenticate anonymously so PowerSync has a token
+      try {
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session == null) {
+          await Supabase.instance.client.auth.signInAnonymously();
+        }
+      } catch (authError) {
+        print('[Database] Anonymous auth failed: $authError');
+        // If auth fails, we should ideally not throw, but continue in offline mode.
       }
-    } catch (authError) {
-      print('[Database] Anonymous auth failed: $authError');
-      // If auth fails, we should ideally not throw, but continue in offline mode.
-    }
 
-    appDb.connect(connector: SupabaseConnector(Supabase.instance.client));
+      appDb.connect(connector: SupabaseConnector(Supabase.instance.client));
+    } else {
+      print('[Database] Missing Supabase credentials in .env. Running entirely offline.');
+    }
     _dbInitialized = true;
     print('[Database] PowerSync + Supabase initialized successfully.');
   } catch (e) {

@@ -2,12 +2,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/emergency_orchestrator.dart';
-import '../services/ai_triage_service.dart';
+import '../services/../services/emergency_orchestrator.dart';
+import '../../triage/ai_triage_service.dart';
 import 'status_indicator.dart';
 import 'sos_countdown_widget.dart';
-import 'triage_result_card.dart';
-import 'map_widget.dart';
+import '../../triage/triage_result_card.dart';
+import '../../map/map_widget.dart';
 
 /// Production-quality emergency dashboard.
 ///

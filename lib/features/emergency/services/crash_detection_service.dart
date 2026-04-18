@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'emergency_orchestrator.dart';
+import '../services/emergency_orchestrator.dart';
 
 /// Real-time Crash Detection Service.
 /// 

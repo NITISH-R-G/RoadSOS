@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/ai_triage_service.dart';
+import '../../triage/ai_triage_service.dart';
 
 /// Compact status indicators for the app bar.
 /// Shows GPS lock, AI model state, and network connectivity.

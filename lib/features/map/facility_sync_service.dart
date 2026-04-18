@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../database/app_database.dart';
+import '../../core/database/app_database.dart';
 
 /// Service to sync emergency facilities from OpenStreetMap (Overpass API).
 /// 

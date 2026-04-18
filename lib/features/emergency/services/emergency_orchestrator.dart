@@ -4,13 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:state_notifier/state_notifier.dart';
 import 'package:uuid/uuid.dart';
-import '../main.dart';
-import '../database/app_database.dart';
-import 'ai_triage_service.dart';
-import 'location_service.dart';
+import '../../../main.dart';
+import '../../../core/database/app_database.dart';
+import '../../triage/ai_triage_service.dart';
+import '../../../core/services/location_service.dart';
 import 'mesh_network_service.dart';
 import 'crash_detection_service.dart';
-import '../models/facility.dart';
+import '../../../core/models/facility.dart';
 
 /// The lifecycle of an SOS event.
 enum SOSPhase {
