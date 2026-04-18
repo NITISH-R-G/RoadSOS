@@ -266,6 +266,9 @@ Step 5: Format compressed payload.
   }
 
   /// Build a first-aid query for the RAG system.
+  /// NOTE: This is currently returning a hardcoded mapping to `FirstAidStore`.
+  /// In production, this should pass a generic query to an actual Vector/RAG database
+  /// (e.g. ObjectBox) rather than enforcing an exact match.
   String _buildFirstAidQuery(String text) {
     final lower = text.toLowerCase();
     if (lower.contains('bleed')) return 'severe bleeding wound management tourniquet';

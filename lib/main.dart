@@ -5,9 +5,11 @@ import 'database/app_database.dart';
 import 'services/hardware_trigger_service.dart';
 import 'services/emergency_orchestrator.dart';
 import 'ui/dashboard.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   await initializeDatabase();
   runApp(const ProviderScope(child: RoadSOSApp()));
 }
