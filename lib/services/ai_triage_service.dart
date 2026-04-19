@@ -156,7 +156,7 @@ class AiTriageService {
       return _runFullInference(audioTranscript, locationString);
     } else {
       return _runDegradedMode(locationString, accelerometerSeverityHint);
-    }
+    } 
   }
   Future<TriageResult> performTriage({
   required dynamic location,
