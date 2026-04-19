@@ -168,7 +168,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       isBystander: state.isBystander,
     );
     state = state.copyWith(triageResult: triage);
-    _log('AI Triage Complete: ${triage.severityLevel.ToString()}', SOSPhase.triaging);
+    _log('AI Triage Complete: ${triage.severityLevel.toString()}', SOSPhase.triaging);
 
     _log('Dispatching connectivity cascade...', SOSPhase.dispatching);
     state = state.copyWith(phase: SOSPhase.dispatching);
