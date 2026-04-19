@@ -52,7 +52,7 @@ class CrashDetectionService {
     
     // In a real app, we would re-sample the accelerometer here. 
     // For the prototype, we assume stillness = confirm crash.
-    _ref.read(emergencyOrchestratorProvider.notifier).triggerSos();
+    _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
   }
 }
 
