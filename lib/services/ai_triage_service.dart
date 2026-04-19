@@ -158,7 +158,19 @@ class AiTriageService {
       return _runDegradedMode(locationString, accelerometerSeverityHint);
     }
   }
+  Future<TriageResult> performTriage({
+  required dynamic location,
+  required bool isBystander,
+    }) async {
+  // Convert location to string (simple fix for now)
+  final locationString = "${location.latitude},${location.longitude}";
 
+  return triageEmergency(
+    audioTranscript: "Emergency detected", // placeholder
+    locationString: locationString,
+    accelerometerSeverityHint: 4,
+  );
+  }
   /// Full Gemma 4 inference with the <|think|> triage prompt.
   Future<TriageResult> _runFullInference(String transcript, String location) async {
     final systemPrompt = '''<bos><start_of_turn>system
