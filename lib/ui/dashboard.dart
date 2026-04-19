@@ -19,7 +19,7 @@ import 'sos_side_effect_observer.dart';
 import 'mesh_chat_screen.dart';
 import 'vital_scan_screen.dart';
 import 'settings_screen.dart';
-
+import 'vehicle_rescue_screen.dart';
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -192,6 +192,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   icon: Icons.forum, 
                   label: 'MESH CHAT', 
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MeshChatScreen()))
+                ),
+                _buildActionItem(
+                  icon: Icons.car_crash,
+                  label: 'RESCUE',
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const VehicleRescueScreen()))
                 ),
                 _buildActionItem(
                   icon: Icons.settings, 
