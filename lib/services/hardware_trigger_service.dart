@@ -27,7 +27,7 @@ class HardwareTriggerService {
       if (call.method == 'triggerSOS') {
         print('[HardwareTriggerService] 🚨 HARDWARE SOS TRIGGER DETECTED!');
         // Invoke the full emergency pipeline
-        _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
+        _ref.read(emergencyOrchestratorProvider.notifier).triggerSos();
       }
     });
   }
