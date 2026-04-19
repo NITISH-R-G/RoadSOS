@@ -16,6 +16,7 @@ import 'voice_assistant_service.dart';
 import 'user_profile_service.dart';
 import 'gemma_assistant_service.dart';
 import '../models/facility.dart';
+import 'package:flutter/material.dart';
 
 /// The lifecycle of an SOS event.
 enum SOSPhase {
@@ -187,6 +188,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     await _persistState(true);
     _log('🚨 SOS IS LIVE — all channels active', SOSPhase.active);
   }
+  void triggerSOS() => startSos();
+  void cancelSOS() => cancelSos();
 }
 
 final emergencyOrchestratorProvider = StateNotifierProvider<EmergencyOrchestrator, SOSState>((ref) {
