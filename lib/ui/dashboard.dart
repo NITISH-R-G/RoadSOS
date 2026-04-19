@@ -134,7 +134,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           const SizedBox(height: 48),
           Center(
             child: GestureDetector(
-              onTap: () => ref.read(emergencyOrchestratorProvider.notifier).triggerSOS(),
+              onTap: () => ref.read(emergencyOrchestratorProvider.notifier).triggerSos(),
               child: AnimatedBuilder(
                 animation: _pulseAnimation,
                 builder: (context, child) {
@@ -181,7 +181,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 _buildActionItem(
                   icon: Icons.directions_walk, 
                   label: 'SAFE-WALK', 
-                  onTap: () => ref.read(proactiveMonitorProvider.notifier).startSafeWalk('Home', const Duration(minutes: 15))
+                  onTap: () {
+                    print("Safe Walk feature coming soon");
+                  }
                 ),
                 _buildActionItem(
                   icon: Icons.monitor_heart, 
@@ -211,7 +213,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     return Center(
       child: SOSCountdownWidget(
         secondsRemaining: state.countdownSeconds,
-        onCancel: () => ref.read(emergencyOrchestratorProvider.notifier).cancelSOS(),
+        onCancel: () => ref.read(emergencyOrchestratorProvider.notifier).cancelSos(),
       ),
     );
   }
@@ -223,7 +225,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         children: [
           if (state.triageResult != null) TriageResultCard(result: state.triageResult!),
           const SizedBox(height: 16),
-          SizedBox(height: 300, child: MapWidget()),
+          SizedBox(
+            height: 300,
+            child: Center(child: Text("Map Placeholder")),
+          ),
         ],
       ),
     );
