@@ -168,20 +168,20 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       isBystander: state.isBystander,
     );
     state = state.copyWith(triageResult: triage);
-    _log('AI Triage Complete: ${triage.severity.name.toUpperCase()}', SOSPhase.triaging);
+    _log('AI Triage Complete: ${triage.severityLevel.ToString()}', SOSPhase.triaging);
 
     _log('Dispatching connectivity cascade...', SOSPhase.dispatching);
     state = state.copyWith(phase: SOSPhase.dispatching);
 
     // Mesh Broadcast
     await _ref.read(meshNetworkServiceProvider).startBroadcasting(
-      triage.encryptedPayload,
+      triage.compressedPayload,
       lat: location.latitude,
       lng: location.longitude,
     );
     
     // SMS Fallback if needed
-    await _ref.read(meshNetworkServiceProvider).triggerSmsFallback(triage.encryptedPayload);
+    await _ref.read(meshNetworkServiceProvider).triggerSmsFallback(triage.compressedPayload);
 
     // ── Pipeline Complete ─────────────────────────────────
     state = state.copyWith(phase: SOSPhase.active);
