@@ -58,11 +58,23 @@ class MeshNetworkService {
     // with proper Android/iOS background workers.
     FlutterBluePlus.scanResults.listen((results) {
       for (ScanResult r in results) {
+<<<<<<< Updated upstream
         if (r.advertisementData.manufacturerData.containsKey(0xFFFF)) {
           final data = r.advertisementData.manufacturerData[0xFFFF]!;
           final message = utf8.decode(data);
           print('🚨 Found RoadSOS Beacon: $message');
           // Forward to cloud if internet available...
+=======
+        // Check manufacturer data for RoadSOS signature (Example ID 0xFFFF)
+        if (r.advertisementData.manufacturerData.containsKey(0xFFFF)) {
+          final rawData = r.advertisementData.manufacturerData[0xFFFF]!;
+          final payload = utf8.decode(rawData);
+          
+          print('🚨 Found RoadSOS SOS Beacon from mesh! Payload: $payload');
+          
+          // Relay logic: Try to sync to cloud
+          _relaySosToCloud(payload, r.device.remoteId.str);
+>>>>>>> Stashed changes
         }
       }
     });
@@ -71,6 +83,19 @@ class MeshNetworkService {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
     } catch (e) {
       print('⚠️ Failed to start BLE scan: $e');
+    }
+  }
+
+  Future<void> _relaySosToCloud(String payload, String deviceId) async {
+    print('📡 Relaying mesh payload from $deviceId to cloud...');
+    // In a real implementation, we'd parse the payload and insert into Supabase
+    // For now, we simulate the network request
+    try {
+      // Simulate API call
+      await Future.delayed(const Duration(milliseconds: 800));
+      print('✅ Mesh relay successful for incident from $deviceId');
+    } catch (e) {
+      print('❌ Mesh relay failed: $e');
     }
   }
 

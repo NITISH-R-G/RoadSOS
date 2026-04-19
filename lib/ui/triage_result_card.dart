@@ -115,7 +115,7 @@ class TriageResultCard extends StatelessWidget {
 
           // First Aid guidance
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
@@ -167,11 +167,11 @@ class TriageResultCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Text(
-              result.compressedPayload,
+              'BLE PAYLOAD: ${result.compressedPayload}',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 fontFamily: 'RobotoMono',
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withOpacity(0.2),
                 letterSpacing: 0.5,
               ),
             ),

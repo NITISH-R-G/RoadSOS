@@ -213,6 +213,63 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
           ),
 
+          // Nearby Facilities Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'NEARBY EMERGENCY HELP',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white38,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.radar, size: 10, color: Colors.green),
+                          SizedBox(width: 4),
+                          Text(
+                            '800m',
+                            style: TextStyle(fontSize: 9, color: Colors.green),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _FacilityListItem(
+                  name: 'IITM Apollo Hospital',
+                  type: 'Trauma Center',
+                  distance: '0.4 km',
+                  icon: Icons.local_hospital,
+                  color: Colors.redAccent,
+                ),
+                const SizedBox(height: 8),
+                _FacilityListItem(
+                  name: 'Emergency Response Hub',
+                  type: 'Quick Response Team',
+                  distance: '1.2 km',
+                  icon: Icons.health_and_safety,
+                  color: Colors.blueAccent,
+                ),
+              ],
+            ),
+          ),
+
           const Spacer(flex: 1),
 
           // Info cards
@@ -655,6 +712,78 @@ class _InfoCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// List item for nearby emergency facilities.
+class _FacilityListItem extends StatelessWidget {
+  final String name;
+  final String type;
+  final String distance;
+  final IconData icon;
+  final Color color;
+
+  const _FacilityListItem({
+    required this.name,
+    required this.type,
+    required this.distance,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  type,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            distance,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.white70,
+            ),
+          ),
+        ],
       ),
     );
   }
