@@ -47,7 +47,7 @@ dependencies:
   llamadart: ^0.6.10
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
-  flutter_map_animations: ^0.7.0
+  flutter_map_animations: ^0.8.0
   sensors_plus: ^7.0.0
   flutter_ble_peripheral: ^2.1.0
   country_codes: ^3.3.0
