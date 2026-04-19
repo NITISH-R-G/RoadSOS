@@ -134,7 +134,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           const SizedBox(height: 48),
           Center(
             child: GestureDetector(
-              onTap: () => ref.read(emergencyOrchestratorProvider.notifier).triggerSos(),
+              onTap: () => ref.read(emergencyOrchestratorProvider.notifier).triggerSOS(),
               child: AnimatedBuilder(
                 animation: _pulseAnimation,
                 builder: (context, child) {
