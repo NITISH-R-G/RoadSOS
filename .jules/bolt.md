@@ -1,0 +1,3 @@
+## 2024-04-19 - Widget Rebuild Bottleneck inside AnimatedBuilder
+**Learning:** Found a critical anti-pattern in Flutter apps involving `AnimatedBuilder` and `CustomPaint`. Expensive subtrees (like a complex layout or a static `SweepGradient`) nested directly in the `builder` function cause constant recreation, increasing memory churn and GPU repaints at 60fps.
+**Action:** Always move static subtree configurations into the `child` parameter of `AnimatedBuilder`. Limit the `builder` callback exclusively to applying transformations or property adjustments (e.g., `Transform.rotate` with the pre-built `child`). For static custom painting underneath an animation, return `false` on `shouldRepaint` and move translation/rotation up to the AnimatedBuilder's transform.
