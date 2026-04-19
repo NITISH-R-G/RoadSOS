@@ -65,6 +65,11 @@ dependencies:
   encrypt: ^5.0.3
   crypto: ^3.0.7
   flutter_secure_storage: ^10.0.0
+  
+  # Your module packages
+  image_picker: ^1.1.2
+  flutter_inappwebview: ^6.0.0
+  sqflite: ^2.3.3+1
 
 dev_dependencies:
   flutter_test:

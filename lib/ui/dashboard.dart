@@ -18,7 +18,9 @@ import 'safe_walk_overlay.dart';
 import 'sos_side_effect_observer.dart';
 import 'mesh_chat_screen.dart';
 import 'vital_scan_screen.dart';
+import 'first_aid_screen.dart';
 import 'settings_screen.dart';
+
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -182,6 +184,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   icon: Icons.directions_walk, 
                   label: 'SAFE-WALK', 
                   onTap: () => ref.read(proactiveMonitorProvider.notifier).startSafeWalk('Home', const Duration(minutes: 15))
+                ),
+                _buildActionItem(
+                  icon: Icons.health_and_safety_outlined, 
+                  label: 'FIRST AID', 
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FirstAidScreen()))
                 ),
                 _buildActionItem(
                   icon: Icons.monitor_heart, 
