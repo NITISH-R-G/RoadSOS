@@ -56,25 +56,28 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
               ...List.generate(3, (i) => _buildCircle(i)),
               
               // Scanning sweep
+              // ⚡ Bolt: Re-use the expensive SweepGradient subtree by passing it to `child`.
+              // Transform.rotate will only rebuild the rotation transform, not the gradient shader.
               AnimatedBuilder(
                 animation: _rotationController,
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    gradient: SweepGradient(
+                      colors: [
+                        Colors.blue.withOpacity(0.0),
+                        Colors.blue.withOpacity(0.3),
+                        Colors.blue.withOpacity(0.0),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
                 builder: (context, child) {
                   return Transform.rotate(
                     angle: _rotationController.value * 2 * pi,
-                    child: Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        gradient: SweepGradient(
-                          colors: [
-                            Colors.blue.withOpacity(0.0),
-                            Colors.blue.withOpacity(0.3),
-                            Colors.blue.withOpacity(0.0),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
+                    child: child,
                   );
                 },
               ),
