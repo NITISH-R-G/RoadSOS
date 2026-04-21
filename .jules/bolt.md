@@ -1,0 +1,3 @@
+## 2026-04-21 - AnimatedBuilder Rebuild Optimization
+**Learning:** In Flutter, if an `AnimatedBuilder` uses a `builder` that returns a complex widget tree (like a `Container` with an expensive `SweepGradient`), it rebuilds that entire tree on every animation frame (e.g., 60fps). This can cause significant jank.
+**Action:** Always extract static parts of an animated widget into the `child` parameter of `AnimatedBuilder`. The `builder` function should only apply the dynamic changes (like `Transform.rotate`), referencing the pre-built `child`. This ensures the expensive static elements are built only once.
