@@ -10,7 +10,8 @@ class MeshRadar extends ConsumerStatefulWidget {
   ConsumerState<MeshRadar> createState() => _MeshRadarState();
 }
 
-class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProviderStateMixin {
+class _MeshRadarState extends ConsumerState<MeshRadar>
+    with SingleTickerProviderStateMixin {
   late AnimationController _rotationController;
 
   @override
@@ -20,7 +21,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat();
-    
+
     // Start scanning
     ref.read(meshNetworkServiceProvider).listenForSosBeacons();
   }
@@ -54,27 +55,28 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
             children: [
               // Radar circles
               ...List.generate(3, (i) => _buildCircle(i)),
-              
+
               // Scanning sweep
               AnimatedBuilder(
                 animation: _rotationController,
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    gradient: SweepGradient(
+                      colors: [
+                        Colors.blue.withOpacity(0.0),
+                        Colors.blue.withOpacity(0.3),
+                        Colors.blue.withOpacity(0.0),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
                 builder: (context, child) {
                   return Transform.rotate(
                     angle: _rotationController.value * 2 * pi,
-                    child: Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        gradient: SweepGradient(
-                          colors: [
-                            Colors.blue.withOpacity(0.0),
-                            Colors.blue.withOpacity(0.3),
-                            Colors.blue.withOpacity(0.0),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
+                    child: child,
                   );
                 },
               ),
@@ -82,7 +84,8 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
               // Discovered Nodes
               ...nodes.asMap().entries.map((entry) {
                 final idx = entry.key;
-                final angle = (idx * 137.5) * pi / 180; // Golden angle for distribution
+                final angle =
+                    (idx * 137.5) * pi / 180; // Golden angle for distribution
                 final dist = 40.0 + (idx * 15);
                 return _buildNode(angle, dist);
               }),
@@ -138,9 +141,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
         decoration: const BoxDecoration(
           color: Colors.red,
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(color: Colors.red, blurRadius: 8),
-          ],
+          boxShadow: [BoxShadow(color: Colors.red, blurRadius: 8)],
         ),
       ),
     );

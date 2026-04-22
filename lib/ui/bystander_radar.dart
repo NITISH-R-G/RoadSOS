@@ -44,19 +44,19 @@ class _BystanderRadarState extends State<BystanderRadar>
             // Radar Pulse
             AnimatedBuilder(
               animation: _controller,
+              child: CustomPaint(
+                size: const Size(200, 200),
+                painter: _SweepPainter(),
+              ),
               builder: (context, child) {
-                return CustomPaint(
-                  size: const Size(200, 200),
-                  painter: _SweepPainter(_controller.value),
+                return Transform.rotate(
+                  angle: _controller.value * math.pi * 2,
+                  child: child,
                 );
               },
             ),
             // Mock Found Incident
-            Positioned(
-              top: 40,
-              left: 140,
-              child: _IncidentDot(),
-            ),
+            Positioned(top: 40, left: 140, child: _IncidentDot()),
             const Icon(Icons.my_location, color: Colors.blue, size: 24),
           ],
         ),
@@ -97,8 +97,7 @@ class _RadarPainter extends CustomPainter {
 }
 
 class _SweepPainter extends CustomPainter {
-  final double sweep;
-  _SweepPainter(this.sweep);
+  _SweepPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -115,7 +114,6 @@ class _SweepPainter extends CustomPainter {
         Colors.blue.withOpacity(0),
       ],
       stops: const [0.0, 0.5, 1.0],
-      transform: GradientRotation(sweep * math.pi * 2),
     );
 
     final paint = Paint()
@@ -126,7 +124,7 @@ class _SweepPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _IncidentDot extends StatelessWidget {
