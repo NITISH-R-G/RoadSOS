@@ -1,0 +1,3 @@
+## 2024-05-18 - AnimatedBuilder Subtree Rebuilds in Flutter
+**Learning:** Rebuilding expensive visual elements like `SweepGradient` or paths inside an `AnimatedBuilder`'s `builder` function is a significant performance anti-pattern. This is explicitly noted in the Flutter memory file as it leads to wasted rebuilds every tick.
+**Action:** Always extract the static portion of the animated widget tree (e.g., the `Container` with gradients or `CustomPaint` shapes that just need transforming) and pass it to `AnimatedBuilder(child: ...)`. Then, have the `builder` return only the transformation (like `Transform.rotate(child: child)`).
