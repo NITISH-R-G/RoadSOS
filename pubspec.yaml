@@ -52,7 +52,7 @@ dependencies:
   flutter_ble_peripheral: ^2.1.0
   country_codes: ^3.3.0
   http: ^1.6.0
-  flutter_dotenv: ^6.0.0
+  flutter_dotenv: ^6.0.1
   flutter_tts: ^4.2.5
   speech_to_text: ^7.3.0
   cryptography: ^2.9.0
