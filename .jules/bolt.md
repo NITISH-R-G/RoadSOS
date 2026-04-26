@@ -1,0 +1,3 @@
+## 2026-04-26 - Prevent Expensive Rebuilds in AnimatedBuilder
+**Learning:** In Flutter, recreating static subtrees (especially those with expensive operations like `SweepGradient` or `BoxShadow`) inside an `AnimatedBuilder`'s `builder` function causes unnecessary allocations and rendering overhead on every frame (60fps). This is a common performance anti-pattern.
+**Action:** Always extract the static portion of the widget tree and pass it to the `child` parameter of `AnimatedBuilder`. Restrict the `builder` function strictly to applying transformations (e.g., `Transform.rotate`) using that `child`.

@@ -42,12 +42,18 @@ class _BystanderRadarState extends State<BystanderRadar>
               painter: _RadarPainter(_controller),
             ),
             // Radar Pulse
+            // Performance Optimization: The CustomPaint is now static, preventing the SweepGradient
+            // from being reconstructed every frame. The AnimatedBuilder only applies rotation via Transform.
             AnimatedBuilder(
               animation: _controller,
+              child: CustomPaint(
+                size: const Size(200, 200),
+                painter: _SweepPainter(),
+              ),
               builder: (context, child) {
-                return CustomPaint(
-                  size: const Size(200, 200),
-                  painter: _SweepPainter(_controller.value),
+                return Transform.rotate(
+                  angle: _controller.value * 2 * math.pi,
+                  child: child,
                 );
               },
             ),
@@ -97,8 +103,7 @@ class _RadarPainter extends CustomPainter {
 }
 
 class _SweepPainter extends CustomPainter {
-  final double sweep;
-  _SweepPainter(this.sweep);
+  _SweepPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -115,7 +120,6 @@ class _SweepPainter extends CustomPainter {
         Colors.blue.withOpacity(0),
       ],
       stops: const [0.0, 0.5, 1.0],
-      transform: GradientRotation(sweep * math.pi * 2),
     );
 
     final paint = Paint()
@@ -126,7 +130,7 @@ class _SweepPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _IncidentDot extends StatelessWidget {
