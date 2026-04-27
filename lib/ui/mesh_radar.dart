@@ -58,23 +58,26 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
               // Scanning sweep
               AnimatedBuilder(
                 animation: _rotationController,
+                // ⚡ Bolt: Moving static container out of builder prevents expensive SweepGradient recreation
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    gradient: SweepGradient(
+                      colors: [
+                        Colors.blue.withValues(alpha: 0.0),
+                        Colors.blue.withValues(alpha: 0.3),
+                        Colors.blue.withValues(alpha: 0.0),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
                 builder: (context, child) {
                   return Transform.rotate(
+                    // ⚡ Bolt: Rotate the cached child instead of rebuilding
                     angle: _rotationController.value * 2 * pi,
-                    child: Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        gradient: SweepGradient(
-                          colors: [
-                            Colors.blue.withOpacity(0.0),
-                            Colors.blue.withOpacity(0.3),
-                            Colors.blue.withOpacity(0.0),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
+                    child: child,
                   );
                 },
               ),
