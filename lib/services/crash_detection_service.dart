@@ -68,7 +68,8 @@ class CrashDetectionService {
   void startMonitoring() {
     stopMonitoring();
     _startGpsSpeed();
-    _accelSub = userAccelerometerEventStream().listen(_onAccelerometer);
+    _accelSub =
+        SensorsPlatform.instance.userAccelerometerEventStream().listen(_onAccelerometer);
   }
 
   Future<void> _startGpsSpeed() async {
@@ -206,7 +207,7 @@ class CrashDetectionService {
   /// Sample user acceleration for [stillnessSampleWindowMs]; low std-dev ⇒ device at rest.
   Future<bool> _measureStillness() async {
     final magnitudes = <double>[];
-    final sub = userAccelerometerEventStream().listen((e) {
+    final sub = SensorsPlatform.instance.userAccelerometerEventStream().listen((e) {
       magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z));
     });
 
