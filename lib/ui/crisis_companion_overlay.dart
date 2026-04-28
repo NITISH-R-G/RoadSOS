@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/emergency_orchestrator.dart';
 import '../services/app_locale_controller.dart';
 import '../services/roadsos_assistant_service.dart';
+import '../models/dispatch_channel_status.dart';
 
 class CrisisCompanionOverlay extends ConsumerWidget {
   const CrisisCompanionOverlay({super.key});

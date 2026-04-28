@@ -77,9 +77,9 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
       final minZoom = _minZoom;
       final maxZoom = _maxZoom;
 
-      final region = CircleRegion(center: center, radius: radiusKm * 1000.0).toDownloadable(
-        minZoom: minZoom,
-        maxZoom: maxZoom,
+      final region = CircleRegion(center, radiusKm).toDownloadable(
+        minZoom: minZoom.round(),
+        maxZoom: maxZoom.round(),
         options: TileLayer(
           urlTemplate: MapTileConfig.effectiveUrlTemplate,
           subdomains: MapTileConfig.effectiveSubdomains,

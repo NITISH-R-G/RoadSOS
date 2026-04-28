@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../app_navigator.dart';
@@ -77,10 +78,10 @@ class SafeWalkNotificationService {
 
     try {
       await _local.show(
-        _checkInNotificationId,
-        'Safe Walk check-in',
-        'Are you safe? Destination: $destination',
-        const NotificationDetails(
+        id: _checkInNotificationId,
+        title: 'Safe Walk check-in',
+        body: 'Are you safe? Destination: $destination',
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             _channelId,
             _channelName,
@@ -112,7 +113,7 @@ class SafeWalkNotificationService {
 
   Future<void> cancelCheckInNotification() async {
     try {
-      await _local.cancel(_checkInNotificationId);
+      await _local.cancel(id: _checkInNotificationId);
     } catch (_) {}
   }
 

@@ -123,7 +123,7 @@ class MeshNetworkService {
     }
   }
 
-  String? _tryDecodeUtf8(Uint8List data) {
+  String? _tryDecodeUtf8(List<int> data) {
     try {
       // Manufacturer data is app-controlled; use permissive decoding (allow malformed).
       return utf8.decode(data, allowMalformed: true).trim();
