@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:roadsos/l10n/app_localizations.dart';
 
 import '../services/ai_triage_service.dart';
@@ -146,12 +147,28 @@ class TriageResultCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    result.firstAidQuery,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurface.withValues(alpha: 0.92),
-                          height: 1.4,
-                        ),
+                  MarkdownBody(
+                    data: result.firstAidQuery,
+                    selectable: true,
+                    styleSheet: MarkdownStyleSheet(
+                      p: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: scheme.onSurface.withValues(alpha: 0.92),
+                            height: 1.4,
+                          ),
+                      strong: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: scheme.onSurface,
+                          ),
+                      em: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontStyle: FontStyle.italic,
+                            color: scheme.onSurface.withValues(alpha: 0.92),
+                          ),
+                      blockquoteDecoration: BoxDecoration(
+                        color: scheme.surface.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: scheme.outline.withValues(alpha: 0.25)),
+                      ),
+                    ),
                   ),
                 ],
               ),

@@ -2,7 +2,6 @@
 ///
 /// Intended footprint is tiny (rules only). A future ONNX/TFLite model can
 /// replace [classify] while keeping the same API — **no on-device LLM/GGUF**.
-
 /// Result of the offline tier (fits in <<50MB when backed by TFLite later).
 class OfflineClassification {
   final int severityLevel;

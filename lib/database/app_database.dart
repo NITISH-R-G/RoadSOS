@@ -23,7 +23,7 @@ Future<void> bootstrapSupabaseAuth() async {
   if (url.isEmpty || anonKey.isEmpty) {
     _supabaseSdkInitialized = false;
     appLog.w(
-      'Supabase bootstrap skipped — set SUPABASE_URL and SUPABASE_ANON_KEY in assets/.env',
+      'Supabase bootstrap skipped — set SUPABASE_URL and SUPABASE_ANON_KEY via --dart-define or local .env',
     );
     return;
   }
@@ -133,7 +133,7 @@ Future<void> initializeDatabase() async {
     if (url.isEmpty || anonKey.isEmpty) {
       appLog.w(
         'SUPABASE_URL / SUPABASE_ANON_KEY missing — local SQLite only. '
-        'Set credentials in assets/.env (not in Dart source) and enable RLS in Supabase.',
+        'Set credentials via --dart-define or local .env (not in Dart source) and enable RLS in Supabase.',
       );
       _dbInitialized = true;
       return;

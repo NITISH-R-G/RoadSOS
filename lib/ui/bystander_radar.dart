@@ -156,6 +156,8 @@ class _SweepPainter extends CustomPainter {
 }
 
 class _IncidentDot extends StatelessWidget {
+  const _IncidentDot();
+
   @override
   Widget build(BuildContext context) {
     return Container(

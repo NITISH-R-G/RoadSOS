@@ -173,7 +173,7 @@ class AiTriageService {
       if (data is! Map) {
         throw Exception('Edge triage returned non-object');
       }
-      final payload = Map<String, dynamic>.from(data as Map);
+      final payload = Map<String, dynamic>.from(data);
 
       final severity =
           (payload['severity_level'] as num?)?.toInt().clamp(1, 5) ?? 4;

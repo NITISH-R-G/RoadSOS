@@ -11,8 +11,10 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
+const allowOrigin = Deno.env.get("FAMILY_TRACK_ALLOWED_ORIGIN") ?? "";
 const cors = {
-  "Access-Control-Allow-Origin": "*",
+  // Default is same-origin only; set FAMILY_TRACK_ALLOWED_ORIGIN="*" explicitly for demos.
+  "Access-Control-Allow-Origin": allowOrigin.trim() ? allowOrigin.trim() : "null",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, accept",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -40,6 +42,7 @@ function htmlPage(row: Record<string, unknown>): string {
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta http-equiv="refresh" content="10"/>
+  <meta name="referrer" content="no-referrer"/>
   <title>RoadSOS · Live location</title>
   <style>
     body { font-family: system-ui, sans-serif; background:#080A0D; color:#fff; margin:0; padding:24px; max-width:560px; }
@@ -52,7 +55,7 @@ function htmlPage(row: Record<string, unknown>): string {
 <body>
   <h1>ROADSOS · TRACKING</h1>
   <p class="mono">Severity: ${sev}</p>
-  <p class="mono">Lat ${Number.isFinite(lat) ? lat.toFixed(5) : "—"} · Lng ${Number.isFinite(lng) ? lng.toFixed(5) : "—"}</p>
+  <p class="mono">Lat ${Number.isFinite(lat) ? lat.toFixed(3) : "—"} · Lng ${Number.isFinite(lng) ? lng.toFixed(3) : "—"}</p>
   <p><a href="${maps}" rel="noopener">Open location</a></p>
   <div class="card"><p>${safeSummary || "Triage summary updating…"}</p></div>
   <p style="opacity:.7;font-size:.85rem;margin-top:24px">Page auto-refreshes every 10s. Link expires per incident policy.</p>
@@ -75,6 +78,13 @@ Deno.serve(async (req: Request) => {
   const token = url.searchParams.get("t")?.trim();
   if (!token) {
     return new Response(JSON.stringify({ error: "missing_token" }), {
+      status: 400,
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+  // Basic input hardening (prevents weird logs / accidental massive tokens).
+  if (token.length > 128) {
+    return new Response(JSON.stringify({ error: "invalid_token" }), {
       status: 400,
       headers: { ...cors, "Content-Type": "application/json" },
     });
@@ -124,19 +134,36 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         incident_id: data["incident_id"],
-        latitude: data["latitude"],
-        longitude: data["longitude"],
+        // Minimize by default: coarse location is enough for family pickup decisions.
+        latitude: typeof data["latitude"] === "number"
+          ? Number((data["latitude"] as number).toFixed(3))
+          : data["latitude"],
+        longitude: typeof data["longitude"] === "number"
+          ? Number((data["longitude"] as number).toFixed(3))
+          : data["longitude"],
         accuracy_m: data["accuracy_m"],
         severity: data["severity"],
         triage_summary: data["triage_summary"],
         updated_at: data["updated_at"],
         expires_at: data["expires_at"],
       }),
-      { headers: { ...cors, "Content-Type": "application/json; charset=utf-8" } },
+      {
+        headers: {
+          ...cors,
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "no-store",
+          "Referrer-Policy": "no-referrer",
+        },
+      },
     );
   }
 
   return new Response(htmlPage(data as Record<string, unknown>), {
-    headers: { ...cors, "Content-Type": "text/html; charset=utf-8" },
+    headers: {
+      ...cors,
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store",
+      "Referrer-Policy": "no-referrer",
+    },
   });
 });

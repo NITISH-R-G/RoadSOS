@@ -27,10 +27,12 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
     try {
       final en = await rootBundle.loadString(_assets[0]);
       final hi = await rootBundle.loadString(_assets[1]);
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
           _en = en;
           _hi = hi;
         });
+      }
     } catch (_) {
       if (mounted) {
         setState(() {

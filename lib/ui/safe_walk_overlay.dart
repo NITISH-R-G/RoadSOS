@@ -50,7 +50,8 @@ class SafeWalkOverlay extends ConsumerWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => ref.read(proactiveMonitorProvider.notifier).endSafeWalk(),
+                // "I'm safe" should acknowledge the check-in without stopping Safe Walk monitoring.
+                onPressed: () => ref.read(proactiveMonitorProvider.notifier).confirmImSafe(),
                 child: const Text('I AM SAFE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ],

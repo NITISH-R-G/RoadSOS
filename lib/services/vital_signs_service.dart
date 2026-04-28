@@ -60,10 +60,7 @@ class VitalSignsService extends StateNotifier<VitalSigns?> {
     return 'Flagged: ${flags.join(', ')}. If unconscious, breathing abnormal, or bleeding heavily: treat as high severity and call EMS.';
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
+  // No custom dispose behavior.
 }
 
 final vitalSignsProvider = StateNotifierProvider.autoDispose<VitalSignsService, VitalSigns?>((ref) {

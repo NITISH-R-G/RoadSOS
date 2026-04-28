@@ -184,6 +184,24 @@ abstract class AppLocalizations {
   /// **'Location: {lat}, {lng}'**
   String orchestratorLocationSecured(String lat, String lng);
 
+  /// No description provided for @orchestratorLocationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location unavailable — enable location services or move to open sky.'**
+  String get orchestratorLocationUnavailable;
+
+  /// No description provided for @orchestratorManualActionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual action required — if automated dispatch fails, dial your emergency number now.'**
+  String get orchestratorManualActionRequired;
+
+  /// No description provided for @orchestratorSmsNoGpsPayload.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS (no GPS). Please call emergency services now. RoadSOS could not acquire location.'**
+  String get orchestratorSmsNoGpsPayload;
+
   /// No description provided for @orchestratorAiBrief.
   ///
   /// In en, this message translates to:
@@ -541,19 +559,19 @@ abstract class AppLocalizations {
   /// No description provided for @nearbySosSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Community SOS'**
+  /// **'Nearby SOS'**
   String get nearbySosSectionTitle;
 
   /// No description provided for @nearbySosToggleTitle.
   ///
   /// In en, this message translates to:
-  /// **'Community SOS push alerts'**
+  /// **'Nearby SOS push alerts'**
   String get nearbySosToggleTitle;
 
   /// No description provided for @nearbySosToggleSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Firebase Cloud Messaging — broadcasts (not geofenced) when someone may need help'**
+  /// **'Firebase Cloud Messaging — notify me when someone nearby needs help'**
   String get nearbySosToggleSubtitle;
 
   /// No description provided for @nearbySosLearnProtection.
@@ -589,7 +607,7 @@ abstract class AppLocalizations {
   /// No description provided for @helpEtaPlaceholder.
   ///
   /// In en, this message translates to:
-  /// **'HELP DISPATCHED'**
+  /// **'No ETA available'**
   String get helpEtaPlaceholder;
 
   /// No description provided for @talkButton.

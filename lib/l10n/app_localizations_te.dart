@@ -51,6 +51,18 @@ class AppLocalizationsTe extends AppLocalizations {
   }
 
   @override
+  String get orchestratorLocationUnavailable =>
+      'Location unavailable — enable location services or move to open sky.';
+
+  @override
+  String get orchestratorManualActionRequired =>
+      'Manual action required — if automated dispatch fails, dial your emergency number now.';
+
+  @override
+  String get orchestratorSmsNoGpsPayload =>
+      'SOS (no GPS). Please call emergency services now. RoadSOS could not acquire location.';
+
+  @override
   String get orchestratorAiBrief => 'క్లౌడ్ AI పరిస్థితి అంచనా…';
 
   @override
@@ -239,14 +251,14 @@ class AppLocalizationsTe extends AppLocalizations {
   String get goodSamaritanContinue => 'Understood';
 
   @override
-  String get nearbySosSectionTitle => 'Community SOS';
+  String get nearbySosSectionTitle => 'Nearby SOS';
 
   @override
-  String get nearbySosToggleTitle => 'Community SOS push alerts';
+  String get nearbySosToggleTitle => 'Nearby SOS push alerts';
 
   @override
   String get nearbySosToggleSubtitle =>
-      'Firebase Cloud Messaging — broadcasts (not geofenced) when someone may need help';
+      'Firebase Cloud Messaging — notify me when someone nearby needs help';
 
   @override
   String get nearbySosLearnProtection => 'Good Samaritan protection';
@@ -265,7 +277,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get sceneIntelligenceTitle => 'SCENE INTELLIGENCE';
 
   @override
-  String get helpEtaPlaceholder => 'HELP DISPATCHED';
+  String get helpEtaPlaceholder => 'No ETA available';
 
   @override
   String get talkButton => 'TALK';

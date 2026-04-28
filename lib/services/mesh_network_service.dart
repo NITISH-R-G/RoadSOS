@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:io' show Platform;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart' as ble_adv;
 import 'package:country_codes/country_codes.dart';
@@ -48,9 +49,6 @@ class MeshNetworkService {
   Timer? _rescanTimer;
   bool _listeningStarted = false;
 
-  DateTime? _lastSync;
-  static const int _syncCooldownMinutes = 30;
-
   void dispose() {
     _rescanTimer?.cancel();
     _scanSubscription?.cancel();
@@ -64,7 +62,11 @@ class MeshNetworkService {
     }
     if (!kIsWeb) {
       unawaited(_peripheral.stop());
-      unawaited(FlutterBluePlus.stopScan());
+      if (Platform.isAndroid || Platform.isIOS) {
+        try {
+          unawaited(FlutterBluePlus.stopScan());
+        } catch (_) {}
+      }
     }
   }
 
@@ -73,6 +75,10 @@ class MeshNetworkService {
 
   Future<void> ensureListeningForPeers() async {
     if (kIsWeb) {
+      return;
+    }
+    // Unit/widget tests and desktop targets: avoid calling flutter_blue_plus at all.
+    if (!Platform.isAndroid && !Platform.isIOS) {
       return;
     }
 
@@ -116,6 +122,7 @@ class MeshNetworkService {
 
   Future<void> _runScanRound() async {
     if (kIsWeb || _discoveredBeaconsController.isClosed) return;
+    if (!Platform.isAndroid && !Platform.isIOS) return;
     try {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 30));
     } catch (e) {

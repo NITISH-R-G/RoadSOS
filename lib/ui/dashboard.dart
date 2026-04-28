@@ -601,8 +601,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   Widget _buildActiveSessionView(BuildContext context, SOSState state) {
-    final scheme = Theme.of(context).colorScheme;
-
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

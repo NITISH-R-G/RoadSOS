@@ -106,6 +106,8 @@ class SosActivityLogScreen extends ConsumerWidget {
   Widget _historyCard(BuildContext context, SosActivityRecord r) {
     final localTime = r.completedAtUtc.toLocal();
     final fmt = DateFormat.yMMMd().add_jm();
+    final coarseLat = r.latitude.toStringAsFixed(3);
+    final coarseLng = r.longitude.toStringAsFixed(3);
     return Card(
       color: Colors.white.withValues(alpha: 0.05),
       margin: const EdgeInsets.only(bottom: 14),
@@ -122,13 +124,16 @@ class SosActivityLogScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'GPS shared (decimal degrees)',
+              'GPS shared (coarse by default)',
               style: TextStyle(color: Colors.blue.withValues(alpha: 0.8), fontWeight: FontWeight.w800, fontSize: 10),
             ),
             const SizedBox(height: 4),
-            SelectableText(
-              r.formattedGpsIndia(),
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            SelectableText('$coarseLat, $coarseLng (±${r.accuracyM.round()} m • ${r.locationSource})',
+                style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 6),
+            Text(
+              'Precise coordinates are stored encrypted on-device. If police/insurer requests exact GPS, export via a dedicated signed report (not implemented yet).',
+              style: const TextStyle(color: Colors.white38, fontSize: 11, height: 1.35),
             ),
             const SizedBox(height: 12),
             Text(

@@ -3,7 +3,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roadsos/l10n/app_localizations.dart';
 import 'database/app_database.dart';
-import 'logging/app_log.dart';
 import 'services/sms_permission_bootstrap.dart';
 import 'services/first_aid_repository.dart';
 import 'services/hardware_trigger_service.dart';
@@ -12,27 +11,18 @@ import 'services/emergency_orchestrator.dart';
 import 'services/map_tile_cache.dart';
 import 'services/mesh_network_service.dart';
 import 'services/app_locale_controller.dart';
-import 'services/voice_assistant_service.dart';
 import 'ui/dashboard.dart';
 import 'ui/consent_screen.dart';
 import 'ui/onboarding_gate.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/privacy_consent_service.dart';
 import 'services/nearby_sos_push_service.dart';
 import 'app_navigator.dart';
 import 'theme/roadsos_theme.dart';
+import 'config/runtime_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await dotenv.load(fileName: 'assets/.env');
-  } catch (e, st) {
-    appLog.w(
-      'Could not load assets/.env — check flutter assets',
-      error: e,
-      stackTrace: st,
-    );
-  }
+  await RuntimeConfig.bootstrap();
   await bootstrapSupabaseAuth();
   await initializeDatabase();
   await requestSmsPermissionEarlyIfAndroid();

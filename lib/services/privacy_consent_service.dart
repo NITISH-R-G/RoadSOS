@@ -28,4 +28,13 @@ class PrivacyConsentService {
     final p = await SharedPreferences.getInstance();
     await p.setBool(_kExtendedRetention, value);
   }
+
+  /// Convenience: best-effort read that never throws.
+  static Future<bool> extendedRetentionForUploads() async {
+    try {
+      return await extendedCloudRetentionEnabled();
+    } catch (_) {
+      return false;
+    }
+  }
 }

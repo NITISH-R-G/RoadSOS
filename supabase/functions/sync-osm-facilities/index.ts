@@ -81,7 +81,21 @@ function mapElement(el: Record<string, unknown>): Record<string, unknown> | null
   };
 }
 
-Deno.serve(async () => {
+Deno.serve(async (req: Request) => {
+  // Hard gate: require an explicit trigger token to avoid accidental public invocation.
+  // Configure `SYNC_TRIGGER_TOKEN` as an Edge Function secret.
+  const trigger = Deno.env.get("SYNC_TRIGGER_TOKEN")?.trim() ?? "";
+  if (trigger) {
+    const auth = req.headers.get("authorization") ?? "";
+    const expected = `Bearer ${trigger}`;
+    if (auth !== expected) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+      });
+    }
+  }
+
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) {

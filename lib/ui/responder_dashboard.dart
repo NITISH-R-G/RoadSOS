@@ -100,7 +100,7 @@ class ResponderDashboard extends ConsumerWidget {
     final loc = state.location;
     final locLine = loc == null
         ? 'Location: —'
-        : 'Location: ${loc.latitude.toStringAsFixed(5)},${loc.longitude.toStringAsFixed(5)} (±${loc.accuracy.round()}m)';
+        : 'Location: ${loc.latitude.toStringAsFixed(3)},${loc.longitude.toStringAsFixed(3)} (±${loc.accuracy.round()}m)';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),

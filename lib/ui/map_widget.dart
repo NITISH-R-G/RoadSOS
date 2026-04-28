@@ -70,9 +70,13 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final userLoc = widget.state.location != null
+    final hasFix = widget.state.location != null &&
+        widget.state.location!.source != 'unknown' &&
+        !(widget.state.location!.latitude == 0.0 &&
+            widget.state.location!.longitude == 0.0);
+    final userLoc = hasFix
         ? LatLng(widget.state.location!.latitude, widget.state.location!.longitude)
-        : const LatLng(0, 0);
+        : null;
 
     return Container(
       height: 300,
@@ -87,8 +91,8 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
           FlutterMap(
             mapController: _mapController.mapController,
             options: MapOptions(
-              initialCenter: userLoc,
-              initialZoom: 15,
+              initialCenter: userLoc ?? const LatLng(20.5937, 78.9629),
+              initialZoom: userLoc != null ? 15 : 4.5,
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               ),
@@ -103,7 +107,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
               MarkerLayer(
                 markers: [
                   // User Location Marker
-                  if (widget.state.location != null)
+                  if (userLoc != null)
                     Marker(
                       point: userLoc,
                       width: 40,
@@ -190,6 +194,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
 
   List<Marker> _buildIncidentMarkers() {
     if (widget.state.incidentId == null || widget.state.location == null) return [];
+    if (widget.state.location!.source == 'unknown') return [];
     
     return [
       Marker(

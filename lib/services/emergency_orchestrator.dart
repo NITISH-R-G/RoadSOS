@@ -1,13 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:uuid/uuid.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart';
 import '../database/app_database.dart';
 import '../models/dispatch_channel_status.dart';
 import '../models/sos_activity_record.dart';
@@ -25,6 +22,7 @@ import 'facility_query_service.dart';
 import 'facility_sync_service.dart';
 import 'sos_activity_log_service.dart';
 import 'family_tracking_service.dart';
+import 'privacy_consent_service.dart';
 
 final facilityQueryServiceProvider = Provider<FacilityQueryService>((ref) {
   return FacilityQueryService();
@@ -192,13 +190,68 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     final location = await _ref.read(locationServiceProvider).getCurrentLocation();
     state = state.copyWith(location: location);
-    _log(
-      l10n.orchestratorLocationSecured(
-        location.latitude.toStringAsFixed(5),
-        location.longitude.toStringAsFixed(5),
-      ),
-      SOSPhase.gpsLocking,
-    );
+    // Never surface precise lat/lng in the live status log (privacy + shoulder-surf risk).
+    final locLine = location.source == 'unknown'
+        ? l10n.orchestratorLocationUnavailable
+        : l10n.orchestratorLocationSecured(
+            location.latitude.toStringAsFixed(3),
+            location.longitude.toStringAsFixed(3),
+          );
+    _log(locLine, SOSPhase.gpsLocking, isError: location.source == 'unknown');
+
+    if (location.source == 'unknown') {
+      // Location is required for many downstream steps. Do not proceed with fake (0,0).
+      _log(
+        l10n.orchestratorManualActionRequired,
+        SOSPhase.dispatching,
+        isError: true,
+      );
+      state = state.copyWith(
+        phase: SOSPhase.dispatching,
+        dispatchChannels: _initialDispatchRows(),
+      );
+      _patchDispatchChannel(
+        'mesh',
+        DispatchChannelLifecycle.skipped,
+        'Skipped — no usable GPS fix.',
+      );
+      _patchDispatchChannel(
+        'family_link',
+        DispatchChannelLifecycle.skipped,
+        'Skipped — no usable GPS fix.',
+      );
+      _patchDispatchChannel(
+        'local_log',
+        DispatchChannelLifecycle.failed,
+        'Not saved — no usable GPS fix.',
+      );
+      // SMS may still be attempted without GPS.
+      _patchDispatchChannel(
+        'sms',
+        DispatchChannelLifecycle.inProgress,
+        'Sending emergency SMS (no GPS)…',
+      );
+      final smsOutcome = await _ref.read(meshNetworkServiceProvider).triggerSmsFallback(
+            l10n.orchestratorSmsNoGpsPayload,
+          );
+      _patchDispatchChannel(
+        'sms',
+        smsOutcome.primaryAutomatedBarMet
+            ? DispatchChannelLifecycle.success
+            : DispatchChannelLifecycle.failed,
+        smsOutcome.detail,
+      );
+      state = state.copyWith(phase: SOSPhase.active);
+      await _persistState(true);
+      _log(
+        smsOutcome.primaryAutomatedBarMet
+            ? 'Emergency session active — SMS requested without GPS.'
+            : 'Emergency session active — automated SMS did not succeed; dial emergency number now.',
+        SOSPhase.active,
+        isError: !smsOutcome.primaryAutomatedBarMet,
+      );
+      return;
+    }
 
     final facilities = await _ref.read(facilityQueryServiceProvider).queryNearby(
           location.latitude,
@@ -308,10 +361,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       familyFuture,
     ]);
 
-    final meshOk = results[0] as bool;
     final smsOutcome = results[1] as SmsDispatchOutcome;
-    final persisted = results[2] as ({bool ok, String detail});
-    final family = results[3] as ({bool ok, String detail});
+    // results[0] mesh bool, results[2] persisted snapshot, results[3] family link are already reflected in dispatch rows.
 
     await SosActivityLogService.instance.append(
       SosActivityRecord(
@@ -365,7 +416,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         lifecycle: DispatchChannelLifecycle.pending,
         detail: 'Waiting…',
       ),
-      const DispatchChannelRow(
+      DispatchChannelRow(
         id: 'family_link',
         title: 'Family tracking link',
         lifecycle: DispatchChannelLifecycle.pending,
@@ -397,6 +448,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     try {
       final now = DateTime.now().toIso8601String();
       final svc = triage.requiredServices.join(',');
+      final extended = await PrivacyConsentService.extendedRetentionForUploads();
       await appDb.execute(
         '''INSERT INTO reported_incidents (
           id, latitude, longitude, severity, services_needed, status, reported_at, created_at, extended_retention
@@ -410,7 +462,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
           'dispatched',
           now,
           now,
-          0,
+          extended ? 1 : 0,
         ],
       );
       return (

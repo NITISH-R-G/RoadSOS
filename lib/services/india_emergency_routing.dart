@@ -46,6 +46,11 @@ bool coordinatesRoughlyInIndia(double lat, double lng) {
 IndiaEmergencyRoute? resolveIndiaEmergencyRoute(double lat, double lng) {
   if (!coordinatesRoughlyInIndia(lat, lng)) return null;
 
+  // Coarse state box overrides for border-sensitive metros where centroid routing is unreliable.
+  // Keep this list tiny and explicit; for production accuracy use server-side reverse geocoding.
+  final boxed = _resolveByCoarseBoxes(lat, lng);
+  if (boxed != null) return boxed;
+
   const dist = Distance();
   final p = LatLng(lat, lng);
 
@@ -66,28 +71,49 @@ IndiaEmergencyRoute? resolveIndiaEmergencyRoute(double lat, double lng) {
     stateCode: best.code,
     stateName: best.name,
     nationalNumber: IndiaEmergencyRoute.nationalErss,
-    ambulanceNumber: best.ambulance,
-    policeNumber: best.police,
-    fireNumber: best.fire,
+    ambulanceNumber: '108',
+    policeNumber: '100',
+    fireNumber: '101',
   );
+}
+
+IndiaEmergencyRoute? _resolveByCoarseBoxes(double lat, double lng) {
+  // Bengaluru should never resolve to TN for common coordinates.
+  // Karnataka (very rough): 11.5–18.6N, 74.0–78.9E
+  if (lat >= 11.5 && lat <= 18.6 && lng >= 74.0 && lng <= 78.9) {
+    return const IndiaEmergencyRoute(
+      stateCode: 'IN-KA',
+      stateName: 'Karnataka',
+      nationalNumber: IndiaEmergencyRoute.nationalErss,
+      ambulanceNumber: '108',
+      policeNumber: '100',
+      fireNumber: '101',
+    );
+  }
+  // Tamil Nadu (rough): 8.0–13.6N, 76.0–80.6E
+  if (lat >= 8.0 && lat <= 13.6 && lng >= 76.0 && lng <= 80.6) {
+    return const IndiaEmergencyRoute(
+      stateCode: 'IN-TN',
+      stateName: 'Tamil Nadu',
+      nationalNumber: IndiaEmergencyRoute.nationalErss,
+      ambulanceNumber: '108',
+      policeNumber: '100',
+      fireNumber: '101',
+    );
+  }
+  return null;
 }
 
 class _Centroid {
   const _Centroid(
     this.code,
     this.name,
-    this.point, {
-    this.ambulance = '108',
-    this.police = '100',
-    this.fire = '101',
-  });
+    this.point,
+  );
 
   final String code;
   final String name;
   final LatLng point;
-  final String ambulance;
-  final String police;
-  final String fire;
 }
 
 /// Approximate geographic centers (WGS84). Ambulance digits: most states use 108;

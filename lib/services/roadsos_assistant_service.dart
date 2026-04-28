@@ -141,7 +141,7 @@ Max 25 words. No preamble.''',
     String languageCode,
   ) {
     if (languageCode == 'hi') {
-      return 'संक्षेप: ${impactVector} प्रभाव, तेज मंदी — आंतरिक चोट संभव।';
+      return 'संक्षेप: $impactVector प्रभाव, तेज मंदी — आंतरिक चोट संभव।';
     }
     return 'Brief: High-G $impactVector impact with severe deceleration. Possible internal trauma.';
   }
