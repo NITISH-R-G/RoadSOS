@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/user_profile_service.dart';
 
@@ -73,7 +74,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
             _buildField('Emergency Contact', _contactController, Icons.contact_phone),
             const SizedBox(height: 40),
             Text(
-              'Gemma 4 analyzes this data to prioritize specific life-saving instructions during an SOS event.',
+              AppLocalizations.of(context)!.profileAiLine,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11),
             ),

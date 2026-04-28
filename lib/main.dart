@@ -10,11 +10,17 @@ import 'services/first_aid_repository.dart';
 import 'services/hardware_trigger_service.dart';
 import 'services/ios_lifecycle_service.dart';
 import 'services/emergency_orchestrator.dart';
+import 'services/map_tile_cache.dart';
 import 'services/mesh_network_service.dart';
 import 'services/app_locale_controller.dart';
 import 'services/voice_assistant_service.dart';
 import 'ui/dashboard.dart';
+import 'ui/consent_screen.dart';
+import 'ui/onboarding_gate.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'services/privacy_consent_service.dart';
+import 'services/nearby_sos_push_service.dart';
+import 'app_navigator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,21 +29,45 @@ void main() async {
   } catch (e, st) {
     appLog.w('Could not load assets/.env — check flutter assets', e, st);
   }
+  await bootstrapSupabaseAuth();
   await initializeDatabase();
-  await bootstrapSupabaseAnonymousAuthOnLaunch();
   await requestSmsPermissionEarlyIfAndroid();
   await initializeFirstAidRepository();
+  await initializeFmtcMapCache();
   runApp(const ProviderScope(child: RoadSOSApp()));
 }
 
 /// Global SOS state — toggled by hardware trigger or UI button.
 final isSOSActiveProvider = StateProvider<bool>((ref) => false);
 
-class RoadSOSApp extends ConsumerWidget {
+class RoadSOSApp extends ConsumerStatefulWidget {
   const RoadSOSApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RoadSOSApp> createState() => _RoadSOSAppState();
+}
+
+class _RoadSOSAppState extends ConsumerState<RoadSOSApp> {
+  bool _privacyReady = false;
+  bool _privacyConsent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    PrivacyConsentService.hasConsent().then((accepted) {
+      if (!mounted) return;
+      setState(() {
+        _privacyConsent = accepted;
+        _privacyReady = true;
+      });
+      if (accepted) {
+        NearbySosPushService.instance.configureAfterConsentIfNeeded();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.watch(hardwareTriggerServiceProvider);
     ref.watch(iosLifecycleServiceProvider);
     ref.watch(meshListeningBootstrapProvider);
@@ -83,6 +113,7 @@ class RoadSOSApp extends ConsumerWidget {
         }
 
         return MaterialApp(
+          navigatorKey: appNavigatorKey,
           onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
           debugShowCheckedModeBanner: false,
           locale: appLocale,
@@ -104,9 +135,29 @@ class RoadSOSApp extends ConsumerWidget {
             fontFamily: 'Roboto',
           ),
           themeMode: ThemeMode.dark,
-          home: const _InitialTtsSync(child: DashboardScreen()),
+          home: _privacyHome(),
         );
       },
+    );
+  }
+
+  Widget _privacyHome() {
+    if (!_privacyReady) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (!_privacyConsent) {
+      return ConsentScreen(
+        onAccepted: () {
+          setState(() => _privacyConsent = true);
+          NearbySosPushService.instance.configureAfterConsentIfNeeded();
+        },
+      );
+    }
+    return const OnboardingGate(
+      child: _InitialTtsSync(child: DashboardScreen()),
     );
   }
 }

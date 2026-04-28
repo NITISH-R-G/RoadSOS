@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/vital_signs_service.dart';
 
@@ -35,7 +36,8 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('GEMMA PULSE: VITAL SCAN', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+        title: Text(AppLocalizations.of(context)!.vitalScanTitle,
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
         backgroundColor: Colors.transparent,
       ),
       body: Column(
@@ -52,7 +54,7 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
           Padding(
             padding: const EdgeInsets.all(32),
             child: Text(
-              'Align index finger with rear camera and flash for precise PPG reading.',
+              AppLocalizations.of(context)!.vitalAlignFinger,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
             ),
@@ -116,7 +118,7 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
           const SizedBox(width: 16),
           Expanded(
             child: Text(
-              vitals.gemmaInterpretation,
+              vitals.aiInterpretation,
               style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),

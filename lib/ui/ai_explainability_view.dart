@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../services/ai_triage_service.dart';
 
 class AiExplainabilityView extends ConsumerWidget {
@@ -9,6 +10,8 @@ class AiExplainabilityView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -23,27 +26,27 @@ class AiExplainabilityView extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.psychology, 
-                color: Theme.of(context).colorScheme.primary, size: 20),
+              Icon(Icons.psychology,
+                  color: Theme.of(context).colorScheme.primary, size: 20),
               const SizedBox(width: 8),
               Text(
-                'GEMMA 4 THINKING MODE',
+                l10n.aiThinkingTraceTitle,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
               ),
             ],
           ),
           const Divider(height: 24),
           Text(
-            triage.thinkingTrace ?? 'Analyzing situational context...',
+            triage.thinkingTrace ?? '…',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              height: 1.5,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+                  fontFamily: 'monospace',
+                  height: 1.5,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
           const SizedBox(height: 12),
           Container(

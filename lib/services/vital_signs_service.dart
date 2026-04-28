@@ -5,13 +5,13 @@ class VitalSigns {
   final int bpm;
   final int respiratoryRate;
   final double bloodOxygen;
-  final String gemmaInterpretation;
+  final String aiInterpretation;
 
   VitalSigns({
     required this.bpm,
     required this.respiratoryRate,
     required this.bloodOxygen,
-    required this.gemmaInterpretation,
+    required this.aiInterpretation,
   });
 }
 
@@ -26,14 +26,18 @@ class VitalSignsService extends StateNotifier<VitalSigns?> {
       final rr = 12 + (timer.tick % 8);
       
       String interpretation = "STABLE";
-      if (bpm > 100) interpretation = "Gemma: TACHYCARDIA DETECTED. Monitor for Shock.";
-      if (rr > 20) interpretation = "Gemma: HYPERVENTILATION. Assist with Breathing.";
+      if (bpm > 100) {
+        interpretation = 'TACHYCARDIA DETECTED — monitor for shock.';
+      }
+      if (rr > 20) {
+        interpretation = 'RAPID BREATHING — assist ventilation if trained.';
+      }
 
       state = VitalSigns(
         bpm: bpm,
         respiratoryRate: rr,
         bloodOxygen: 98.0 - (timer.tick % 3),
-        gemmaInterpretation: interpretation,
+        aiInterpretation: interpretation,
       );
     });
   }

@@ -63,13 +63,13 @@ class UserProfileService extends StateNotifier<UserProfile> {
     await prefs.setString('user_profile', newProfile.toJson());
   }
 
-  /// Gemma Risk Analysis: Evaluates the profile for emergency considerations.
+  /// Risk hint for allergies (deterministic — no on-device LLM).
   Future<String> getMedicalRiskBrief() async {
     // Prompt: "Analyze this profile for emergency responders: $state"
     if (state.bloodType == 'Unknown' && state.allergies == 'None') {
       return "Low specific medical risk detected.";
     }
-    return "Gemma: Prioritizing allergy protocols for ${state.allergies}.";
+    return 'Allergy alert: prioritize avoiding exposure to ${state.allergies}.';
   }
 }
 
