@@ -10,7 +10,9 @@ import '../services/nearby_sos_push_service.dart';
 import '../services/privacy_consent_service.dart';
 import 'good_samaritan_law_screen.dart';
 import 'offline_map_screen.dart';
+import 'permission_onboarding_screen.dart';
 import 'privacy_policy_screen.dart';
+import 'sos_activity_log_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -128,12 +130,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           _tile(
             context,
+            Icons.fact_check_outlined,
+            'Activity log',
+            'GPS, triage, SMS/mesh/cloud steps — for insurance or police records',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+            ),
+          ),
+          _tile(
+            context,
             Icons.map,
             l10n.offlineMapsTitle,
             l10n.offlineMapsSubtitle,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const OfflineMapScreen()),
+            ),
+          ),
+          _tile(
+            context,
+            Icons.app_shortcut,
+            'Review permissions',
+            'Open the setup walkthrough again',
+            onTap: () => Navigator.push<void>(
+              context,
+              MaterialPageRoute<void>(
+                fullscreenDialog: true,
+                builder: (_) => PermissionOnboardingScreen(
+                  onComplete: () => Navigator.pop(context),
+                ),
+              ),
             ),
           ),
           _tile(
@@ -218,7 +245,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Text(
         title,
         style: TextStyle(
-          color: Colors.blue.withOpacity(0.6),
+          color: Colors.blue.withValues(alpha: ),
           fontWeight: FontWeight.w900,
           fontSize: 10,
           letterSpacing: 1.5,

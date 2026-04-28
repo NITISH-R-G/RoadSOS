@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
 import '../config/map_tile_config.dart';
 import '../services/emergency_orchestrator.dart';
+import '../services/map_tile_cache.dart';
 import '../models/facility.dart';
 
 /// A robust, offline-capable Map widget for RoadSOS.
@@ -29,6 +32,17 @@ class RoadSosMap extends StatefulWidget {
 
 class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   late final AnimatedMapController _mapController;
+  late final TileProvider _tileProvider = _makeTileProvider();
+
+  TileProvider _makeTileProvider() {
+    if (kIsWeb || !fmtcMapCacheReady) {
+      return NetworkTileProvider();
+    }
+    return FMTCTileProvider(
+      stores: {kFmtcRoadsosOsmStore: BrowseStoreStrategy.readUpdateCreate},
+      loadingStrategy: BrowseLoadingStrategy.cacheFirst,
+    );
+  }
 
   @override
   void initState() {
@@ -84,7 +98,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                 urlTemplate: MapTileConfig.effectiveUrlTemplate,
                 subdomains: MapTileConfig.effectiveSubdomains,
                 userAgentPackageName: 'com.roadsos.app',
-                tileProvider: _getTileProvider(),
+                tileProvider: _tileProvider,
               ),
               MarkerLayer(
                 markers: [
@@ -115,7 +129,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                 MapTileConfig.attributionLabel,
                 style: TextStyle(
                   fontSize: 9,
-                  color: Colors.white.withOpacity(0.45),
+                  color: Colors.white.withValues(alpha: ),
                   shadows: const [
                     Shadow(color: Colors.black54, blurRadius: 4),
                   ],
@@ -161,14 +175,10 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
     );
   }
 
-  TileProvider _getTileProvider() {
-    return NetworkTileProvider();
-  }
-
   Widget _buildUserMarker() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.2),
+        color: Colors.blue.withValues(alpha: ),
         shape: BoxShape.circle,
         border: Border.all(color: Colors.blue, width: 2),
       ),
@@ -216,6 +226,7 @@ class _FacilityMarker extends StatelessWidget {
     switch (facility.type.toLowerCase()) {
       case 'hospital':
       case 'ambulance':
+      case 'primary_health_centre':
         icon = Icons.local_hospital;
         color = Colors.green;
         break;
@@ -250,14 +261,17 @@ class _FacilityMarker extends StatelessWidget {
       onTap: () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${facility.name} (${facility.type})'),
-            duration: const Duration(seconds: 2),
+            content: Text(
+              '${facility.name} (${facility.type})'
+              '${facility.dataSource != null ? ' · ${facility.dataSource}' : ''}',
+            ),
+            duration: const Duration(seconds: 3),
           ),
         );
       },
       child: Container(
         decoration: BoxDecoration(
-          color: color.withOpacity(0.8),
+          color: color.withValues(alpha: ),
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 1),
         ),
