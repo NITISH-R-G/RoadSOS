@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'database/app_database.dart';
 import 'logging/app_log.dart';
@@ -21,6 +20,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/privacy_consent_service.dart';
 import 'services/nearby_sos_push_service.dart';
 import 'app_navigator.dart';
+import 'theme/roadsos_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,9 +36,6 @@ void main() async {
   await initializeFmtcMapCache();
   runApp(const ProviderScope(child: RoadSOSApp()));
 }
-
-/// Global SOS state — toggled by hardware trigger or UI button.
-final isSOSActiveProvider = StateProvider<bool>((ref) => false);
 
 class RoadSOSApp extends ConsumerStatefulWidget {
   const RoadSOSApp({super.key});
@@ -71,73 +68,34 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp> {
     ref.watch(hardwareTriggerServiceProvider);
     ref.watch(iosLifecycleServiceProvider);
     ref.watch(meshListeningBootstrapProvider);
-    final isSOSActive = ref.watch(isSOSActiveProvider);
+    final sosPhase =
+        ref.watch(emergencyOrchestratorProvider.select((s) => s.phase));
     final appLocale = ref.watch(appLocaleProvider);
 
     ref.listen(appLocaleProvider, (_, next) {
       ref.read(voiceAssistantServiceProvider).syncLocale(next);
     });
 
-    return DynamicColorBuilder(
-      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        ColorScheme lightScheme;
-        ColorScheme darkScheme;
+    final theme = sosPhase == SOSPhase.idle
+        ? RoadSosTheme.buildOperationalDark()
+        : RoadSosTheme.buildEmergencyDark();
 
-        if (isSOSActive) {
-          // Emergency Override Theme — high-contrast red/black for maximum readability
-          lightScheme = const ColorScheme.light(
-            primary: Colors.red,
-            onPrimary: Colors.white,
-            surface: Colors.black87,
-            onSurface: Colors.white,
-            error: Colors.redAccent,
-          );
-          darkScheme = const ColorScheme.dark(
-            primary: Colors.red,
-            onPrimary: Colors.white,
-            surface: Colors.black,
-            onSurface: Colors.white,
-            error: Colors.redAccent,
-          );
-        } else {
-          if (lightDynamic != null && darkDynamic != null) {
-            lightScheme = lightDynamic.harmonized();
-            darkScheme = darkDynamic.harmonized();
-          } else {
-            lightScheme = ColorScheme.fromSeed(seedColor: const Color(0xFF1A73E8));
-            darkScheme = ColorScheme.fromSeed(
-              seedColor: const Color(0xFF1A73E8),
-              brightness: Brightness.dark,
-            );
-          }
-        }
-
-        return MaterialApp(
-          navigatorKey: appNavigatorKey,
-          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-          debugShowCheckedModeBanner: false,
-          locale: appLocale,
-          supportedLocales: kSupportedAppLocales,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          theme: ThemeData(
-            useMaterial3: true,
-            colorScheme: lightScheme,
-            fontFamily: 'Roboto',
-          ),
-          darkTheme: ThemeData(
-            useMaterial3: true,
-            colorScheme: darkScheme,
-            fontFamily: 'Roboto',
-          ),
-          themeMode: ThemeMode.dark,
-          home: _privacyHome(),
-        );
-      },
+    return MaterialApp(
+      navigatorKey: appNavigatorKey,
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      debugShowCheckedModeBanner: false,
+      locale: appLocale,
+      supportedLocales: kSupportedAppLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: theme,
+      darkTheme: theme,
+      themeMode: ThemeMode.dark,
+      home: _privacyHome(),
     );
   }
 
