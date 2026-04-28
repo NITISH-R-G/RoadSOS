@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
+import '../config/map_tile_config.dart';
 import '../services/emergency_orchestrator.dart';
 import '../models/facility.dart';
 
 /// A robust, offline-capable Map widget for RoadSOS.
 ///
 /// Features:
-/// - Renders OSM tiles (supports local tile path for hybrid-offline)
+/// - Raster tiles from [MapTileConfig] (defaults to Carto CDN — not OSM.org;
+///   supports Mappls/CARTO/self-hosted URLs via env)
 /// - Displays user location, reported incidents, and nearby facilities
 /// - Supports auto-centering on user location
 class RoadSosMap extends StatefulWidget {
@@ -79,10 +81,9 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: MapTileConfig.effectiveUrlTemplate,
+                subdomains: MapTileConfig.effectiveSubdomains,
                 userAgentPackageName: 'com.roadsos.app',
-                // Hybrid-Offline: If a local tile path exists, use it.
-                // Otherwise, the online OSM tiles will be used as a fallback.
                 tileProvider: _getTileProvider(),
               ),
               MarkerLayer(
@@ -105,7 +106,26 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
               ),
             ],
           ),
-          
+          Positioned(
+            left: 8,
+            bottom: 8,
+            right: 56,
+            child: IgnorePointer(
+              child: Text(
+                MapTileConfig.attributionLabel,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.white.withOpacity(0.45),
+                  shadows: const [
+                    Shadow(color: Colors.black54, blurRadius: 4),
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+
           // Map Overlay Controls
           Positioned(
             right: 12,
