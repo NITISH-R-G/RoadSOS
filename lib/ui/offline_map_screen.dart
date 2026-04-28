@@ -27,6 +27,10 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
   bool _busy = false;
   String? _lastStatus;
 
+  double _radiusKm = 25.0;
+  double _minZoom = 11.0;
+  double _maxZoom = 16.0;
+
   @override
   void dispose() {
     unawaited(_progressSub?.cancel());
@@ -69,12 +73,9 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
 
       final center = LatLng(fix.latitude, fix.longitude);
 
-      // Circle radius is a pragmatic offline cache size; change later via UI slider.
-      const radiusKm = 50.0;
-
-      // Keep zoom range conservative to avoid multi-GB downloads.
-      const minZoom = 10.0;
-      const maxZoom = 16.0;
+      final radiusKm = _radiusKm;
+      final minZoom = _minZoom;
+      final maxZoom = _maxZoom;
 
       final region = CircleRegion(center: center, radius: radiusKm * 1000.0).toDownloadable(
         minZoom: minZoom,
@@ -91,7 +92,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
 
       setState(() {
         _lastStatus =
-            'Downloading ~${tiles.toString()} tiles (r=${radiusKm.toStringAsFixed(0)}km, z$minZoom–$maxZoom)…';
+            'Downloading ~${tiles.toString()} tiles (r=${radiusKm.toStringAsFixed(0)}km, z${minZoom.toStringAsFixed(0)}–${maxZoom.toStringAsFixed(0)})…';
       });
 
       final (:downloadProgress, :tileEvents) = FMTCStore(kFmtcRoadsosOsmStore).download.startForeground(
@@ -172,6 +173,8 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
             ),
             const SizedBox(height: 24),
             _cacheStatusCard(),
+            const SizedBox(height: 18),
+            _controlsCard(),
             const Spacer(),
             if (_busy && _progress != null) ...[
               LinearProgressIndicator(
@@ -210,7 +213,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _busy ? null : _startDownloadAroundMe,
                   icon: const Icon(Icons.download),
-                  label: const Text('DOWNLOAD AROUND ME (50KM)'),
+                  label: Text('DOWNLOAD AROUND ME (${_radiusKm.toStringAsFixed(0)}KM)'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
@@ -226,6 +229,70 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _controlsCard() {
+    if (kIsWeb) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'DOWNLOAD SETTINGS',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w900,
+              fontSize: 10,
+              letterSpacing: 1.3,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Radius: ${_radiusKm.toStringAsFixed(0)} km',
+            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+          ),
+          Slider(
+            value: _radiusKm,
+            min: 5,
+            max: 80,
+            divisions: 15,
+            label: '${_radiusKm.toStringAsFixed(0)} km',
+            onChanged: _busy ? null : (v) => setState(() => _radiusKm = v),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Zoom: ${_minZoom.toStringAsFixed(0)}–${_maxZoom.toStringAsFixed(0)}',
+            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+          ),
+          RangeSlider(
+            values: RangeValues(_minZoom, _maxZoom),
+            min: 8,
+            max: 18,
+            divisions: 10,
+            labels: RangeLabels(_minZoom.toStringAsFixed(0), _maxZoom.toStringAsFixed(0)),
+            onChanged: _busy
+                ? null
+                : (r) => setState(() {
+                      final start = r.start.roundToDouble();
+                      final end = r.end.roundToDouble();
+                      _minZoom = start <= end ? start : end;
+                      _maxZoom = end >= start ? end : start;
+                    }),
+          ),
+          Text(
+            'Tip: higher zoom = more tiles (bigger download).',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 12),
+          ),
+        ],
       ),
     );
   }

@@ -35,7 +35,7 @@ class MeshChatService extends StateNotifier<List<MeshMessage>> {
 
   Future<void> sendMessage(String content) async {
     final newMessage = MeshMessage(
-      senderId: 'ME',
+      senderId: 'SELF',
       content: content,
       timestamp: DateTime.now(),
     );

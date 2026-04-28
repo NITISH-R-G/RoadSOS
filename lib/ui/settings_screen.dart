@@ -74,7 +74,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     }
     setState(() => _nearbySos = value);
-    await NearbySosPushService.instance.onOptInChanged(value);
+    final ok = await NearbySosPushService.instance.onOptInChanged(value);
+    if (!ok && mounted) {
+      setState(() => _nearbySos = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Nearby SOS needs Firebase setup (google-services.json / FirebaseOptions). Toggle turned off.',
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _onRetentionChanged(bool value) async {

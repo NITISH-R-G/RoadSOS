@@ -349,7 +349,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ),
       DispatchChannelRow(
         id: 'cloud',
-        title: 'On-device log / cloud',
+        title: 'On-device incident log',
         lifecycle: DispatchChannelLifecycle.pending,
         detail: 'Waiting…',
       ),
@@ -401,16 +401,11 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
           0,
         ],
       );
-      final synced = _hasSupabaseSession();
-      if (synced) {
-        return (
-          ok: true,
-          detail: 'Saved on device — cloud sync queued when network allows.',
-        );
-      }
       return (
         ok: true,
-        detail: 'Saved on device — sign in anonymously (Supabase) for cloud backup.',
+        detail: _hasSupabaseSession()
+            ? 'Saved on device. Sync is enabled when network allows (no upload confirmation in this build).'
+            : 'Saved on device. Cloud sync needs Supabase credentials (assets/.env) and anonymous auth.',
       );
     } catch (e, st) {
       appLog.w('Local incident insert failed', error: e, stackTrace: st);
@@ -435,7 +430,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return 'Local database off — incident row not stored on device.';
     }
     if (_hasSupabaseSession()) {
-      return 'Saved on phone — PowerSync will upload when network allows.';
+      return 'Saved on phone — sync enabled when network allows (no confirmation of upload).';
     }
     return 'Saved on phone — enable Supabase anonymous auth for cloud backup.';
   }

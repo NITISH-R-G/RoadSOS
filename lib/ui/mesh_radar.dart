@@ -108,6 +108,15 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
                       color: Colors.white,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Foreground only',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white.withValues(alpha: 0.35),
+                    ),
+                  ),
                 ],
               ),
             ],

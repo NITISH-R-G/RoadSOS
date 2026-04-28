@@ -28,7 +28,48 @@ class EmergencySmsDispatchService {
 
   static String emergencyNumberForLocale() {
     final countryCode = CountryCodes.getDeviceLocale()?.countryCode;
-    if (countryCode == 'US' || countryCode == 'CA') return '911';
+    // Minimal routing table (expand as needed). Defaults to 112 where supported.
+    // Note: this is not a substitute for server-side reverse-geocode routing when online.
+    const uses911 = <String>{
+      'US',
+      'CA',
+      'MX',
+      'DO',
+      'PR',
+      'PA',
+      'BS',
+      'JM',
+      'BM',
+    };
+    const uses112 = <String>{
+      'IN',
+      'GB',
+      'IE',
+      'FR',
+      'DE',
+      'ES',
+      'PT',
+      'IT',
+      'NL',
+      'BE',
+      'SE',
+      'NO',
+      'DK',
+      'FI',
+      'PL',
+      'CZ',
+      'AT',
+      'CH',
+      'HU',
+      'RO',
+      'BG',
+      'GR',
+      'TR',
+    };
+    if (countryCode != null && uses911.contains(countryCode)) return '911';
+    if (countryCode != null && uses112.contains(countryCode)) return '112';
+    // Fallback: 112 is widely supported internationally (GSM); for unsupported countries,
+    // the user must still be able to dial manually from UI.
     return '112';
   }
 

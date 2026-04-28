@@ -19,6 +19,9 @@ class NearbySosPushService {
   static const _topic = 'roadsos_nearby_sos';
   final _local = FlutterLocalNotificationsPlugin();
   var _initialized = false;
+  var _firebaseAvailable = false;
+
+  bool get firebaseAvailable => _firebaseAvailable;
 
   Future<void> configureAfterConsentIfNeeded() async {
     if (!await PrivacyConsentService.hasConsent()) return;
@@ -43,8 +46,10 @@ class NearbySosPushService {
         error: e,
         stackTrace: st,
       );
+      _firebaseAvailable = false;
       return;
     }
+    _firebaseAvailable = true;
 
     if (_initialized) {
       await _syncSubscription();
@@ -158,13 +163,18 @@ class NearbySosPushService {
   }
 
   /// Call when user toggles opt-in from Settings (after consent exists).
-  Future<void> onOptInChanged(bool enabled) async {
+  Future<bool> onOptInChanged(bool enabled) async {
     await NearbySosPreferences.setPushOptIn(enabled);
     await configureAfterConsentIfNeeded();
+    if (enabled && !_firebaseAvailable) {
+      await NearbySosPreferences.setPushOptIn(false);
+      return false;
+    }
     if (!enabled) {
       try {
         await FirebaseMessaging.instance.unsubscribeFromTopic(_topic);
       } catch (_) {}
     }
+    return true;
   }
 }
