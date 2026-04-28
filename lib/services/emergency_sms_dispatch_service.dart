@@ -27,8 +27,54 @@ class EmergencySmsDispatchService {
   EmergencySmsDispatchService._();
 
   static String emergencyNumberForLocale() {
+    final override = dotenv.env['EMERGENCY_NUMBER_OVERRIDE']?.trim();
+    if (override != null && override.isNotEmpty) return override;
+
     final countryCode = CountryCodes.getDeviceLocale()?.countryCode;
-    if (countryCode == 'US' || countryCode == 'CA') return '911';
+    // Minimal routing table (expand as needed). Defaults to 112 where supported.
+    // Note: this is not a substitute for server-side reverse-geocode routing when online.
+    const uses911 = <String>{
+      'US',
+      'CA',
+      'MX',
+      'DO',
+      'PR',
+      'PA',
+      'BS',
+      'JM',
+      'BM',
+    };
+    const uses112 = <String>{
+      'IN',
+      'GB',
+      'IE',
+      'FR',
+      'DE',
+      'ES',
+      'PT',
+      'IT',
+      'NL',
+      'BE',
+      'SE',
+      'NO',
+      'DK',
+      'FI',
+      'PL',
+      'CZ',
+      'AT',
+      'CH',
+      'HU',
+      'RO',
+      'BG',
+      'GR',
+      'TR',
+    };
+    if (countryCode != null && uses911.contains(countryCode)) return '911';
+    if (countryCode != null && uses112.contains(countryCode)) return '112';
+    // Fallback: 112 is widely supported internationally (GSM); for unsupported countries,
+    // the user must still be able to dial manually from UI.
+    final fallback = dotenv.env['EMERGENCY_NUMBER_FALLBACK']?.trim();
+    if (fallback != null && fallback.isNotEmpty) return fallback;
     return '112';
   }
 
@@ -58,6 +104,7 @@ class EmergencySmsDispatchService {
       deviceDirectSmsSent: device,
       backendRelayAccepted: relay,
       primaryAutomatedBarMet: primary,
+      proofLevel: (device || relay) ? SmsDispatchProofLevel.accepted : SmsDispatchProofLevel.none,
       detail: detail,
     );
   }
@@ -93,6 +140,9 @@ class EmergencySmsDispatchService {
         (lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng));
     if (inIndiaContext) {
       final indiaUrl = dotenv.env['INDIA_SOS_DISPATCH_URL']?.trim();
+      final indiaDest = (dotenv.env['INDIA_EMERGENCY_NUMBER']?.trim().isNotEmpty ?? false)
+          ? dotenv.env['INDIA_EMERGENCY_NUMBER']!.trim()
+          : '112';
       final route = lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng)
           ? resolveIndiaEmergencyRoute(lat, lng)
           : null;
@@ -100,9 +150,9 @@ class EmergencySmsDispatchService {
         final ok = await _postJson(
           indiaUrl,
           <String, dynamic>{
-            'channel': 'india_112',
+            'channel': 'india_emergency_sms',
             'country_code': 'IN',
-            'destination': '112',
+            'destination': indiaDest,
             'payload': payload,
             'latitude': lat,
             'longitude': lng,
@@ -120,7 +170,7 @@ class EmergencySmsDispatchService {
           appLog.d('SMS India relay accepted');
           final primary = _primaryAutomatedBar(deviceDirectSmsSent: false, backendRelayAccepted: true);
           final detail = primary
-              ? 'India relay accepted ✓'
+              ? 'India relay accepted ✓ (request handed off; not delivery-proof)'
               : 'India relay HTTP 2xx ✓ — primary (A) bar needs device SEND_SMS or '
                   'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true (audited SMS to 112).';
           return _outcome(device: false, relay: true, detail: detail);
@@ -183,7 +233,7 @@ class EmergencySmsDispatchService {
       return _outcome(
         device: false,
         relay: true,
-        detail: 'SMS relay reported sent to $emergencyNum ✓',
+        detail: 'SMS relay accepted for $emergencyNum ✓ (request handed off; not delivery-proof)',
       );
     }
     appLog.w('iOS backend SMS dispatch failed');
@@ -221,7 +271,7 @@ class EmergencySmsDispatchService {
         appLog.d('Android SMS dispatched via SMS_DISPATCH_URL (Twilio/backend)');
         final primary = _primaryAutomatedBar(deviceDirectSmsSent: false, backendRelayAccepted: true);
         final detail = primary
-            ? 'SMS dispatched via backend to $number ✓'
+            ? 'Backend relay accepted for $number ✓ (request handed off; not delivery-proof)'
             : 'Backend relay HTTP 2xx ✓ — primary bar needs device SEND_SMS or '
                 'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true.';
         return _outcome(device: false, relay: true, detail: detail);
@@ -237,7 +287,7 @@ class EmergencySmsDispatchService {
       return _outcome(
         device: true,
         relay: false,
-        detail: 'Sent SMS to $number ✓',
+        detail: 'Device SMS request accepted for $number ✓ (carrier delivery not confirmed)',
       );
     }
 
@@ -300,7 +350,7 @@ class EmergencySmsDispatchService {
         appLog.w('India ERSS ingest HTTP ${response.statusCode}');
       }
     } catch (e, st) {
-      appLog.w('India ERSS ingest failed', e, st);
+      appLog.w('India ERSS ingest failed', error: e, stackTrace: st);
     }
   }
 
@@ -318,7 +368,7 @@ class EmergencySmsDispatchService {
           .timeout(const Duration(seconds: 15));
       return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e, st) {
-      appLog.w('SMS HTTP dispatch error', e, st);
+      appLog.w('SMS HTTP dispatch error', error: e, stackTrace: st);
       return false;
     }
   }

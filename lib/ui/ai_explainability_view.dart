@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import '../services/ai_triage_service.dart';
 
 class AiExplainabilityView extends ConsumerWidget {
@@ -52,13 +52,15 @@ class AiExplainabilityView extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(4),
+              color: Colors.blue.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(6),
             ),
-            child: const Text(
-              '✓ VERIFIED AGAINST FIRST-AID-STORE v2.0',
-              style: TextStyle(
-                color: Colors.green,
+            child: Text(
+              triage.source == TriageSource.offlineClassifier
+                  ? 'From curated first-aid library (offline)'
+                  : 'First-aid text sourced from curated library',
+              style: const TextStyle(
+                color: Colors.blueAccent,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
               ),

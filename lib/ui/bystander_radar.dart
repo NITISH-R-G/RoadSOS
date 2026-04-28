@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/mesh_network_service.dart';
 
-class BystanderRadar extends StatefulWidget {
+class BystanderRadar extends ConsumerStatefulWidget {
   const BystanderRadar({super.key});
 
   @override
-  State<BystanderRadar> createState() => _BystanderRadarState();
+  ConsumerState<BystanderRadar> createState() => _BystanderRadarState();
 }
 
-class _BystanderRadarState extends State<BystanderRadar>
+class _BystanderRadarState extends ConsumerState<BystanderRadar>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -31,47 +31,73 @@ class _BystanderRadarState extends State<BystanderRadar>
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.center,
+    final beaconsStream = ref.watch(meshNetworkServiceProvider).discoveredBeacons;
+
+    return StreamBuilder<List<String>>(
+      stream: beaconsStream,
+      initialData: const [],
+      builder: (context, snapshot) {
+        final beacons = snapshot.data ?? const <String>[];
+        return Column(
           children: [
-            // Radar Background Rings
-            CustomPaint(
-              size: const Size(200, 200),
-              painter: _RadarPainter(_controller),
-            ),
-            // Radar Pulse
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return CustomPaint(
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                // Radar Background Rings
+                CustomPaint(
                   size: const Size(200, 200),
-                  painter: _SweepPainter(_controller.value),
-                );
-              },
+                  painter: _RadarPainter(_controller),
+                ),
+                // Radar Pulse
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      size: const Size(200, 200),
+                      painter: _SweepPainter(_controller.value),
+                    );
+                  },
+                ),
+                ..._buildBeaconDots(beacons),
+                const Icon(Icons.my_location, color: Colors.blue, size: 24),
+              ],
             ),
-            // Mock Found Incident
-            Positioned(
-              top: 40,
-              left: 140,
-              child: _IncidentDot(),
+            const SizedBox(height: 16),
+            Text(
+              beacons.isEmpty ? 'SCANNING (NO PEERS)' : 'PEERS DETECTED: ${beacons.length}',
+              style: const TextStyle(
+                color: Colors.blue,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
             ),
-            const Icon(Icons.my_location, color: Colors.blue, size: 24),
           ],
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          "SCANNING MESH NETWORK",
-          style: TextStyle(
-            color: Colors.blue,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-          ),
-        ),
-      ],
+        );
+      },
     );
+  }
+
+  List<Widget> _buildBeaconDots(List<String> ids) {
+    final out = <Widget>[];
+    const center = 100.0;
+    const maxR = 78.0;
+    for (final id in ids) {
+      final h = id.hashCode;
+      final angle = ((h % 360) * math.pi) / 180.0;
+      final r =
+          (math.sqrt(((h >> 8).abs() % 1000) / 1000.0) * maxR).clamp(18.0, maxR);
+      final x = center + math.cos(angle) * r;
+      final y = center + math.sin(angle) * r;
+      out.add(
+        Positioned(
+          left: x,
+          top: y,
+          child: const _IncidentDot(),
+        ),
+      );
+    }
+    return out;
   }
 }
 

@@ -1,7 +1,8 @@
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/app_locale_controller.dart';
 import '../services/hardware_trigger_service.dart';
@@ -13,6 +14,7 @@ import 'offline_map_screen.dart';
 import 'permission_onboarding_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'sos_activity_log_screen.dart';
+import 'mesh_chat_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -73,7 +75,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     }
     setState(() => _nearbySos = value);
-    await NearbySosPushService.instance.onOptInChanged(value);
+    final ok = await NearbySosPushService.instance.onOptInChanged(value);
+    if (!ok && mounted) {
+      setState(() => _nearbySos = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Nearby SOS needs Firebase setup (google-services.json / FirebaseOptions). Toggle turned off.',
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _onRetentionChanged(bool value) async {
@@ -168,9 +180,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Icons.bluetooth,
             l10n.meshConfigTitle,
             l10n.meshConfigSubtitle,
-            onTap: () {},
+            onTap: () => Navigator.push<void>(
+              context,
+              MaterialPageRoute<void>(builder: (_) => const MeshChatScreen()),
+            ),
           ),
-          if (Platform.isAndroid) ...[
+          if (!kIsWeb && Platform.isAndroid) ...[
             const SizedBox(height: 8),
             _tile(
               context,

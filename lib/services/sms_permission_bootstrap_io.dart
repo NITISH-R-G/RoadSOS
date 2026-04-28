@@ -17,6 +17,10 @@ Future<void> requestSmsPermissionEarlyIfAndroidImpl() async {
       );
     }
   } catch (e, st) {
-    appLog.w('Startup SMS permission request failed', e, st);
+    appLog.w(
+      'Startup SMS permission request failed',
+      error: e,
+      stackTrace: st,
+    );
   }
 }

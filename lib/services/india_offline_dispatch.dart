@@ -55,7 +55,7 @@ class IndiaOfflineDispatch {
         appLog.d('India: launched $desc');
       }
     } catch (e, st) {
-      appLog.w('India: could not launch $desc', e, st);
+      appLog.w('India: could not launch $desc', error: e, stackTrace: st);
     }
   }
 
@@ -67,7 +67,7 @@ class IndiaOfflineDispatch {
         appLog.d('India USSD intent: $code');
       }
     } catch (e, st) {
-      appLog.w('India USSD launch failed', e, st);
+      appLog.w('India USSD launch failed', error: e, stackTrace: st);
     }
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 
 /// In-app privacy notice (bundled EN/HI text assets; DPDP-aligned summary).
 class PrivacyPolicyScreen extends StatefulWidget {

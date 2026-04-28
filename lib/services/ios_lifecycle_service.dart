@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,6 +21,7 @@ class IosLifecycleService {
       MethodChannel('com.codestreak.roadsos/ios_lifecycle');
 
   void attach() {
+    if (kIsWeb) return;
     if (!Platform.isIOS) return;
     _channel.setMethodCallHandler((call) async {
       switch (call.method) {
@@ -39,11 +41,12 @@ class IosLifecycleService {
 
   /// Ask the OS to schedule the next BGAppRefresh task (subject to budget / user patterns).
   Future<void> scheduleBackgroundRefresh() async {
+    if (kIsWeb) return;
     if (!Platform.isIOS) return;
     try {
       await _channel.invokeMethod<void>('scheduleBackgroundRefresh');
     } catch (e, st) {
-      appLog.w('scheduleBackgroundRefresh failed', e, st);
+      appLog.w('scheduleBackgroundRefresh failed', error: e, stackTrace: st);
     }
   }
 }

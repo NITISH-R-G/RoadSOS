@@ -31,7 +31,12 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
               children: [
                 Icon(Icons.wifi_off, color: Colors.blue, size: 16),
                 SizedBox(width: 8),
-                Text('Using BLE Mesh Network - No Internet Required', style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold)),
+                Expanded(
+                  child: Text(
+                    'BLE broadcast (foreground only). No delivery guarantee; use for short scene coordination.',
+                    style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ],
             ),
           ),
@@ -41,7 +46,7 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final msg = messages[index];
-                final isMe = msg.senderId == 'ME';
+                final isMe = msg.senderId == 'SELF';
                 return Align(
                   alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(

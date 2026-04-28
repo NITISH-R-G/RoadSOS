@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +14,7 @@ import '../models/sos_activity_record.dart';
 import 'ai_triage_service.dart';
 import 'location_service.dart';
 import 'mesh_network_service.dart';
+import 'sms_dispatch_outcome.dart';
 import 'crash_detection_service.dart';
 import 'voice_assistant_service.dart';
 import 'user_profile_service.dart';
@@ -230,73 +231,87 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     final mesh = _ref.read(meshNetworkServiceProvider);
 
-    _patchDispatchChannel(
-      'mesh',
-      DispatchChannelLifecycle.inProgress,
-      'Broadcasting BLE beacon…',
-    );
-    final meshOk = await mesh.startBroadcasting(
-      triage.compressedPayload,
-      lat: location.latitude,
-      lng: location.longitude,
-    );
-    _patchDispatchChannel(
-      'mesh',
-      meshOk ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
-      meshOk
-          ? 'Mesh beacon active — nearby app users can detect you ✓'
-          : 'Mesh did not start — Bluetooth off, unsupported, or failed.',
-    );
+    // Dispatch channels are started in parallel. Each completion patches its row.
+    _patchDispatchChannel('mesh', DispatchChannelLifecycle.inProgress, 'Broadcasting BLE beacon…');
+    _patchDispatchChannel('sms', DispatchChannelLifecycle.inProgress, 'Sending emergency SMS…');
+    _patchDispatchChannel('local_log', DispatchChannelLifecycle.inProgress, 'Saving incident on device…');
+    _patchDispatchChannel('family_link', DispatchChannelLifecycle.inProgress, 'Family tracking link…');
 
-    _patchDispatchChannel(
-      'sms',
-      DispatchChannelLifecycle.inProgress,
-      'SMS to emergency number…',
-    );
-    final smsOutcome = await mesh.triggerSmsFallback(
-      triage.compressedPayload,
-      lat: location.latitude,
-      lng: location.longitude,
-    );
-    _patchDispatchChannel(
-      'sms',
-      smsOutcome.primaryAutomatedBarMet
-          ? DispatchChannelLifecycle.success
-          : DispatchChannelLifecycle.failed,
-      smsOutcome.detail,
-    );
+    final meshFuture = mesh
+        .startBroadcasting(
+          triage.compressedPayload,
+          lat: location.latitude,
+          lng: location.longitude,
+        )
+        .then((meshOk) {
+      _patchDispatchChannel(
+        'mesh',
+        meshOk ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        meshOk
+            ? 'Mesh beacon active — nearby app users can detect you ✓'
+            : 'Mesh did not start — Bluetooth off, unsupported, or failed.',
+      );
+      return meshOk;
+    });
 
-    _patchDispatchChannel(
-      'cloud',
-      DispatchChannelLifecycle.inProgress,
-      'Saving incident on device…',
-    );
-    final persisted = await _persistIncidentSnapshot(
+    final smsFuture = mesh
+        .triggerSmsFallback(
+          triage.compressedPayload,
+          lat: location.latitude,
+          lng: location.longitude,
+        )
+        .then((smsOutcome) {
+      // IMPORTANT: SMS "success" means our app/backend accepted the request, not guaranteed emergency receipt.
+      _patchDispatchChannel(
+        'sms',
+        smsOutcome.primaryAutomatedBarMet
+            ? DispatchChannelLifecycle.success
+            : DispatchChannelLifecycle.failed,
+        smsOutcome.detail,
+      );
+      return smsOutcome;
+    });
+
+    final persistedFuture = _persistIncidentSnapshot(
       incidentId: state.incidentId ?? '',
       location: location,
       triage: triage,
-    );
-    _patchDispatchChannel(
-      'cloud',
-      persisted.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
-      persisted.detail,
-    );
+    ).then((persisted) {
+      _patchDispatchChannel(
+        'local_log',
+        persisted.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        persisted.detail,
+      );
+      return persisted;
+    });
 
-    _patchDispatchChannel(
-      'family_link',
-      DispatchChannelLifecycle.inProgress,
-      'Family tracking link…',
-    );
-    final family = await _ref.read(familyTrackingServiceProvider).registerAndNotifyContact(
+    final familyFuture = _ref
+        .read(familyTrackingServiceProvider)
+        .registerAndNotifyContact(
           incidentId: state.incidentId ?? '',
           location: location,
           triage: triage,
-        );
-    _patchDispatchChannel(
-      'family_link',
-      family.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
-      family.detail,
-    );
+        )
+        .then((family) {
+      _patchDispatchChannel(
+        'family_link',
+        family.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        family.detail,
+      );
+      return family;
+    });
+
+    final results = await Future.wait([
+      meshFuture,
+      smsFuture,
+      persistedFuture,
+      familyFuture,
+    ]);
+
+    final meshOk = results[0] as bool;
+    final smsOutcome = results[1] as SmsDispatchOutcome;
+    final persisted = results[2] as ({bool ok, String detail});
+    final family = results[3] as ({bool ok, String detail});
 
     await SosActivityLogService.instance.append(
       SosActivityRecord(
@@ -315,19 +330,16 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ),
     );
 
-    // ERSS HTTP ingest / ambulance dial happen inside SMS/mesh helpers but do not add flags here.
-    // SMS channel uses [SmsDispatchOutcome.primaryAutomatedBarMet] (device SEND_SMS or audited relay).
-    final anyConfirmed = meshOk ||
-        smsOutcome.primaryAutomatedBarMet ||
-        persisted.ok ||
-        family.ok;
+    // "Confirmed" == the primary automated dispatch bar for emergency SMS.
+    // Mesh + local logging + family link are helpful but do not prove emergency services were reached.
+    final anyConfirmed = smsOutcome.primaryAutomatedBarMet;
 
     state = state.copyWith(phase: SOSPhase.active);
     await _persistState(true);
     _log(
       anyConfirmed
-          ? 'Emergency session active — review each channel above for confirmation.'
-          : 'Emergency session active — every automatic channel reported failure; take manual action.',
+          ? 'Emergency session active — review each channel above for request status.'
+          : 'Emergency session active — no automated emergency SMS request succeeded; take manual action (dial emergency number).',
       SOSPhase.active,
       isError: !anyConfirmed,
     );
@@ -348,8 +360,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         detail: 'Waiting…',
       ),
       DispatchChannelRow(
-        id: 'cloud',
-        title: 'On-device log / cloud',
+        id: 'local_log',
+        title: 'On-device incident log',
         lifecycle: DispatchChannelLifecycle.pending,
         detail: 'Waiting…',
       ),
@@ -401,19 +413,14 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
           0,
         ],
       );
-      final synced = _hasSupabaseSession();
-      if (synced) {
-        return (
-          ok: true,
-          detail: 'Saved on device — cloud sync queued when network allows.',
-        );
-      }
       return (
         ok: true,
-        detail: 'Saved on device — sign in anonymously (Supabase) for cloud backup.',
+        detail: _hasSupabaseSession()
+            ? 'Saved on device. Sync is enabled when network allows (no upload confirmation in this build).'
+            : 'Saved on device. Cloud sync needs Supabase credentials (assets/.env) and anonymous auth.',
       );
     } catch (e, st) {
-      appLog.w('Local incident insert failed', e, st);
+      appLog.w('Local incident insert failed', error: e, stackTrace: st);
       return (
         ok: false,
         detail: 'Could not save incident log on device.',
@@ -435,7 +442,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return 'Local database off — incident row not stored on device.';
     }
     if (_hasSupabaseSession()) {
-      return 'Saved on phone — PowerSync will upload when network allows.';
+      return 'Saved on phone — sync enabled when network allows (no confirmation of upload).';
     }
     return 'Saved on phone — enable Supabase anonymous auth for cloud backup.';
   }

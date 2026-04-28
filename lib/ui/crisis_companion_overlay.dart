@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/emergency_orchestrator.dart';
 import '../services/app_locale_controller.dart';
 import '../services/roadsos_assistant_service.dart';
+import '../models/dispatch_channel_status.dart';
 
 class CrisisCompanionOverlay extends ConsumerWidget {
   const CrisisCompanionOverlay({super.key});
+
+  String _honestStatusLine(SOSState state) {
+    if (state.phase == SOSPhase.triaging) return 'TRIAGING…';
+    if (state.dispatchChannels.isEmpty) return 'DISPATCH IN PROGRESS…';
+    final anyOk = state.dispatchChannels.any((c) => c.lifecycle == DispatchChannelLifecycle.success);
+    if (anyOk) return 'DISPATCH CONFIRMED (CHECK CHANNELS)';
+    final anyInProgress =
+        state.dispatchChannels.any((c) => c.lifecycle == DispatchChannelLifecycle.inProgress);
+    return anyInProgress ? 'DISPATCH IN PROGRESS…' : 'NO DISPATCH CONFIRMATION';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -106,11 +117,12 @@ class CrisisCompanionOverlay extends ConsumerWidget {
   }
 
   Widget _buildControlBar(WidgetRef ref, AppLocalizations l10n, String lang) {
+    final sosState = ref.watch(emergencyOrchestratorProvider);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          l10n.helpEtaPlaceholder,
+          _honestStatusLine(sosState),
           style: TextStyle(
             color: Colors.green.withValues(alpha: 0.7),
             fontWeight: FontWeight.bold,
@@ -119,9 +131,12 @@ class CrisisCompanionOverlay extends ConsumerWidget {
         ),
         Row(
           children: [
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.mic_none, color: Colors.white54),
+            Tooltip(
+              message: 'Voice capture is not available in this build.',
+              child: IconButton(
+                onPressed: null,
+                icon: const Icon(Icons.mic_none, color: Colors.white54),
+              ),
             ),
             const SizedBox(width: 8),
             ElevatedButton(

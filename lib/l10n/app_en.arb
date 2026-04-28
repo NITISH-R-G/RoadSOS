@@ -97,7 +97,7 @@
   "crisisCompanionTitle": "CRISIS ASSISTANT",
   "crisisCompanionBreathing": "Breathe steadily. Monitoring your situation.",
   "sceneIntelligenceTitle": "SCENE INTELLIGENCE",
-  "helpEtaPlaceholder": "HELP DISPATCHED",
+  "helpEtaPlaceholder": "No ETA available",
   "talkButton": "TALK",
   "settingsExtendedRetentionTitle": "Extended cloud retention",
   "settingsExtendedRetentionSubtitle": "Keep incident summaries beyond 90 days when synced to Supabase (overrides default purge)."

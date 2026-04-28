@@ -19,6 +19,9 @@ class NearbySosPushService {
   static const _topic = 'roadsos_nearby_sos';
   final _local = FlutterLocalNotificationsPlugin();
   var _initialized = false;
+  var _firebaseAvailable = false;
+
+  bool get firebaseAvailable => _firebaseAvailable;
 
   Future<void> configureAfterConsentIfNeeded() async {
     if (!await PrivacyConsentService.hasConsent()) return;
@@ -40,11 +43,13 @@ class NearbySosPushService {
     } catch (e, st) {
       appLog.w(
         'Firebase not configured (add google-services.json / FirebaseOptions). Nearby SOS push disabled.',
-        e,
-        st,
+        error: e,
+        stackTrace: st,
       );
+      _firebaseAvailable = false;
       return;
     }
+    _firebaseAvailable = true;
 
     if (_initialized) {
       await _syncSubscription();
@@ -84,7 +89,7 @@ class NearbySosPushService {
         await messaging.unsubscribeFromTopic(_topic);
       }
     } catch (e, st) {
-      appLog.w('FCM topic subscribe/unsubscribe failed', e, st);
+      appLog.w('FCM topic subscribe/unsubscribe failed', error: e, stackTrace: st);
     }
   }
 
@@ -92,7 +97,7 @@ class NearbySosPushService {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
     await _local.initialize(
-      const InitializationSettings(android: android, iOS: ios),
+      settings: const InitializationSettings(android: android, iOS: ios),
       onDidReceiveNotificationResponse: _onTapLocalNotification,
     );
 
@@ -123,10 +128,10 @@ class NearbySosPushService {
         'Someone nearby may need help.';
 
     await _local.show(
-      message.hashCode,
-      title,
-      body,
-      const NotificationDetails(
+      id: message.hashCode,
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'roadsos_nearby_sos',
           'Nearby SOS',
@@ -158,13 +163,18 @@ class NearbySosPushService {
   }
 
   /// Call when user toggles opt-in from Settings (after consent exists).
-  Future<void> onOptInChanged(bool enabled) async {
+  Future<bool> onOptInChanged(bool enabled) async {
     await NearbySosPreferences.setPushOptIn(enabled);
     await configureAfterConsentIfNeeded();
+    if (enabled && !_firebaseAvailable) {
+      await NearbySosPreferences.setPushOptIn(false);
+      return false;
+    }
     if (!enabled) {
       try {
         await FirebaseMessaging.instance.unsubscribeFromTopic(_topic);
       } catch (_) {}
     }
+    return true;
   }
 }

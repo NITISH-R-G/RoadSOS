@@ -23,7 +23,7 @@ class SosActivityLogService {
           .map((e) => SosActivityRecord.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e, st) {
-      appLog.w('Activity log parse failed', e, st);
+      appLog.w('Activity log parse failed', error: e, stackTrace: st);
       return [];
     }
   }
@@ -40,7 +40,7 @@ class SosActivityLogService {
         jsonEncode(trimmed.map((e) => e.toJson()).toList()),
       );
     } catch (e, st) {
-      appLog.w('Activity log append failed', e, st);
+      appLog.w('Activity log append failed', error: e, stackTrace: st);
     }
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 
 /// One-screen awareness of Good Samaritan protections (India).
 class GoodSamaritanLawScreen extends StatelessWidget {
