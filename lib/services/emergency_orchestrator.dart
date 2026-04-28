@@ -298,6 +298,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ),
     );
 
+    // ERSS HTTP ingest / ambulance dial happen inside SMS/mesh helpers but do not add flags here —
+    // success for this session is mesh beacon, SMS outcome, or on-device persistence only.
     final anyConfirmed =
         meshOk || smsOutcome.pathConfirmedSent || persisted.ok;
 

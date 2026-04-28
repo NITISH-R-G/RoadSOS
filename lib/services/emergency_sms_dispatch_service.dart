@@ -16,6 +16,11 @@ import 'sms_dispatch_outcome.dart';
 ///   Otherwise (or after relay failure) uses [SEND_SMS] + Telephony API.
 /// - **iOS**: POST to [SMS_DISPATCH_URL] only (cannot send SMS directly).
 /// - **India**: Prefer [INDIA_SOS_DISPATCH_URL], optional [INDIA_ERSS_API_URL] (MHA/CDAC enrollment).
+///
+/// **Dispatch success contract (v1 India / Android):**
+/// - **(A)** Primary automated bar: SMS to **112** via relay or device ([SmsDispatchOutcome.pathConfirmedSent]).
+/// - **(B)** Parallel **108** dial / USSD — handled by [IndiaOfflineDispatch]; dialer only, **not** dispatch proof.
+/// - **(C)** [INDIA_ERSS_API_URL] is optional telemetry until a gateway is contracted; **never** gates outcome.
 class EmergencySmsDispatchService {
   EmergencySmsDispatchService._();
 
@@ -42,6 +47,7 @@ class EmergencySmsDispatchService {
     final body = _composeBody(payload, lat, lng);
     final emergencyNum = emergencyNumberForLocale();
 
+    // (C) Optional ERSS ingest — must not affect return value below.
     if (lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng)) {
       final erssUrl = dotenv.env['INDIA_ERSS_API_URL']?.trim();
       if (erssUrl != null && erssUrl.isNotEmpty) {

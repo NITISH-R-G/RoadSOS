@@ -9,6 +9,9 @@ import 'india_emergency_routing.dart';
 /// Voice / USSD paths that work with **no mobile data** when cellular voice/SMS is available.
 ///
 /// BLE mesh is opportunistic; this layer reflects India’s typical “zero data” reality.
+///
+/// **Contract:** Best-effort parallel channels — opens the dialer; **not** counted toward automated
+/// SMS success in [EmergencySmsDispatchService] / orchestrator (`(B)` vs primary `(A)` SEND_SMS bar).
 class IndiaOfflineDispatch {
   IndiaOfflineDispatch._();
 
