@@ -1,7 +1,6 @@
 import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -170,6 +169,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         () => Navigator.push(
                           ctx,
                           MaterialPageRoute(builder: (_) => const MeshChatScreen()),
+                        ),
+                      ),
+                      _sheetAction(
+                        ctx,
+                        Icons.fact_check_outlined,
+                        'Activity log',
+                        () => Navigator.push(
+                          ctx,
+                          MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
                         ),
                       ),
                       _sheetAction(
