@@ -33,7 +33,7 @@ We follow a **Modular Feature-First** architecture. See [docs/ARCH.md](docs/ARCH
    ```powershell
    ./scripts/setup.ps1
    ```
-3. **Environment**: Copy `assets/env.template` to `assets/.env` and add keys (never commit real secrets).
+3. **Environment**: The app loads dotenv from `assets/.env`. The setup script will create it from `assets/env.template` if missing—fill in values locally and **never commit real secrets**.
 4. **Run**:
    ```bash
    flutter run
