@@ -8,7 +8,15 @@
 .build/
 .buildlog/
 .history
-.cursor/
+# Cursor — version shared rules/skills/agents/hooks; ignore local-only junk
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+!.cursor/skills/
+!.cursor/skills/**
+!.cursor/agents/
+!.cursor/agents/**
+!.cursor/hooks.json
 .svn/
 .swiftpm/
 migrate_working_dir/
