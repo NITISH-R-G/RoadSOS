@@ -129,7 +129,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                 MapTileConfig.attributionLabel,
                 style: TextStyle(
                   fontSize: 9,
-                  color: Colors.white.withValues(alpha: ),
+                  color: Colors.white.withValues(alpha: 0.45),
                   shadows: const [
                     Shadow(color: Colors.black54, blurRadius: 4),
                   ],
@@ -178,7 +178,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   Widget _buildUserMarker() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: ),
+        color: Colors.blue.withValues(alpha: 0.2),
         shape: BoxShape.circle,
         border: Border.all(color: Colors.blue, width: 2),
       ),
@@ -271,7 +271,7 @@ class _FacilityMarker extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: color.withValues(alpha: ),
+          color: color.withValues(alpha: 0.8),
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 1),
         ),

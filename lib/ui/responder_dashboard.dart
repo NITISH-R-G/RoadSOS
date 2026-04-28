@@ -24,7 +24,7 @@ class ResponderDashboard extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
@@ -40,9 +40,9 @@ class ResponderDashboard extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -56,7 +56,7 @@ class ResponderDashboard extends ConsumerWidget {
                         ],
                       ),
                       const Spacer(),
-                      Text('MESH-SYNC', style: TextStyle(color: Colors.red.withOpacity(0.5), fontWeight: FontWeight.bold, fontSize: 8)),
+                      Text('MESH-SYNC', style: TextStyle(color: Colors.red.withValues(alpha: 0.5), fontWeight: FontWeight.bold, fontSize: 8)),
                     ],
                   ),
                 ),
@@ -87,7 +87,7 @@ class ResponderDashboard extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: status.contains('HIGH') ? Colors.red.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+              color: status.contains('HIGH') ? Colors.red.withValues(alpha: 0.2) : Colors.green.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

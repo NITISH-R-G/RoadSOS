@@ -56,7 +56,7 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
             child: Text(
               AppLocalizations.of(context)!.vitalAlignFinger,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 12),
             ),
           ),
         ],
@@ -108,9 +108,9 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
+        color: Colors.blue.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -136,7 +136,7 @@ class _WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.greenAccent.withOpacity(0.6)
+      ..color = Colors.greenAccent.withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
 

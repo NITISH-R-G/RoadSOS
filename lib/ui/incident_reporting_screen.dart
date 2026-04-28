@@ -60,7 +60,7 @@ class _IncidentReportingScreenState
         fontSize: 10,
         fontWeight: FontWeight.w900,
         letterSpacing: 1.5,
-        color: Colors.blue.withOpacity(0.6),
+        color: Colors.blue.withValues(alpha: 0.6),
       ),
     );
   }
@@ -70,7 +70,7 @@ class _IncidentReportingScreenState
       width: double.infinity,
       height: 180,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -78,7 +78,7 @@ class _IncidentReportingScreenState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.camera_enhance, size: 40, color: Colors.white.withOpacity(0.3)),
+            Icon(Icons.camera_enhance, size: 40, color: Colors.white.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () => setState(() => _isCapturingImage = !_isCapturingImage),
@@ -110,9 +110,9 @@ class _IncidentReportingScreenState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
+        color: Colors.blue.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -130,7 +130,7 @@ class _IncidentReportingScreenState
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Speak or type…',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                     filled: true,
                     fillColor: Colors.black,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -165,7 +165,7 @@ class _IncidentReportingScreenState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

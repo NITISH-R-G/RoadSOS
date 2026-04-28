@@ -82,7 +82,7 @@ class _RadarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue.withOpacity(0.1)
+      ..color = Colors.blue.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -110,9 +110,9 @@ class _SweepPainter extends CustomPainter {
       startAngle: 0,
       endAngle: math.pi * 2,
       colors: [
-        Colors.blue.withOpacity(0),
-        Colors.blue.withOpacity(0.5),
-        Colors.blue.withOpacity(0),
+        Colors.blue.withValues(alpha: 0),
+        Colors.blue.withValues(alpha: 0.5),
+        Colors.blue.withValues(alpha: 0),
       ],
       stops: const [0.0, 0.5, 1.0],
       transform: GradientRotation(sweep * math.pi * 2),

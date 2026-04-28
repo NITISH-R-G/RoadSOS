@@ -108,6 +108,6 @@ class MedicalCardScreen extends ConsumerWidget {
   }
 
   Widget _buildDivider() {
-    return Divider(color: Colors.white.withOpacity(0.1), height: 1);
+    return Divider(color: Colors.white.withValues(alpha: 0.1), height: 1);
   }
 }
