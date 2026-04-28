@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+
+import '../logging/app_log.dart';
 import 'first_aid_store.dart';
 import 'offline_triage_classifier.dart';
 
@@ -89,12 +91,12 @@ class AiTriageService {
       _state = ModelState.degraded;
       _lastError =
           'GEMINI_API_KEY missing in .env — using offline classifier only.';
-      debugPrint('[AiTriageService] $_lastError');
+      appLog.d('[AiTriageService] $_lastError');
       return;
     }
     _state = ModelState.ready;
     _lastError = null;
-    debugPrint(
+    appLog.d(
       '[AiTriageService] Cloud triage (Gemini Flash). Offline: keyword classifier.',
     );
   }
@@ -131,7 +133,7 @@ class AiTriageService {
       );
       return cloud;
     } catch (e, st) {
-      debugPrint('[AiTriageService] Gemini failed ($e); classifier. $st');
+      appLog.d('[AiTriageService] Gemini failed; using classifier', e, st);
       _lastError = 'Cloud triage failed: $e';
       return heuristic;
     }

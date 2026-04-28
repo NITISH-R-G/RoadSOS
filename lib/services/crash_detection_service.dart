@@ -1,58 +1,240 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:sensors_plus/sensors_plus.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+
+import '../logging/app_log.dart';
 import 'emergency_orchestrator.dart';
 
-/// Real-time Crash Detection Service.
-/// 
-/// Monitors accelerometer data for high-G impact events characteristic of vehicle crashes.
-class CrashDetectionService {
-  final Ref _ref;
-  StreamSubscription<UserAccelerometerEvent>? _subscription;
-  
-  // Thresholds (can be tuned)
-  static const double crashThresholdG = 25.0; // Typical air-bag trigger is ~15-20G
-  static const int cooldownMs = 5000;
-  
-  DateTime? _lastDetection;
+class _SpeedSample {
+  final DateTime t;
+  final double kmh;
 
+  _SpeedSample(this.t, this.kmh);
+}
+
+/// Multi-stage crash detection inspired by consumer phone crash pipelines:
+/// 1) Strong user-accelerometer spike (device frame, gravity removed).
+/// 2) Pre-impact vehicle speed was at or above [minApproachSpeedKmh] (GPS).
+/// 3) Within [postImpactWindow], speed collapses toward a stop (sudden deceleration).
+/// 4) Sustained low motion variance on the user accelerometer (stillness — not a phone bouncing in a cabin or on a vibration road).
+///
+/// Values are **m/s²** on the accelerometer channel; they are **not** “G” despite common speech.
+///
+/// If GPS speed is unavailable, this service **does not** trigger SOS on accelerometry alone (avoids
+/// pothole / drop-phone false positives on Indian roads).
+class CrashDetectionService {
   CrashDetectionService(this._ref);
 
+  final Ref _ref;
+
+  StreamSubscription<UserAccelerometerEvent>? _accelSub;
+  StreamSubscription<Position>? _positionSub;
+
+  final List<_SpeedSample> _speedHistory = [];
+
+  bool _gpsSpeedUsable = false;
+  bool _evaluationInFlight = false;
+  DateTime? _lastConfirmedSos;
+  DateTime? _lastSpikeHandled;
+
+  /// User acceleration magnitude (m/s²) needed to begin a crash evaluation.
+  static const double impactThresholdMs2 = 52.0;
+
+  /// Typical airbag / severe crash impulse is higher, but GPS gating removes most non-crash spikes.
+  static const double minApproachSpeedKmh = 20.0;
+
+  /// Treat as “stopped” given GPS noise and update rate limits.
+  static const double stoppedSpeedKmh = 8.0;
+
+  /// Minimum drop in speed (before → after impact window) to accept a crash profile.
+  static const double suddenDecelDeltaKmh = 18.0;
+
+  /// How long we retain speed samples for crash correlation.
+  static const int speedHistoryHorizonMs = 4000;
+
+  /// Device must look “still” after the impact (standard deviation of |a_user| below this).
+  static const double stillnessStdDevMaxMs2 = 2.8;
+
+  static const int stillnessSampleWindowMs = 1600;
+
+  static const int preImpactLookbackMs = 2000;
+  static const int postImpactWindowMs = 1200;
+  static const int interSpikeDebounceMs = 900;
+  static const int sosCooldownMs = 45000;
+
   void startMonitoring() {
-    _subscription?.cancel();
-    _subscription = userAccelerometerEventStream().listen((UserAccelerometerEvent event) {
-      final double totalG = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
-      
-      if (totalG > crashThresholdG) {
-        // NOTE: In a real app, this simple threshold triggers false positives (e.g. dropping phone).
-        // You need to combine accelerometer with gyroscope (spin) and GPS (sudden deceleration).
-        _handlePotentialCrash(totalG);
+    stopMonitoring();
+    _startGpsSpeed();
+    _accelSub = userAccelerometerEventStream().listen(_onAccelerometer);
+  }
+
+  Future<void> _startGpsSpeed() async {
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
       }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        _gpsSpeedUsable = false;
+        appLog.d(
+          'GPS permission denied — crash auto-SOS disabled (accel-only never used)',
+        );
+        return;
+      }
+
+      final enabled = await Geolocator.isLocationServiceEnabled();
+      if (!enabled) {
+        _gpsSpeedUsable = false;
+        return;
+      }
+
+      _gpsSpeedUsable = true;
+
+      final settings = const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 0,
+      );
+
+      _positionSub = Geolocator.getPositionStream(
+        locationSettings: settings,
+      ).listen(
+        _onPosition,
+        onError: (_) => _gpsSpeedUsable = false,
+      );
+    } catch (_) {
+      _gpsSpeedUsable = false;
+    }
+  }
+
+  void _onPosition(Position p) {
+    final ms = p.speed;
+    if (ms.isNaN || ms < 0) return;
+    final kmh = (ms * 3.6).clamp(0.0, 320.0);
+    final now = DateTime.now();
+    _speedHistory.add(_SpeedSample(now, kmh));
+    final cutoff = now.subtract(const Duration(milliseconds: speedHistoryHorizonMs));
+    _speedHistory.removeWhere((s) => s.t.isBefore(cutoff));
+  }
+
+  void _onAccelerometer(UserAccelerometerEvent event) {
+    final mag = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
+    if (mag <= impactThresholdMs2) return;
+
+    final now = DateTime.now();
+    if (_lastSpikeHandled != null &&
+        now.difference(_lastSpikeHandled!).inMilliseconds < interSpikeDebounceMs) {
+      return;
+    }
+    _lastSpikeHandled = now;
+
+    appLog.d('Impact spike ${mag.toStringAsFixed(1)} m/s² — evaluating');
+
+    unawaited(_evaluateCrash(now, mag));
+  }
+
+  Future<void> _evaluateCrash(DateTime impactTime, double peakMs2) async {
+    if (_evaluationInFlight) return;
+    _evaluationInFlight = true;
+
+    try {
+      await Future.delayed(Duration(milliseconds: postImpactWindowMs + 150));
+
+      if (!_gpsSpeedUsable || _speedHistory.length < 2) {
+        appLog.d('Dismissed: insufficient GPS speed context');
+        return;
+      }
+
+      final beforeStart = impactTime.subtract(const Duration(milliseconds: preImpactLookbackMs));
+      final beforeEnd = impactTime;
+      final afterStart = impactTime;
+      final afterEnd = impactTime.add(const Duration(milliseconds: postImpactWindowMs));
+
+      var maxBefore = 0.0;
+      for (final s in _speedHistory) {
+        if (!s.t.isBefore(beforeStart) && !s.t.isAfter(beforeEnd)) {
+          if (s.kmh > maxBefore) maxBefore = s.kmh;
+        }
+      }
+
+      var minAfter = double.infinity;
+      for (final s in _speedHistory) {
+        if (!s.t.isBefore(afterStart) && !s.t.isAfter(afterEnd)) {
+          if (s.kmh < minAfter) minAfter = s.kmh;
+        }
+      }
+      if (minAfter.isInfinite) {
+        minAfter = _speedHistory.last.kmh;
+      }
+
+      final approach = maxBefore >= minApproachSpeedKmh;
+      final halted = minAfter <= stoppedSpeedKmh;
+      final sharpDrop = (maxBefore - minAfter) >= suddenDecelDeltaKmh;
+
+      if (!approach || !(halted || sharpDrop)) {
+        appLog.d(
+          'Dismissed: speed maxBefore=${maxBefore.toStringAsFixed(1)} '
+          'minAfter=${minAfter.toStringAsFixed(1)} km/h (peak $peakMs2 m/s²)',
+        );
+        return;
+      }
+
+      final still = await _measureStillness();
+      if (!still) {
+        appLog.d(
+          'Dismissed: motion continues after spike (not a wrecked-phone profile)',
+        );
+        return;
+      }
+
+      final now = DateTime.now();
+      if (_lastConfirmedSos != null &&
+          now.difference(_lastConfirmedSos!).inMilliseconds < sosCooldownMs) {
+        return;
+      }
+      _lastConfirmedSos = now;
+
+      _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
+    } finally {
+      _evaluationInFlight = false;
+    }
+  }
+
+  /// Sample user acceleration for [stillnessSampleWindowMs]; low std-dev ⇒ device at rest.
+  Future<bool> _measureStillness() async {
+    final magnitudes = <double>[];
+    final sub = userAccelerometerEventStream().listen((e) {
+      magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z));
     });
+
+    await Future<void>.delayed(const Duration(milliseconds: stillnessSampleWindowMs));
+    await sub.cancel();
+
+    if (magnitudes.length < 6) return false;
+
+    final mean = magnitudes.reduce((a, b) => a + b) / magnitudes.length;
+    var varSum = 0.0;
+    for (final m in magnitudes) {
+      final d = m - mean;
+      varSum += d * d;
+    }
+    final std = sqrt(varSum / magnitudes.length);
+
+    appLog.d(
+      'Stillness σ=${std.toStringAsFixed(2)} m/s² (${magnitudes.length} samples)',
+    );
+
+    return std <= stillnessStdDevMaxMs2;
   }
 
   void stopMonitoring() {
-    _subscription?.cancel();
-  }
-
-  void _handlePotentialCrash(double magnitude) async {
-    final now = DateTime.now();
-    if (_lastDetection != null && now.difference(_lastDetection!).inMilliseconds < cooldownMs) {
-      return;
-    }
-
-    _lastDetection = now;
-    print('[CrashDetection] ⚠️ POTENTIAL IMPACT: ${magnitude.toStringAsFixed(1)}m/s². Checking for stillness...');
-    
-    // Heuristic: Wait 2 seconds and check if the device is stationary
-    // A dropped phone will have micro-movements (bouncing/sliding) or be picked up.
-    // A crash victim's phone is often stationary in the wreckage.
-    await Future.delayed(const Duration(seconds: 2));
-    
-    // In a real app, we would re-sample the accelerometer here. 
-    // For the prototype, we assume stillness = confirm crash.
-    _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
+    _accelSub?.cancel();
+    _accelSub = null;
+    _positionSub?.cancel();
+    _positionSub = null;
   }
 }
 

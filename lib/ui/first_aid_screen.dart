@@ -337,7 +337,7 @@ class _FirstAidScreenState extends State<FirstAidScreen> {
                               color: const Color(0xFF1A1A2E),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.red.withOpacity(0.3),
+                                color: Colors.red.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
