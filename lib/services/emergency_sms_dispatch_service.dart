@@ -18,9 +18,11 @@ import 'sms_dispatch_outcome.dart';
 /// - **India**: Prefer [INDIA_SOS_DISPATCH_URL], optional [INDIA_ERSS_API_URL] (MHA/CDAC enrollment).
 ///
 /// **Dispatch success contract (v1 India / Android):**
-/// - **(A)** Primary automated bar: SMS to **112** via relay or device ([SmsDispatchOutcome.pathConfirmedSent]).
-/// - **(B)** Parallel **108** dial / USSD — handled by [IndiaOfflineDispatch]; dialer only, **not** dispatch proof.
-/// - **(C)** [INDIA_ERSS_API_URL] is optional telemetry until a gateway is contracted; **never** gates outcome.
+/// - **(A)** Primary automated bar: [SmsDispatchOutcome.primaryAutomatedBarMet] — **device** [SEND_SMS] to
+///   112/911, *or* (iOS only) HTTP relay 2xx, *or* (Android) HTTP relay 2xx only if
+///   `SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true` (audited backend that actually delivers to 112).
+/// - **(B)** Parallel **108** dial / USSD — [IndiaOfflineDispatch]; dialer only, not dispatch proof.
+/// - **(C)** [INDIA_ERSS_API_URL] is optional telemetry; never gates outcome.
 class EmergencySmsDispatchService {
   EmergencySmsDispatchService._();
 
@@ -30,6 +32,36 @@ class EmergencySmsDispatchService {
     return '112';
   }
 
+  /// Android: direct device send always satisfies (A). HTTP relay 2xx only if
+  /// [SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH] is set. iOS: HTTP relay 2xx is the only automated path.
+  static bool _primaryAutomatedBar({
+    required bool deviceDirectSmsSent,
+    required bool backendRelayAccepted,
+  }) {
+    if (deviceDirectSmsSent) return true;
+    if (!backendRelayAccepted) return false;
+    if (defaultTargetPlatform == TargetPlatform.iOS) return true;
+    final v = dotenv.env['SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH']?.trim().toLowerCase();
+    return v == 'true' || v == '1' || v == 'yes';
+  }
+
+  static SmsDispatchOutcome _outcome({
+    required bool device,
+    required bool relay,
+    required String detail,
+  }) {
+    final primary = _primaryAutomatedBar(
+      deviceDirectSmsSent: device,
+      backendRelayAccepted: relay,
+    );
+    return SmsDispatchOutcome(
+      deviceDirectSmsSent: device,
+      backendRelayAccepted: relay,
+      primaryAutomatedBarMet: primary,
+      detail: detail,
+    );
+  }
+
   /// Single entry for mesh / orchestrator SOS path.
   static Future<SmsDispatchOutcome> dispatch({
     required String payload,
@@ -37,8 +69,9 @@ class EmergencySmsDispatchService {
     double? lng,
   }) async {
     if (kIsWeb) {
-      return const SmsDispatchOutcome(
-        pathConfirmedSent: false,
+      return _outcome(
+        device: false,
+        relay: false,
         detail: 'SMS unavailable on web — install the app on a phone.',
       );
     }
@@ -56,11 +89,8 @@ class EmergencySmsDispatchService {
     }
 
     // India — server-side relay when enrolled (MoHA / state ERSS integrations).
-    // Use locale **or** GPS so tourists / wrong SIM region still hit the India relay when in-country.
     final inIndiaContext = cc == 'IN' ||
-        (lat != null &&
-            lng != null &&
-            coordinatesRoughlyInIndia(lat, lng));
+        (lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng));
     if (inIndiaContext) {
       final indiaUrl = dotenv.env['INDIA_SOS_DISPATCH_URL']?.trim();
       final route = lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng)
@@ -88,10 +118,12 @@ class EmergencySmsDispatchService {
         );
         if (ok) {
           appLog.d('SMS India relay accepted');
-          return SmsDispatchOutcome(
-            pathConfirmedSent: true,
-            detail: 'Emergency relay accepted request (112 route) ✓',
-          );
+          final primary = _primaryAutomatedBar(deviceDirectSmsSent: false, backendRelayAccepted: true);
+          final detail = primary
+              ? 'India relay accepted ✓'
+              : 'India relay HTTP 2xx ✓ — primary (A) bar needs device SEND_SMS or '
+                  'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true (audited SMS to 112).';
+          return _outcome(device: false, relay: true, detail: detail);
         }
         appLog.w('SMS India relay failed; falling back to device SMS where allowed');
       }
@@ -106,8 +138,9 @@ class EmergencySmsDispatchService {
     }
 
     appLog.w('Unsupported platform for automatic SMS');
-    return const SmsDispatchOutcome(
-      pathConfirmedSent: false,
+    return _outcome(
+      device: false,
+      relay: false,
       detail: 'Automatic SMS not available on this device.',
     );
   }
@@ -126,8 +159,9 @@ class EmergencySmsDispatchService {
         'iOS: set SMS_DISPATCH_URL for server-side SMS (Twilio/Edge). '
         'Cannot auto-send SMS on iOS.',
       );
-      return SmsDispatchOutcome(
-        pathConfirmedSent: false,
+      return _outcome(
+        device: false,
+        relay: false,
         detail:
             'SMS did not send automatically on iOS — configure SMS_DISPATCH_URL or dial $emergencyNum manually.',
       );
@@ -146,14 +180,16 @@ class EmergencySmsDispatchService {
     );
     if (ok) {
       appLog.d('iOS backend SMS dispatch sent');
-      return SmsDispatchOutcome(
-        pathConfirmedSent: true,
+      return _outcome(
+        device: false,
+        relay: true,
         detail: 'SMS relay reported sent to $emergencyNum ✓',
       );
     }
     appLog.w('iOS backend SMS dispatch failed');
-    return const SmsDispatchOutcome(
-      pathConfirmedSent: false,
+    return _outcome(
+      device: false,
+      relay: false,
       detail: 'SMS relay request failed — check network and SMS_DISPATCH_URL.',
     );
   }
@@ -183,10 +219,12 @@ class EmergencySmsDispatchService {
       );
       if (relayOk) {
         appLog.d('Android SMS dispatched via SMS_DISPATCH_URL (Twilio/backend)');
-        return SmsDispatchOutcome(
-          pathConfirmedSent: true,
-          detail: 'SMS dispatched via backend to $number ✓',
-        );
+        final primary = _primaryAutomatedBar(deviceDirectSmsSent: false, backendRelayAccepted: true);
+        final detail = primary
+            ? 'SMS dispatched via backend to $number ✓'
+            : 'Backend relay HTTP 2xx ✓ — primary bar needs device SEND_SMS or '
+                'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true.';
+        return _outcome(device: false, relay: true, detail: detail);
       }
       appLog.w(
         'Android backend SMS failed or unavailable — falling back to direct SEND_SMS',
@@ -196,14 +234,16 @@ class EmergencySmsDispatchService {
     final directOk = await sendSmsDirectAndroid(number, body);
     if (directOk) {
       appLog.d('Android direct SMS send');
-      return SmsDispatchOutcome(
-        pathConfirmedSent: true,
+      return _outcome(
+        device: true,
+        relay: false,
         detail: 'Sent SMS to $number ✓',
       );
     }
 
-    return SmsDispatchOutcome(
-      pathConfirmedSent: false,
+    return _outcome(
+      device: false,
+      relay: false,
       detail:
           'SMS not sent — configure SMS_DISPATCH_URL + SMS_DISPATCH_ANON_KEY or allow SEND_SMS.',
     );

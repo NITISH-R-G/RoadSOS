@@ -259,7 +259,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     );
     _patchDispatchChannel(
       'sms',
-      smsOutcome.pathConfirmedSent
+      smsOutcome.primaryAutomatedBarMet
           ? DispatchChannelLifecycle.success
           : DispatchChannelLifecycle.failed,
       smsOutcome.detail,
@@ -298,10 +298,10 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ),
     );
 
-    // ERSS HTTP ingest / ambulance dial happen inside SMS/mesh helpers but do not add flags here —
-    // success for this session is mesh beacon, SMS outcome, or on-device persistence only.
+    // ERSS HTTP ingest / ambulance dial happen inside SMS/mesh helpers but do not add flags here.
+    // SMS channel uses [SmsDispatchOutcome.primaryAutomatedBarMet] (device SEND_SMS or audited relay).
     final anyConfirmed =
-        meshOk || smsOutcome.pathConfirmedSent || persisted.ok;
+        meshOk || smsOutcome.primaryAutomatedBarMet || persisted.ok;
 
     state = state.copyWith(phase: SOSPhase.active);
     await _persistState(true);
