@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../logging/app_log.dart';
 import 'package:geolocator/geolocator.dart';
 
 /// Represents a single GPS fix with metadata about its source and quality.
@@ -87,7 +88,7 @@ class LocationService {
 
   /// Fallback: return last good cached position or a degraded unknown fix.
   LocationFix _fallbackLocation(String reason) {
-    print('[LocationService] Fallback triggered: $reason');
+    appLog.d('Location fallback triggered: $reason');
 
     if (_lastGoodFix != null) {
       return LocationFix(

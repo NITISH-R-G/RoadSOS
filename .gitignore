@@ -43,5 +43,5 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-.env
-/assets/.env
+# Local developer secrets (root only; committed template is assets/.env)
+/.env

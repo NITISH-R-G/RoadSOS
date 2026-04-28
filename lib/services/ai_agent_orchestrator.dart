@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../logging/app_log.dart';
 import 'emergency_orchestrator.dart';
 import 'mesh_network_service.dart';
 
@@ -57,19 +58,19 @@ class AiAgentOrchestrator extends StateNotifier<AsyncValue<void>> {
   }
 
   Future<void> _dispatchToCloud(String id, Map sitrep) async {
-    print('[Agent] 🌐 Dispatching SITREP to Global Cloud Infrastructure...');
+    appLog.d('Dispatching SITREP to cloud');
   }
 
   Future<void> _dispatchToMesh(Map sitrep) async {
-    print('[Agent] 📶 Broadcasting SITREP via Encrypted Peer-to-Peer Mesh...');
+    appLog.d('Broadcasting SITREP via mesh');
   }
 
   Future<void> _dispatchToSms(Map sitrep) async {
-    print('[Agent] 📟 Fallback: Sending compressed SITREP via 2G/SMS Gateway...');
+    appLog.d('SMS SITREP fallback');
   }
 
   Future<void> _notifyNextOfKin(Map sitrep) async {
-    print('[Agent] 👨‍👩‍👧‍👦 Notifying Emergency Contacts with secure location link...');
+    appLog.d('Notifying emergency contacts');
   }
 }
 

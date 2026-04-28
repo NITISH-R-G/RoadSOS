@@ -15,7 +15,18 @@ flutter pub get
 # 3. Handle .env
 if (!(Test-Path .env)) {
     Write-Host "📄 Creating .env template..." -ForegroundColor Yellow
-    "SUPABASE_URL=YOUR_URL`nSUPABASE_ANON_KEY=YOUR_KEY`nPOWERSYNC_URL=YOUR_URL" | Out-File .env
+    @(
+        "SUPABASE_URL=YOUR_URL",
+        "SUPABASE_ANON_KEY=YOUR_KEY",
+        "POWERSYNC_URL=YOUR_URL",
+        "",
+        "# Optional SOS SMS relay (India ERSS/iSafe-style partner HTTPS endpoint)",
+        "INDIA_SOS_DISPATCH_URL=",
+        "# iOS Twilio/backend — POST JSON { body, payload, latitude, longitude, destination }",
+        "SMS_DISPATCH_URL=",
+        "# Bearer for dispatch Edge Function if required",
+        "SMS_DISPATCH_ANON_KEY="
+    ) -join "`n" | Out-File .env
     Write-Host "⚠️ Created .env. Please fill in your Supabase/PowerSync credentials." -ForegroundColor Red
 }
 
