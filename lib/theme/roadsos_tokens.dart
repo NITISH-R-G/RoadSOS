@@ -8,7 +8,7 @@ abstract final class RoadSosColors {
   static const Color amber = Color(0xFFF59220);
 
   /// UI chrome borders / dividers on abyss.
-  static Color borderSubtle = Colors.white.withValues(alpha: 0.07);
+  static Color get borderSubtle => Colors.white.withValues(alpha: 0.07);
 }
 
 /// Layout constants (8px grid, minimum touch targets).

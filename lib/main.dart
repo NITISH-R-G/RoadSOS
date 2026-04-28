@@ -37,9 +37,6 @@ void main() async {
   runApp(const ProviderScope(child: RoadSOSApp()));
 }
 
-/// Global SOS state — toggled by hardware trigger or UI button.
-final isSOSActiveProvider = StateProvider<bool>((ref) => false);
-
 class RoadSOSApp extends ConsumerStatefulWidget {
   const RoadSOSApp({super.key});
 
@@ -71,16 +68,17 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp> {
     ref.watch(hardwareTriggerServiceProvider);
     ref.watch(iosLifecycleServiceProvider);
     ref.watch(meshListeningBootstrapProvider);
-    final isSOSActive = ref.watch(isSOSActiveProvider);
+    final sosPhase =
+        ref.watch(emergencyOrchestratorProvider.select((s) => s.phase));
     final appLocale = ref.watch(appLocaleProvider);
 
     ref.listen(appLocaleProvider, (_, next) {
       ref.read(voiceAssistantServiceProvider).syncLocale(next);
     });
 
-    final theme = isSOSActive
-        ? RoadSosTheme.buildEmergencyDark()
-        : RoadSosTheme.buildOperationalDark();
+    final theme = sosPhase == SOSPhase.idle
+        ? RoadSosTheme.buildOperationalDark()
+        : RoadSosTheme.buildEmergencyDark();
 
     return MaterialApp(
       navigatorKey: appNavigatorKey,

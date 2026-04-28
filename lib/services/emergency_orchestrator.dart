@@ -23,6 +23,7 @@ import 'app_locale_controller.dart';
 import 'facility_query_service.dart';
 import 'facility_sync_service.dart';
 import 'sos_activity_log_service.dart';
+import 'family_tracking_service.dart';
 
 final facilityQueryServiceProvider = Provider<FacilityQueryService>((ref) {
   return FacilityQueryService();
@@ -281,6 +282,22 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       persisted.detail,
     );
 
+    _patchDispatchChannel(
+      'family_link',
+      DispatchChannelLifecycle.inProgress,
+      'Family tracking link…',
+    );
+    final family = await _ref.read(familyTrackingServiceProvider).registerAndNotifyContact(
+          incidentId: state.incidentId ?? '',
+          location: location,
+          triage: triage,
+        );
+    _patchDispatchChannel(
+      'family_link',
+      family.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+      family.detail,
+    );
+
     await SosActivityLogService.instance.append(
       SosActivityRecord(
         incidentId: state.incidentId ?? '',
@@ -300,8 +317,10 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     // ERSS HTTP ingest / ambulance dial happen inside SMS/mesh helpers but do not add flags here.
     // SMS channel uses [SmsDispatchOutcome.primaryAutomatedBarMet] (device SEND_SMS or audited relay).
-    final anyConfirmed =
-        meshOk || smsOutcome.primaryAutomatedBarMet || persisted.ok;
+    final anyConfirmed = meshOk ||
+        smsOutcome.primaryAutomatedBarMet ||
+        persisted.ok ||
+        family.ok;
 
     state = state.copyWith(phase: SOSPhase.active);
     await _persistState(true);
@@ -331,6 +350,12 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       DispatchChannelRow(
         id: 'cloud',
         title: 'On-device log / cloud',
+        lifecycle: DispatchChannelLifecycle.pending,
+        detail: 'Waiting…',
+      ),
+      const DispatchChannelRow(
+        id: 'family_link',
+        title: 'Family tracking link',
         lifecycle: DispatchChannelLifecycle.pending,
         detail: 'Waiting…',
       ),

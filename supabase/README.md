@@ -6,6 +6,17 @@ Apply with Supabase CLI (`supabase db push`) or paste into the SQL editor in ord
 
 1. `20260428120000_emergency_facilities.sql` — OSM-derived facility rows replicated to the app via PowerSync.
 2. `20260428120001_incident_retention.sql` — retention columns + purge function for `reported_incidents`.
+3. `20260428210000_incident_live_links.sql` — ephemeral tokens for **family tracking URLs** (insert/update RLS for authenticated users; **no public SELECT** — reads only via Edge Function).
+
+## Edge Function: `family-track`
+
+Public browser viewer for contacts: **GET** `/functions/v1/family-track?t=<token>` returns HTML (default) or JSON (`Accept: application/json`). Uses the service role server-side.
+
+1. Deploy with JWT verification disabled for anonymous browser access:
+   `supabase functions deploy family-track --no-verify-jwt`
+2. Required secrets on the project: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (auto-injected on hosted Supabase).
+
+The Flutter app inserts rows into `incident_live_links` after SOS when the user has a Supabase session.
 
 ## Edge Function: `sync-osm-facilities`
 
