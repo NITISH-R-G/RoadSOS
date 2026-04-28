@@ -41,10 +41,22 @@ Future<void> bootstrapSupabaseAuth() async {
 
 /// Ensures a JWT exists for PowerSync ([fetchCredentials]). Call after [Supabase.initialize].
 Future<void> ensureSupabaseAnonymousSession(SupabaseClient client) async {
-  if (client.auth.currentSession != null) {
-    return;
-  }
   try {
+    final existing = client.auth.currentSession;
+    if (existing != null && !existing.isExpired) {
+      return;
+    }
+    if (existing != null) {
+      try {
+        await client.auth.refreshSession();
+        final after = client.auth.currentSession;
+        if (after != null && !after.isExpired) {
+          return;
+        }
+      } catch (e, st) {
+        appLog.w('Session refresh failed; re-authenticating', e, st);
+      }
+    }
     await client.auth.signInAnonymously();
   } catch (e, st) {
     appLog.w('Anonymous auth failed', e, st);

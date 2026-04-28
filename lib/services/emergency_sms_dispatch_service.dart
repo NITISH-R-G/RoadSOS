@@ -12,8 +12,9 @@ import 'sms_direct_send.dart';
 import 'sms_dispatch_outcome.dart';
 
 /// Routes SOS SMS by platform and region:
-/// - **Android**: [SEND_SMS] + Telephony API direct send when no India relay succeeds.
-/// - **iOS**: POST to [SMS_DISPATCH_URL] (e.g. Twilio via Supabase Edge Function).
+/// - **Android**: When [SMS_DISPATCH_URL] + [SMS_DISPATCH_ANON_KEY] are set, POST there first (Twilio / Edge).
+///   Otherwise (or after relay failure) uses [SEND_SMS] + Telephony API.
+/// - **iOS**: POST to [SMS_DISPATCH_URL] only (cannot send SMS directly).
 /// - **India**: Prefer [INDIA_SOS_DISPATCH_URL], optional [INDIA_ERSS_API_URL] (MHA/CDAC enrollment).
 class EmergencySmsDispatchService {
   EmergencySmsDispatchService._();
@@ -49,7 +50,12 @@ class EmergencySmsDispatchService {
     }
 
     // India — server-side relay when enrolled (MoHA / state ERSS integrations).
-    if (cc == 'IN') {
+    // Use locale **or** GPS so tourists / wrong SIM region still hit the India relay when in-country.
+    final inIndiaContext = cc == 'IN' ||
+        (lat != null &&
+            lng != null &&
+            coordinatesRoughlyInIndia(lat, lng));
+    if (inIndiaContext) {
       final indiaUrl = dotenv.env['INDIA_SOS_DISPATCH_URL']?.trim();
       final route = lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng)
           ? resolveIndiaEmergencyRoute(lat, lng)
