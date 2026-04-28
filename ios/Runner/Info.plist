@@ -68,6 +68,8 @@
 	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>RoadSOS uses your location for emergency alerts, map position, and vehicle speed checks for crash detection.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>RoadSOS needs background location so SOS and crash detection can keep reporting your position if you leave the app or lock the screen during an emergency.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

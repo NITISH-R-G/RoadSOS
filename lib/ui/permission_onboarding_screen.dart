@@ -33,6 +33,15 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       request: _PermRequest.location,
     ),
     _PermPage(
+      title: 'Location in the background',
+      body:
+          'Crises do not wait for the app to stay open. “Always” / background location lets RoadSOS '
+          'keep a fix if you switch apps or the screen locks during an SOS. Denying this still allows '
+          'SOS while the app is visible — but updates may pause when RoadSOS is not in the foreground.',
+      actionLabel: 'Allow background location',
+      request: _PermRequest.locationAlways,
+    ),
+    _PermPage(
       title: 'Bluetooth',
       body:
           'Bluetooth broadcasts a short SOS beacon to nearby RoadSOS users when towers fail. '
@@ -87,6 +96,9 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     switch (r) {
       case _PermRequest.location:
         await Permission.locationWhenInUse.request();
+        break;
+      case _PermRequest.locationAlways:
+        await Permission.locationAlways.request();
         break;
       case _PermRequest.bluetooth:
         if (Platform.isAndroid) {
@@ -231,7 +243,15 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   }
 }
 
-enum _PermRequest { location, bluetooth, sms, microphone, notification, battery }
+enum _PermRequest {
+  location,
+  locationAlways,
+  bluetooth,
+  sms,
+  microphone,
+  notification,
+  battery,
+}
 
 class _PermPage {
   final String title;
