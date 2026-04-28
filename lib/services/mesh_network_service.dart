@@ -14,6 +14,20 @@ import 'india_offline_dispatch.dart';
 import 'scene_security_service.dart';
 import '../logging/app_log.dart';
 
+class MeshPacket {
+  final String senderId;
+  final String payload;
+  final int? rssi;
+  final DateTime receivedAt;
+
+  MeshPacket({
+    required this.senderId,
+    required this.payload,
+    required this.receivedAt,
+    this.rssi,
+  });
+}
+
 /// MeshNetworkService: BLE manufacturer-data SOS beacons + scan for peers.
 ///
 /// Scanning runs while the app process is alive (dashboard opens [MeshRadar] too).
@@ -24,7 +38,11 @@ class MeshNetworkService {
   final _discoveredBeaconsController = StreamController<List<String>>.broadcast();
   Stream<List<String>> get discoveredBeacons => _discoveredBeaconsController.stream;
 
+  final _packetsController = StreamController<MeshPacket>.broadcast();
+  Stream<MeshPacket> get packets => _packetsController.stream;
+
   final List<String> _currentBeacons = [];
+  final Map<String, DateTime> _recentPacketDedup = <String, DateTime>{};
 
   StreamSubscription<List<ScanResult>>? _scanSubscription;
   Timer? _rescanTimer;
@@ -40,6 +58,9 @@ class MeshNetworkService {
     _listeningStarted = false;
     if (!_discoveredBeaconsController.isClosed) {
       _discoveredBeaconsController.close();
+    }
+    if (!_packetsController.isClosed) {
+      _packetsController.close();
     }
     if (!kIsWeb) {
       unawaited(_peripheral.stop());
@@ -67,11 +88,17 @@ class MeshNetworkService {
 
       var updated = false;
       for (final r in results) {
-        if (r.advertisementData.manufacturerData.containsKey(0xFFFF)) {
+        final md = r.advertisementData.manufacturerData[0xFFFF];
+        if (md != null) {
           final id = r.device.remoteId.str;
           if (!_currentBeacons.contains(id)) {
             _currentBeacons.add(id);
             updated = true;
+          }
+
+          final payload = _tryDecodeUtf8(md);
+          if (payload != null && payload.isNotEmpty && !_packetsController.isClosed) {
+            _emitPacketDedup(id, payload, r.rssi);
           }
         }
       }
@@ -92,8 +119,43 @@ class MeshNetworkService {
     try {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 30));
     } catch (e) {
-      appLog.w('Failed to start BLE scan', e);
+      appLog.w('Failed to start BLE scan', error: e);
     }
+  }
+
+  String? _tryDecodeUtf8(Uint8List data) {
+    try {
+      // Manufacturer data is app-controlled; use permissive decoding (allow malformed).
+      return utf8.decode(data, allowMalformed: true).trim();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _emitPacketDedup(String senderId, String payload, int? rssi) {
+    final now = DateTime.now();
+
+    // Prevent hot loops where scanResults repeats the same advertisement constantly.
+    // Key is stable for identical payload per sender.
+    final key = '$senderId|$payload';
+    final last = _recentPacketDedup[key];
+    if (last != null && now.difference(last).inMilliseconds < 2500) return;
+    _recentPacketDedup[key] = now;
+
+    // Prune occasionally.
+    if (_recentPacketDedup.length > 300) {
+      final cutoff = now.subtract(const Duration(minutes: 2));
+      _recentPacketDedup.removeWhere((_, t) => t.isBefore(cutoff));
+    }
+
+    _packetsController.add(
+      MeshPacket(
+        senderId: senderId,
+        payload: payload,
+        rssi: rssi,
+        receivedAt: now,
+      ),
+    );
   }
 
   /// Broadcasts an encrypted SOS payload over BLE. Returns whether advertising actually started.
@@ -125,7 +187,7 @@ class MeshNetworkService {
       appLog.d('BLE mesh advertising SOS payload');
       return true;
     } catch (e, st) {
-      appLog.w('BLE advertising failed', e, st);
+      appLog.w('BLE advertising failed', error: e, stackTrace: st);
       return false;
     }
   }
@@ -175,11 +237,11 @@ final meshNetworkServiceProvider = Provider.autoDispose<MeshNetworkService>((ref
 });
 
 /// Starts mesh RX once so peers are discovered even before opening Mesh Radar.
-final meshListeningBootstrapProvider = FutureProvider<void>((ref) async {
+final meshListeningBootstrapProvider = FutureProvider.autoDispose<void>((ref) async {
   final mesh = ref.watch(meshNetworkServiceProvider);
   try {
     await mesh.ensureListeningForPeers();
   } catch (e, st) {
-    appLog.w('Mesh listening bootstrap failed', e, st);
+    appLog.w('Mesh listening bootstrap failed', error: e, stackTrace: st);
   }
 });

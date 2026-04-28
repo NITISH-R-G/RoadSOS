@@ -114,7 +114,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                   // Incident Markers
                   ..._buildIncidentMarkers(),
                   
-                  // Facility Markers (Placeholder for now)
+                  // Facility Markers (seeded + cloud-synced via PowerSync when configured)
                   ..._buildFacilityMarkers(),
                 ],
               ),

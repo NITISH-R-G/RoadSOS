@@ -1,5 +1,9 @@
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/app_locale_controller.dart';
 import '../services/roadsos_assistant_service.dart';
@@ -14,7 +18,9 @@ class IncidentReportingScreen extends ConsumerStatefulWidget {
 class _IncidentReportingScreenState
     extends ConsumerState<IncidentReportingScreen> {
   final TextEditingController _voiceInputController = TextEditingController();
-  bool _isCapturingImage = false;
+  final _picker = ImagePicker();
+  Uint8List? _sceneImageBytes;
+  bool _sceneCaptureBusy = false;
 
   @override
   Widget build(BuildContext context) {
@@ -78,21 +84,38 @@ class _IncidentReportingScreenState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.camera_enhance, size: 40, color: Colors.white.withValues(alpha: 0.3)),
+            if (_sceneImageBytes == null)
+              Icon(Icons.camera_enhance, size: 40, color: Colors.white.withValues(alpha: 0.3))
+            else
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.memory(
+                  _sceneImageBytes!,
+                  width: 120,
+                  height: 80,
+                  fit: BoxFit.cover,
+                ),
+              ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => setState(() => _isCapturingImage = !_isCapturingImage),
-              icon: Icon(_isCapturingImage ? Icons.check : Icons.add_a_photo),
-              label: Text(_isCapturingImage ? 'SCENE CAPTURED' : 'CAPTURE SCENE'),
+              onPressed: _sceneCaptureBusy ? null : _captureScene,
+              icon: _sceneCaptureBusy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(_sceneImageBytes != null ? Icons.check : Icons.add_a_photo),
+              label: Text(_sceneImageBytes != null ? 'SCENE ATTACHED' : 'CAPTURE / ATTACH PHOTO'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _isCapturingImage ? Colors.green : Colors.blue,
+                backgroundColor: _sceneImageBytes != null ? Colors.green : Colors.blue,
               ),
             ),
-            if (_isCapturingImage)
+            if (_sceneImageBytes != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  l10n.incidentAssistantAnalyzed,
+                  'Photo attached to this report (not auto-analyzed in this build).',
                   style: const TextStyle(
                       color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
@@ -102,6 +125,61 @@ class _IncidentReportingScreenState
         ),
       ),
     );
+  }
+
+  Future<void> _captureScene() async {
+    setState(() => _sceneCaptureBusy = true);
+    try {
+      final file = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 72,
+        maxWidth: 1600,
+      );
+      if (file == null) {
+        if (!mounted) return;
+        setState(() => _sceneCaptureBusy = false);
+        return;
+      }
+
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _sceneImageBytes = bytes;
+        _sceneCaptureBusy = false;
+      });
+    } catch (_) {
+      // On emulators/devices without camera, fall back to gallery.
+      try {
+        final file = await _picker.pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 72,
+          maxWidth: 1600,
+        );
+        if (file == null) {
+          if (!mounted) return;
+          setState(() => _sceneCaptureBusy = false);
+          return;
+        }
+        final bytes = await file.readAsBytes();
+        if (!mounted) return;
+        setState(() {
+          _sceneImageBytes = bytes;
+          _sceneCaptureBusy = false;
+        });
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _sceneCaptureBusy = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not capture a scene photo on this device.')),
+        );
+      }
+    }
+
+    if (!kIsWeb && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Scene photo attached.')),
+      );
+    }
   }
 
   Widget _buildVoiceInterviewCard(AssistantState assistant, AppLocalizations l10n) {

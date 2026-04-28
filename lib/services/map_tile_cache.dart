@@ -17,6 +17,10 @@ Future<void> initializeFmtcMapCache() async {
     fmtcMapCacheReady = true;
   } catch (e, st) {
     fmtcMapCacheReady = false;
-    appLog.w('FMTC map cache init failed — using network tiles only', e, st);
+    appLog.w(
+      'FMTC map cache init failed — using network tiles only',
+      error: e,
+      stackTrace: st,
+    );
   }
 }

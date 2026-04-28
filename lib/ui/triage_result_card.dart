@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 
 import '../services/ai_triage_service.dart';
 import 'ai_explainability_view.dart';

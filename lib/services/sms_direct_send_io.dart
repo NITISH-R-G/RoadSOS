@@ -17,7 +17,7 @@ Future<bool> sendSmsDirectAndroidImpl(String number, String message) async {
     await telephony.sendSms(to: number, message: message);
     return true;
   } catch (e, st) {
-    appLog.w('Telephony send failed', e, st);
+    appLog.w('Telephony send failed', error: e, stackTrace: st);
     return false;
   }
 }

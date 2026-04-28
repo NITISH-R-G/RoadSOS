@@ -80,7 +80,7 @@ class FamilyTrackingService {
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
     } catch (e, st) {
-      appLog.w('incident_live_links insert failed', e, st);
+      appLog.w('incident_live_links insert failed', error: e, stackTrace: st);
       return (
         ok: false,
         detail:
@@ -102,7 +102,8 @@ class FamilyTrackingService {
       );
     }
 
-    final name = profile.fullName.trim.isEmpty ? 'RoadSOS user' : profile.fullName.trim();
+    final trimmedName = profile.fullName.trim();
+    final name = trimmedName.isEmpty ? 'RoadSOS user' : trimmedName;
     final body =
         'RoadSOS: $name needs help. Live location & triage: $trackingUrl '
         '(updates if app online; expires 24h).';

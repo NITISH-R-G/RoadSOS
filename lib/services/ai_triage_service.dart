@@ -133,7 +133,11 @@ class AiTriageService {
       );
       return cloud;
     } catch (e, st) {
-      appLog.d('[AiTriageService] Gemini failed; using classifier', e, st);
+      appLog.d(
+        '[AiTriageService] Gemini failed; using classifier',
+        error: e,
+        stackTrace: st,
+      );
       _lastError = 'Cloud triage failed: $e';
       return heuristic;
     }
@@ -144,6 +148,7 @@ class AiTriageService {
     required bool isBystander,
     String transcript = '',
     String languageCode = 'en',
+    int severityHint = 3,
   }) async {
     final locationString = '${location.latitude},${location.longitude}';
     final ctx = transcript.trim().isEmpty
@@ -155,7 +160,7 @@ class AiTriageService {
     return triageEmergency(
       audioTranscript: ctx,
       locationString: locationString,
-      accelerometerSeverityHint: 4,
+      accelerometerSeverityHint: severityHint.clamp(1, 5),
       languageCode: languageCode,
     );
   }
@@ -221,14 +226,7 @@ User situation text: "$transcript"
 
     final decoded = jsonDecode(response.body) as Map<String, dynamic>;
     final text = _extractGeminiText(decoded);
-    final jsonStart = text.indexOf('{');
-    final jsonEnd = text.lastIndexOf('}');
-    if (jsonStart < 0 || jsonEnd <= jsonStart) {
-      throw FormatException('No JSON in Gemini reply: $text');
-    }
-
-    final payload =
-        jsonDecode(text.substring(jsonStart, jsonEnd + 1)) as Map<String, dynamic>;
+    final payload = _extractFirstJsonObject(text);
 
     final severity =
         (payload['severity_level'] as num?)?.toInt().clamp(1, 5) ?? 4;
@@ -237,7 +235,10 @@ User situation text: "$transcript"
     if (rawServices is List) {
       for (final e in rawServices) {
         if (e is String && e.isNotEmpty) {
-          services.add(e.toLowerCase().replaceAll(' ', '_'));
+          final normalized = e.toLowerCase().replaceAll(' ', '_');
+          if (_allowedServices.contains(normalized)) {
+            services.add(normalized);
+          }
         }
       }
     }
@@ -279,6 +280,51 @@ User situation text: "$transcript"
       if (p is Map && p['text'] is String) buf.write(p['text'] as String);
     }
     return buf.toString();
+  }
+
+  static const Set<String> _allowedServices = {
+    'ambulance',
+    'police',
+    'fire_department',
+    'rescue',
+    'towing',
+    'puncture_shop',
+    'showroom',
+  };
+
+  Map<String, dynamic> _extractFirstJsonObject(String raw) {
+    var text = raw.trim();
+    if (text.startsWith('```')) {
+      // Strip fenced blocks like ```json ... ```
+      final firstNl = text.indexOf('\n');
+      if (firstNl >= 0) {
+        text = text.substring(firstNl + 1);
+      }
+      final fenceEnd = text.lastIndexOf('```');
+      if (fenceEnd >= 0) {
+        text = text.substring(0, fenceEnd);
+      }
+      text = text.trim();
+    }
+
+    // Fast path: payload is exactly a JSON object.
+    if (text.startsWith('{') && text.endsWith('}')) {
+      final decoded = jsonDecode(text);
+      if (decoded is Map<String, dynamic>) return decoded;
+    }
+
+    final jsonStart = text.indexOf('{');
+    final jsonEnd = text.lastIndexOf('}');
+    if (jsonStart < 0 || jsonEnd <= jsonStart) {
+      throw FormatException('No JSON object in Gemini reply');
+    }
+
+    final snippet = text.substring(jsonStart, jsonEnd + 1);
+    final decoded = jsonDecode(snippet);
+    if (decoded is! Map<String, dynamic>) {
+      throw FormatException('Gemini JSON was not an object');
+    }
+    return decoded;
   }
 
   Future<TriageResult> _buildClassifierTriage({

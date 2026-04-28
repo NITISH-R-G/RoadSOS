@@ -40,8 +40,8 @@ class NearbySosPushService {
     } catch (e, st) {
       appLog.w(
         'Firebase not configured (add google-services.json / FirebaseOptions). Nearby SOS push disabled.',
-        e,
-        st,
+        error: e,
+        stackTrace: st,
       );
       return;
     }
@@ -84,7 +84,7 @@ class NearbySosPushService {
         await messaging.unsubscribeFromTopic(_topic);
       }
     } catch (e, st) {
-      appLog.w('FCM topic subscribe/unsubscribe failed', e, st);
+      appLog.w('FCM topic subscribe/unsubscribe failed', error: e, stackTrace: st);
     }
   }
 
@@ -92,7 +92,7 @@ class NearbySosPushService {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
     await _local.initialize(
-      const InitializationSettings(android: android, iOS: ios),
+      settings: const InitializationSettings(android: android, iOS: ios),
       onDidReceiveNotificationResponse: _onTapLocalNotification,
     );
 
@@ -123,10 +123,10 @@ class NearbySosPushService {
         'Someone nearby may need help.';
 
     await _local.show(
-      message.hashCode,
-      title,
-      body,
-      const NotificationDetails(
+      id: message.hashCode,
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'roadsos_nearby_sos',
           'Nearby SOS',

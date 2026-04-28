@@ -71,7 +71,11 @@ Output one line starting with "Brief:"''',
       state = state.copyWith(isThinking: false, lastResponse: result);
       return result;
     } catch (e, st) {
-      appLog.d('RoadSosAssistant synthesizeTelemetry fallback', e, st);
+      appLog.d(
+        'RoadSosAssistant synthesizeTelemetry fallback',
+        error: e,
+        stackTrace: st,
+      );
       state = state.copyWith(isThinking: false, lastResponse: fallback);
       return fallback;
     }
@@ -111,7 +115,11 @@ Max 25 words. No preamble.''',
       );
       return next;
     } catch (e, st) {
-      appLog.d('RoadSosAssistant witness question fallback', e, st);
+      appLog.d(
+        'RoadSosAssistant witness question fallback',
+        error: e,
+        stackTrace: st,
+      );
       state = state.copyWith(
         isThinking: false,
         lastResponse: fallback,

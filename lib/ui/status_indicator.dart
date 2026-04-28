@@ -42,8 +42,6 @@ class StatusIndicatorBar extends ConsumerWidget {
     switch (state) {
       case ModelState.ready:
         return Colors.green;
-      case ModelState.loading:
-        return Colors.amber;
       case ModelState.degraded:
         return Colors.orange;
       case ModelState.error:

@@ -1,55 +1,67 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class VitalSigns {
   final int bpm;
   final int respiratoryRate;
   final double bloodOxygen;
-  final String aiInterpretation;
+  final String interpretation;
+  final DateTime recordedAtUtc;
+  final String source; // 'manual'
 
   VitalSigns({
     required this.bpm,
     required this.respiratoryRate,
     required this.bloodOxygen,
-    required this.aiInterpretation,
+    required this.interpretation,
+    required this.recordedAtUtc,
+    this.source = 'manual',
   });
 }
 
 class VitalSignsService extends StateNotifier<VitalSigns?> {
-  Timer? _scanTimer;
-
   VitalSignsService() : super(null);
 
-  void startScan() {
-    _scanTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      final bpm = 70 + (timer.tick % 40); // Simulate fluctuating heart rate
-      final rr = 12 + (timer.tick % 8);
-      
-      String interpretation = "STABLE";
-      if (bpm > 100) {
-        interpretation = 'TACHYCARDIA DETECTED — monitor for shock.';
-      }
-      if (rr > 20) {
-        interpretation = 'RAPID BREATHING — assist ventilation if trained.';
-      }
-
-      state = VitalSigns(
-        bpm: bpm,
-        respiratoryRate: rr,
-        bloodOxygen: 98.0 - (timer.tick % 3),
-        aiInterpretation: interpretation,
-      );
-    });
+  void setManual({
+    required int bpm,
+    required int respiratoryRate,
+    required double bloodOxygen,
+  }) {
+    final interpretation = _interpret(
+      bpm: bpm,
+      respiratoryRate: respiratoryRate,
+      bloodOxygen: bloodOxygen,
+    );
+    state = VitalSigns(
+      bpm: bpm,
+      respiratoryRate: respiratoryRate,
+      bloodOxygen: bloodOxygen,
+      interpretation: interpretation,
+      recordedAtUtc: DateTime.now().toUtc(),
+      source: 'manual',
+    );
   }
 
-  void stopScan() {
-    _scanTimer?.cancel();
-    state = null;
+  void clear() => state = null;
+
+  String _interpret({
+    required int bpm,
+    required int respiratoryRate,
+    required double bloodOxygen,
+  }) {
+    final flags = <String>[];
+    if (bpm >= 120) flags.add('very fast pulse');
+    if (bpm <= 45) flags.add('very slow pulse');
+    if (respiratoryRate >= 24) flags.add('rapid breathing');
+    if (respiratoryRate <= 8) flags.add('slow breathing');
+    if (bloodOxygen < 90) flags.add('low oxygen');
+    if (bloodOxygen >= 90 && bloodOxygen < 94) flags.add('borderline oxygen');
+
+    if (flags.isEmpty) return 'No immediate red flags detected from entered vitals.';
+    return 'Flagged: ${flags.join(', ')}. If unconscious, breathing abnormal, or bleeding heavily: treat as high severity and call EMS.';
   }
 
   @override
   void dispose() {
-    _scanTimer?.cancel();
     super.dispose();
   }
 }

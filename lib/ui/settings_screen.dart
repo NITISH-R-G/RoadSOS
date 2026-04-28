@@ -1,7 +1,8 @@
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/app_locale_controller.dart';
 import '../services/hardware_trigger_service.dart';
@@ -170,7 +171,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             l10n.meshConfigSubtitle,
             onTap: () {},
           ),
-          if (Platform.isAndroid) ...[
+          if (!kIsWeb && Platform.isAndroid) ...[
             const SizedBox(height: 8),
             _tile(
               context,

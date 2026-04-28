@@ -300,7 +300,7 @@ class EmergencySmsDispatchService {
         appLog.w('India ERSS ingest HTTP ${response.statusCode}');
       }
     } catch (e, st) {
-      appLog.w('India ERSS ingest failed', e, st);
+      appLog.w('India ERSS ingest failed', error: e, stackTrace: st);
     }
   }
 
@@ -318,7 +318,7 @@ class EmergencySmsDispatchService {
           .timeout(const Duration(seconds: 15));
       return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e, st) {
-      appLog.w('SMS HTTP dispatch error', e, st);
+      appLog.w('SMS HTTP dispatch error', error: e, stackTrace: st);
       return false;
     }
   }

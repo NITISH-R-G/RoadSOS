@@ -16,18 +16,20 @@ class MeshMessage {
 
 class MeshChatService extends StateNotifier<List<MeshMessage>> {
   final MeshNetworkService _meshService;
+  StreamSubscription<MeshPacket>? _packetSub;
   
   MeshChatService(this._meshService) : super([]) {
     _listenForIncomingMessages();
   }
 
   void _listenForIncomingMessages() {
-    _meshService.discoveredBeacons.listen((beacons) {
-      // In a real app, we would parse the manufacturerData for message packets
-      // For the demo, we simulate receiving a coordination message when a node is near
-      if (beacons.contains('SIM_NODE_77') && state.isEmpty) {
-        receiveMessage('SIM_NODE_77', 'I am at the scene. I have a first-aid kit.');
-      }
+    _packetSub?.cancel();
+    _packetSub = _meshService.packets.listen((packet) {
+      final p = packet.payload;
+      if (!p.startsWith('MSG:')) return;
+      final content = p.substring(4).trim();
+      if (content.isEmpty) return;
+      receiveMessage(packet.senderId, content);
     });
   }
 
@@ -50,6 +52,12 @@ class MeshChatService extends StateNotifier<List<MeshMessage>> {
       timestamp: DateTime.now(),
     );
     state = [...state, newMessage];
+  }
+
+  @override
+  void dispose() {
+    _packetSub?.cancel();
+    super.dispose();
   }
 }
 

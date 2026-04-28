@@ -1,12 +1,13 @@
 import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../logging/app_log.dart';
 import '../services/ai_triage_service.dart';
 import '../services/emergency_orchestrator.dart';
+import '../services/proactive_monitor_service.dart';
 import 'crisis_companion_overlay.dart';
 import 'dispatch_status_panel.dart';
 import 'first_aid_screen.dart';
@@ -142,7 +143,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         ctx,
                         Icons.directions_walk,
                         l10n.actionSafeWalk,
-                        () => appLog.d('Safe Walk feature coming soon'),
+                        () => _showSafeWalkDialog(ctx),
                       ),
                       _sheetAction(
                         ctx,
@@ -419,6 +420,97 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showSafeWalkDialog(BuildContext context) async {
+    final destCtrl = TextEditingController();
+    var minutes = 30;
+    final monitor = ref.read(proactiveMonitorProvider);
+
+    if (monitor.isMonitoring) {
+      // Quick stop
+      ref.read(proactiveMonitorProvider.notifier).endSafeWalk();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Safe Walk ended.')),
+        );
+      }
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              bottom: MediaQuery.paddingOf(ctx).bottom + 16,
+              top: 8,
+            ),
+            child: StatefulBuilder(
+              builder: (ctx, setModal) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Safe Walk',
+                      style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: destCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Destination (optional)',
+                        hintText: 'e.g., Home, Hostel, Station',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Text('ETA minutes:'),
+                        const SizedBox(width: 12),
+                        DropdownButton<int>(
+                          value: minutes,
+                          items: const [10, 15, 20, 30, 45, 60]
+                              .map((m) => DropdownMenuItem(value: m, child: Text('$m')))
+                              .toList(),
+                          onChanged: (v) => setModal(() => minutes = v ?? 30),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'If you miss check-in after ETA, RoadSOS will escalate to SOS after a 60s grace window.',
+                      style: Theme.of(ctx).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          ref.read(proactiveMonitorProvider.notifier).startSafeWalk(
+                                destCtrl.text.trim().isEmpty ? 'your destination' : destCtrl.text.trim(),
+                                Duration(minutes: minutes),
+                              );
+                          Navigator.pop(ctx);
+                        },
+                        icon: const Icon(Icons.directions_walk),
+                        label: const Text('START SAFE WALK'),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         );
       },
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'database/app_database.dart';
 import 'logging/app_log.dart';
 import 'services/sms_permission_bootstrap.dart';
@@ -27,7 +27,11 @@ void main() async {
   try {
     await dotenv.load(fileName: 'assets/.env');
   } catch (e, st) {
-    appLog.w('Could not load assets/.env — check flutter assets', e, st);
+    appLog.w(
+      'Could not load assets/.env — check flutter assets',
+      error: e,
+      stackTrace: st,
+    );
   }
   await bootstrapSupabaseAuth();
   await initializeDatabase();

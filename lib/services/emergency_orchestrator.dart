@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -413,7 +413,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         detail: 'Saved on device — sign in anonymously (Supabase) for cloud backup.',
       );
     } catch (e, st) {
-      appLog.w('Local incident insert failed', e, st);
+      appLog.w('Local incident insert failed', error: e, stackTrace: st);
       return (
         ok: false,
         detail: 'Could not save incident log on device.',
