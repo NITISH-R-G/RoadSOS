@@ -39,6 +39,10 @@ We follow a **Modular Feature-First** architecture. See [docs/ARCH.md](docs/ARCH
    flutter run
    ```
 
+## Honest product status (April 2026)
+
+RoadSOS targets a differentiated problem—offline-capable emergency relay with structured triage—but **consumer-scale distribution and life-safety operational maturity are not yet delivered**. For a competitive teardown, gap list (corrected against this repo), and suggested priorities, see **[docs/DEEP_INTELLIGENCE_REPORT_2026-04.md](docs/DEEP_INTELLIGENCE_REPORT_2026-04.md)**.
+
 ## 🤝 Contributing
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for our trunk-based development workflow and coding standards.
 
