@@ -8,6 +8,16 @@ import '../services/roadsos_assistant_service.dart';
 class CrisisCompanionOverlay extends ConsumerWidget {
   const CrisisCompanionOverlay({super.key});
 
+  String _honestStatusLine(SOSState state) {
+    if (state.phase == SOSPhase.triaging) return 'TRIAGING…';
+    if (state.dispatchChannels.isEmpty) return 'DISPATCH IN PROGRESS…';
+    final anyOk = state.dispatchChannels.any((c) => c.lifecycle == DispatchChannelLifecycle.success);
+    if (anyOk) return 'DISPATCH CONFIRMED (CHECK CHANNELS)';
+    final anyInProgress =
+        state.dispatchChannels.any((c) => c.lifecycle == DispatchChannelLifecycle.inProgress);
+    return anyInProgress ? 'DISPATCH IN PROGRESS…' : 'NO DISPATCH CONFIRMATION';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sosState = ref.watch(emergencyOrchestratorProvider);
@@ -106,11 +116,12 @@ class CrisisCompanionOverlay extends ConsumerWidget {
   }
 
   Widget _buildControlBar(WidgetRef ref, AppLocalizations l10n, String lang) {
+    final sosState = ref.watch(emergencyOrchestratorProvider);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          l10n.helpEtaPlaceholder,
+          _honestStatusLine(sosState),
           style: TextStyle(
             color: Colors.green.withValues(alpha: 0.7),
             fontWeight: FontWeight.bold,
@@ -119,9 +130,12 @@ class CrisisCompanionOverlay extends ConsumerWidget {
         ),
         Row(
           children: [
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.mic_none, color: Colors.white54),
+            Tooltip(
+              message: 'Voice capture is not available in this build.',
+              child: IconButton(
+                onPressed: null,
+                icon: const Icon(Icons.mic_none, color: Colors.white54),
+              ),
             ),
             const SizedBox(width: 8),
             ElevatedButton(

@@ -23,9 +23,12 @@ function htmlPage(row: Record<string, unknown>): string {
   const lng = Number(row["longitude"]);
   const summary = String(row["triage_summary"] ?? "").slice(0, 800);
   const sev = row["severity"] != null ? String(row["severity"]) : "—";
+  const template =
+    Deno.env.get("MAPS_LINK_TEMPLATE") ??
+    "https://www.google.com/maps?q={lat},{lng}";
   const maps = !Number.isFinite(lat) || !Number.isFinite(lng)
     ? "#"
-    : `https://www.google.com/maps?q=${lat},${lng}`;
+    : template.replaceAll("{lat}", String(lat)).replaceAll("{lng}", String(lng));
   const safeSummary = summary
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -50,7 +53,7 @@ function htmlPage(row: Record<string, unknown>): string {
   <h1>ROADSOS · TRACKING</h1>
   <p class="mono">Severity: ${sev}</p>
   <p class="mono">Lat ${Number.isFinite(lat) ? lat.toFixed(5) : "—"} · Lng ${Number.isFinite(lng) ? lng.toFixed(5) : "—"}</p>
-  <p><a href="${maps}" rel="noopener">Open in Google Maps</a></p>
+  <p><a href="${maps}" rel="noopener">Open location</a></p>
   <div class="card"><p>${safeSummary || "Triage summary updating…"}</p></div>
   <p style="opacity:.7;font-size:.85rem;margin-top:24px">Page auto-refreshes every 10s. Link expires per incident policy.</p>
 </body>

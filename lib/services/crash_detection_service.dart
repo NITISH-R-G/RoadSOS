@@ -7,6 +7,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 
 import '../logging/app_log.dart';
 import 'emergency_orchestrator.dart';
+import 'crash_tuning.dart';
 
 class _SpeedSample {
   final DateTime t;
@@ -40,30 +41,7 @@ class CrashDetectionService {
   DateTime? _lastConfirmedSos;
   DateTime? _lastSpikeHandled;
 
-  /// User acceleration magnitude (m/s²) needed to begin a crash evaluation.
-  static const double impactThresholdMs2 = 52.0;
-
-  /// Typical airbag / severe crash impulse is higher, but GPS gating removes most non-crash spikes.
-  static const double minApproachSpeedKmh = 20.0;
-
-  /// Treat as “stopped” given GPS noise and update rate limits.
-  static const double stoppedSpeedKmh = 8.0;
-
-  /// Minimum drop in speed (before → after impact window) to accept a crash profile.
-  static const double suddenDecelDeltaKmh = 18.0;
-
-  /// How long we retain speed samples for crash correlation.
-  static const int speedHistoryHorizonMs = 4000;
-
-  /// Device must look “still” after the impact (standard deviation of |a_user| below this).
-  static const double stillnessStdDevMaxMs2 = 2.8;
-
-  static const int stillnessSampleWindowMs = 1600;
-
-  static const int preImpactLookbackMs = 2000;
-  static const int postImpactWindowMs = 1200;
-  static const int interSpikeDebounceMs = 900;
-  static const int sosCooldownMs = 45000;
+  // All thresholds are env-configurable via [CrashTuning].
 
   void startMonitoring() {
     stopMonitoring();
@@ -117,17 +95,20 @@ class CrashDetectionService {
     final kmh = (ms * 3.6).clamp(0.0, 320.0);
     final now = DateTime.now();
     _speedHistory.add(_SpeedSample(now, kmh));
-    final cutoff = now.subtract(const Duration(milliseconds: speedHistoryHorizonMs));
+    final cutoff = now.subtract(
+      Duration(milliseconds: CrashTuning.speedHistoryHorizonMs),
+    );
     _speedHistory.removeWhere((s) => s.t.isBefore(cutoff));
   }
 
   void _onAccelerometer(UserAccelerometerEvent event) {
     final mag = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
-    if (mag <= impactThresholdMs2) return;
+    if (mag <= CrashTuning.impactThresholdMs2) return;
 
     final now = DateTime.now();
     if (_lastSpikeHandled != null &&
-        now.difference(_lastSpikeHandled!).inMilliseconds < interSpikeDebounceMs) {
+        now.difference(_lastSpikeHandled!).inMilliseconds <
+            CrashTuning.interSpikeDebounceMs) {
       return;
     }
     _lastSpikeHandled = now;
@@ -142,17 +123,23 @@ class CrashDetectionService {
     _evaluationInFlight = true;
 
     try {
-      await Future.delayed(Duration(milliseconds: postImpactWindowMs + 150));
+      await Future.delayed(
+        Duration(milliseconds: CrashTuning.postImpactWindowMs + 150),
+      );
 
       if (!_gpsSpeedUsable || _speedHistory.length < 2) {
         appLog.d('Dismissed: insufficient GPS speed context');
         return;
       }
 
-      final beforeStart = impactTime.subtract(const Duration(milliseconds: preImpactLookbackMs));
+      final beforeStart = impactTime.subtract(
+        Duration(milliseconds: CrashTuning.preImpactLookbackMs),
+      );
       final beforeEnd = impactTime;
       final afterStart = impactTime;
-      final afterEnd = impactTime.add(const Duration(milliseconds: postImpactWindowMs));
+      final afterEnd = impactTime.add(
+        Duration(milliseconds: CrashTuning.postImpactWindowMs),
+      );
 
       var maxBefore = 0.0;
       for (final s in _speedHistory) {
@@ -171,9 +158,10 @@ class CrashDetectionService {
         minAfter = _speedHistory.last.kmh;
       }
 
-      final approach = maxBefore >= minApproachSpeedKmh;
-      final halted = minAfter <= stoppedSpeedKmh;
-      final sharpDrop = (maxBefore - minAfter) >= suddenDecelDeltaKmh;
+      final approach = maxBefore >= CrashTuning.minApproachSpeedKmh;
+      final halted = minAfter <= CrashTuning.stoppedSpeedKmh;
+      final sharpDrop =
+          (maxBefore - minAfter) >= CrashTuning.suddenDecelDeltaKmh;
 
       if (!approach || !(halted || sharpDrop)) {
         appLog.d(
@@ -193,7 +181,8 @@ class CrashDetectionService {
 
       final now = DateTime.now();
       if (_lastConfirmedSos != null &&
-          now.difference(_lastConfirmedSos!).inMilliseconds < sosCooldownMs) {
+          now.difference(_lastConfirmedSos!).inMilliseconds <
+              CrashTuning.sosCooldownMs) {
         return;
       }
       _lastConfirmedSos = now;
@@ -211,7 +200,9 @@ class CrashDetectionService {
       magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z));
     });
 
-    await Future<void>.delayed(const Duration(milliseconds: stillnessSampleWindowMs));
+    await Future<void>.delayed(
+      Duration(milliseconds: CrashTuning.stillnessSampleWindowMs),
+    );
     await sub.cancel();
 
     if (magnitudes.length < 6) return false;
@@ -228,7 +219,7 @@ class CrashDetectionService {
       'Stillness σ=${std.toStringAsFixed(2)} m/s² (${magnitudes.length} samples)',
     );
 
-    return std <= stillnessStdDevMaxMs2;
+    return std <= CrashTuning.stillnessStdDevMaxMs2;
   }
 
   void stopMonitoring() {

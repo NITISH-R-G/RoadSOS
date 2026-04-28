@@ -27,6 +27,9 @@ class EmergencySmsDispatchService {
   EmergencySmsDispatchService._();
 
   static String emergencyNumberForLocale() {
+    final override = dotenv.env['EMERGENCY_NUMBER_OVERRIDE']?.trim();
+    if (override != null && override.isNotEmpty) return override;
+
     final countryCode = CountryCodes.getDeviceLocale()?.countryCode;
     // Minimal routing table (expand as needed). Defaults to 112 where supported.
     // Note: this is not a substitute for server-side reverse-geocode routing when online.
@@ -70,6 +73,8 @@ class EmergencySmsDispatchService {
     if (countryCode != null && uses112.contains(countryCode)) return '112';
     // Fallback: 112 is widely supported internationally (GSM); for unsupported countries,
     // the user must still be able to dial manually from UI.
+    final fallback = dotenv.env['EMERGENCY_NUMBER_FALLBACK']?.trim();
+    if (fallback != null && fallback.isNotEmpty) return fallback;
     return '112';
   }
 
@@ -134,6 +139,9 @@ class EmergencySmsDispatchService {
         (lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng));
     if (inIndiaContext) {
       final indiaUrl = dotenv.env['INDIA_SOS_DISPATCH_URL']?.trim();
+      final indiaDest = (dotenv.env['INDIA_EMERGENCY_NUMBER']?.trim().isNotEmpty ?? false)
+          ? dotenv.env['INDIA_EMERGENCY_NUMBER']!.trim()
+          : '112';
       final route = lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng)
           ? resolveIndiaEmergencyRoute(lat, lng)
           : null;
@@ -141,9 +149,9 @@ class EmergencySmsDispatchService {
         final ok = await _postJson(
           indiaUrl,
           <String, dynamic>{
-            'channel': 'india_112',
+            'channel': 'india_emergency_sms',
             'country_code': 'IN',
-            'destination': '112',
+            'destination': indiaDest,
             'payload': payload,
             'latitude': lat,
             'longitude': lng,
