@@ -167,7 +167,7 @@ class MeshNetworkService {
     String finalPayload = payload;
     if (lat != null && lng != null) {
       final key = SceneSecurityService.generateSceneKey(lat, lng);
-      finalPayload = SceneSecurityService.encryptPayload(payload, key);
+      finalPayload = await SceneSecurityService.encryptPayload(payload, key);
       appLog.d('Mesh payload encrypted for scene privacy');
     }
 

@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-import 'gemini_http.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../logging/app_log.dart';
 
@@ -34,10 +32,23 @@ class AssistantState {
 class RoadSosAssistantService extends StateNotifier<AssistantState> {
   RoadSosAssistantService() : super(AssistantState());
 
-  String? _apiKey() {
+  Future<String?> _edgeGenerate(String prompt) async {
     try {
-      return dotenv.env['GEMINI_API_KEY']?.trim();
-    } catch (_) {
+      final client = Supabase.instance.client;
+      final res = await client.functions.invoke(
+        'gemini-generate',
+        body: <String, dynamic>{
+          'prompt': prompt,
+          'model': 'gemini-2.0-flash',
+          'temperature': 0.3,
+          'max_output_tokens': 256,
+        },
+      );
+      final data = res.data;
+      if (data is Map && data['text'] is String) return (data['text'] as String).trim();
+      return null;
+    } catch (e, st) {
+      appLog.d('Assistant edge generate failed', error: e, stackTrace: st);
       return null;
     }
   }
@@ -53,21 +64,18 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
     final fallback =
         _offlineTelemetryBrief(maxG, speedDelta, impactVector, languageCode);
 
-    final key = _apiKey();
-    if (kIsWeb || key == null || key.isEmpty) {
+    if (kIsWeb) {
       state = state.copyWith(isThinking: false, lastResponse: fallback);
       return fallback;
     }
 
     try {
-      final text = await generateGeminiFlashText(
-        apiKey: key,
-        prompt:
-            '''Emergency telemetry brief for paramedics (max 20 words). Language: $languageCode (match if not English).
+      final text = await _edgeGenerate(
+        '''Emergency telemetry brief for paramedics (max 20 words). Language: $languageCode (match if not English).
 Max G=$maxG, Delta speed=$speedDelta km/h, Impact=$impactVector.
 Output one line starting with "Brief:"''',
       );
-      final result = text.trim().isEmpty ? fallback : text.trim();
+      final result = (text == null || text.trim().isEmpty) ? fallback : text.trim();
       state = state.copyWith(isThinking: false, lastResponse: result);
       return result;
     } catch (e, st) {
@@ -89,8 +97,7 @@ Output one line starting with "Brief:"''',
 
     final fallback = _offlineWitnessQuestion(previousAnswer, languageCode);
 
-    final key = _apiKey();
-    if (kIsWeb || key == null || key.isEmpty) {
+    if (kIsWeb) {
       state = state.copyWith(
         isThinking: false,
         lastResponse: fallback,
@@ -100,14 +107,12 @@ Output one line starting with "Brief:"''',
     }
 
     try {
-      final text = await generateGeminiFlashText(
-        apiKey: key,
-        prompt:
-            '''Witness said (may be Hindi/regional mixed with English): "$previousAnswer"
+      final text = await _edgeGenerate(
+        '''Witness said (may be Hindi/regional mixed with English): "$previousAnswer"
 Ask ONE short safety-critical follow-up question for a road crash. Language: $languageCode.
 Max 25 words. No preamble.''',
       );
-      final next = text.trim().isEmpty ? fallback : text.trim();
+      final next = (text == null || text.trim().isEmpty) ? fallback : text.trim();
       state = state.copyWith(
         isThinking: false,
         lastResponse: next,

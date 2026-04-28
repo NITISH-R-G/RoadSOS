@@ -1,15 +1,15 @@
-import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../logging/app_log.dart';
 import 'first_aid_store.dart';
 import 'offline_triage_classifier.dart';
+import 'tier2_local_triage_model.dart';
 
 /// How triage was produced.
-enum TriageSource { geminiCloud, offlineClassifier, webDemo }
+enum TriageSource { geminiEdge, localTier2, offlineClassifier, webDemo }
 
 /// Model / pipeline state for UI.
 enum ModelState { unloaded, ready, error, degraded }
@@ -56,49 +56,27 @@ class TriageResult {
 /// AI Triage: **cloud-first** (Gemini Flash) with **tiny offline classifier** fallback.
 /// Full on-device LLM / GGUF is intentionally not used (OOM on low-RAM devices).
 class AiTriageService {
-  static const _geminiModel = 'gemini-2.0-flash';
-  static const _generateContentPath =
-      'v1beta/models/$_geminiModel:generateContent';
-
   static const _classifier = OfflineTriageClassifier();
+  static const _tier2 = Tier2LocalTriageModel();
 
   ModelState _state = ModelState.unloaded;
   String? _lastError;
-  String? _apiKey;
 
   ModelState get state => _state;
   String? get lastError => _lastError;
 
-  String? _envKey() {
-    try {
-      return dotenv.env['GEMINI_API_KEY']?.trim();
-    } catch (_) {
-      return null;
-    }
-  }
-
   /// Resolves API key. No multi-GB model assets on disk.
   Future<void> initializeModel() async {
     _state = ModelState.unloaded;
-    _apiKey = _envKey();
     if (kIsWeb) {
       _state = ModelState.degraded;
-      _lastError =
-          'Web: triage uses offline classifier only (no API key in client).';
+      _lastError = 'Web: triage uses offline tiers only.';
       return;
     }
-    if (_apiKey == null || _apiKey!.isEmpty) {
-      _state = ModelState.degraded;
-      _lastError =
-          'GEMINI_API_KEY missing in .env — using offline classifier only.';
-      appLog.d('[AiTriageService] $_lastError');
-      return;
-    }
+    // Cloud triage is server-side via Supabase Edge Function. Client never holds GEMINI keys.
     _state = ModelState.ready;
     _lastError = null;
-    appLog.d(
-      '[AiTriageService] Cloud triage (Gemini Flash). Offline: keyword classifier.',
-    );
+    appLog.d('[AiTriageService] Triage ready. Cloud: Edge Function. Offline: tier2 + classifier.');
   }
 
   Future<TriageResult> triageEmergency({
@@ -107,7 +85,8 @@ class AiTriageService {
     required int accelerometerSeverityHint,
     String languageCode = 'en',
   }) async {
-    final heuristic = await _buildClassifierTriage(
+    // Tier 3 (always available): simple keyword classifier.
+    final tier3 = await _buildClassifierTriage(
       transcript: audioTranscript,
       location: locationString,
       severityHint: accelerometerSeverityHint,
@@ -115,31 +94,35 @@ class AiTriageService {
     );
 
     if (kIsWeb) {
-      return heuristic;
+      return tier3;
     }
 
-    final key = _apiKey ?? _envKey();
-    if (key == null || key.isEmpty) {
-      return heuristic;
-    }
+    // Tier 2 (always available): slightly richer local model.
+    final tier2 = await _buildTier2Triage(
+      transcript: audioTranscript,
+      location: locationString,
+      severityHint: accelerometerSeverityHint,
+      languageCode: languageCode,
+    );
 
     try {
-      final cloud = await _callGeminiFlash(
-        apiKey: key,
+      // Tier 1: server-side Gemini via Supabase Edge Function (strict timeout).
+      final cloud = await _callGeminiViaEdge(
         transcript: audioTranscript,
         location: locationString,
         severityHint: accelerometerSeverityHint,
         languageCode: languageCode,
-      );
+      ).timeout(const Duration(seconds: 3));
       return cloud;
     } catch (e, st) {
       appLog.d(
-        '[AiTriageService] Gemini failed; using classifier',
+        '[AiTriageService] Cloud triage unavailable; falling back to local tiers',
         error: e,
         stackTrace: st,
       );
-      _lastError = 'Cloud triage failed: $e';
-      return heuristic;
+      _lastError = 'Cloud triage unavailable: $e';
+      // Prefer tier2 over tier3.
+      return tier2;
     }
   }
 
@@ -165,122 +148,76 @@ class AiTriageService {
     );
   }
 
-  Future<TriageResult> _callGeminiFlash({
-    required String apiKey,
+  Future<TriageResult> _callGeminiViaEdge({
     required String transcript,
     required String location,
     required int severityHint,
     required String languageCode,
   }) async {
-    final langHint = languageCode == 'en'
-        ? 'User may write in English or Indian languages (Hindi, Tamil, etc.).'
-        : 'Prefer reasoning and JSON field values appropriate for language code: $languageCode. User text may be mixed English and regional languages.';
-
-    final prompt =
-        '''You are an emergency triage assistant for RoadSOS (road crashes).
-Respond with ONLY valid JSON (no markdown), one object:
-{
-  "severity_level": <int 1-5>,
-  "required_services": <array of strings from: ambulance, police, fire_department, rescue, towing, puncture_shop, showroom>,
-  "first_aid_focus": <short string for first-aid lookup>,
-  "thinking_summary": <one sentence reasoning>
-}
-Rules: If unsure, bias toward higher severity. GPS: $location. Accelerometer hint (1-5): $severityHint.
-$langHint
-User situation text: "$transcript"
-''';
-
-    final uri = Uri.https(
-      'generativelanguage.googleapis.com',
-      _generateContentPath,
-      {'key': apiKey},
-    );
-
-    final body = jsonEncode({
-      'contents': [
-        {
-          'parts': [
-            {'text': prompt},
-          ],
+    // Cloud triage is done server-side. Requires Supabase SDK init + anon session.
+    try {
+      final client = Supabase.instance.client;
+      final res = await client.functions.invoke(
+        'triage-gemini',
+        body: <String, dynamic>{
+          'schema': 'roadsos.triage.v1',
+          'transcript': transcript,
+          'location': location,
+          'severity_hint': severityHint,
+          'language_code': languageCode,
         },
-      ],
-      'generationConfig': {
-        'temperature': 0.2,
-        'maxOutputTokens': 512,
-      },
-    });
-
-    final response = await http
-        .post(
-          uri,
-          headers: {'Content-Type': 'application/json'},
-          body: body,
-        )
-        .timeout(const Duration(seconds: 25));
-
-    if (response.statusCode != 200) {
-      throw Exception(
-        'Gemini HTTP ${response.statusCode}: ${response.body}',
       );
-    }
 
-    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-    final text = _extractGeminiText(decoded);
-    final payload = _extractFirstJsonObject(text);
+      // Supabase functions invoke returns dynamic JSON in [data].
+      final data = res.data;
+      if (data is! Map) {
+        throw Exception('Edge triage returned non-object');
+      }
+      final payload = Map<String, dynamic>.from(data as Map);
 
-    final severity =
-        (payload['severity_level'] as num?)?.toInt().clamp(1, 5) ?? 4;
-    final rawServices = payload['required_services'];
-    final services = <String>{'ambulance'};
-    if (rawServices is List) {
-      for (final e in rawServices) {
-        if (e is String && e.isNotEmpty) {
-          final normalized = e.toLowerCase().replaceAll(' ', '_');
-          if (_allowedServices.contains(normalized)) {
-            services.add(normalized);
+      final severity =
+          (payload['severity_level'] as num?)?.toInt().clamp(1, 5) ?? 4;
+      final rawServices = payload['required_services'];
+      final services = <String>{'ambulance'};
+      if (rawServices is List) {
+        for (final e in rawServices) {
+          if (e is String && e.isNotEmpty) {
+            final normalized = e.toLowerCase().replaceAll(' ', '_');
+            if (_allowedServices.contains(normalized)) {
+              services.add(normalized);
+            }
           }
         }
       }
+      final fromCloud = (payload['first_aid_focus'] as String?)?.trim();
+      final fallbackQuery = _classifier
+          .classify(transcript: transcript, severityHint: severityHint)
+          .firstAidQuery;
+      final aidQuery =
+          (fromCloud != null && fromCloud.isNotEmpty) ? fromCloud : fallbackQuery;
+      final thinking = payload['thinking_summary'] as String?;
+
+      final verifiedAdvice = await FirstAidStore.getVerifiedAdvice(aidQuery);
+
+      return TriageResult(
+        functionCall: 'trigger_sos',
+        location: location,
+        severityLevel: severity,
+        requiredServices: services.toList(),
+        firstAidQuery: verifiedAdvice,
+        compressedPayload:
+            _buildCompressedPayload(location, severity, services.toList()),
+        thinkingTrace: thinking,
+        isDegradedMode: false,
+        source: TriageSource.geminiEdge,
+      );
+    } catch (e, st) {
+      appLog.w('Edge triage failed', error: e, stackTrace: st);
+      rethrow;
     }
-    final fromCloud = (payload['first_aid_focus'] as String?)?.trim();
-    final fallbackQuery = _classifier
-        .classify(transcript: transcript, severityHint: severityHint)
-        .firstAidQuery;
-    final aidQuery =
-        (fromCloud != null && fromCloud.isNotEmpty) ? fromCloud : fallbackQuery;
-    final thinking = payload['thinking_summary'] as String?;
-
-    final verifiedAdvice = await FirstAidStore.getVerifiedAdvice(aidQuery);
-
-    return TriageResult(
-      functionCall: 'trigger_sos',
-      location: location,
-      severityLevel: severity,
-      requiredServices: services.toList(),
-      firstAidQuery: verifiedAdvice,
-      compressedPayload:
-          _buildCompressedPayload(location, severity, services.toList()),
-      thinkingTrace: thinking,
-      isDegradedMode: false,
-      source: TriageSource.geminiCloud,
-    );
   }
 
-  String _extractGeminiText(Map<String, dynamic> decoded) {
-    final candidates = decoded['candidates'];
-    if (candidates is! List || candidates.isEmpty) return '';
-    final first = candidates.first;
-    if (first is! Map) return '';
-    final content = first['content'];
-    if (content is! Map) return '';
-    final parts = content['parts'];
-    if (parts is! List) return '';
-    final buf = StringBuffer();
-    for (final p in parts) {
-      if (p is Map && p['text'] is String) buf.write(p['text'] as String);
-    }
-    return buf.toString();
-  }
+  // Note: direct Gemini HTTP parsing remains in [gemini_http.dart] for non-triage flows.
 
   static const Set<String> _allowedServices = {
     'ambulance',
@@ -292,40 +229,7 @@ User situation text: "$transcript"
     'showroom',
   };
 
-  Map<String, dynamic> _extractFirstJsonObject(String raw) {
-    var text = raw.trim();
-    if (text.startsWith('```')) {
-      // Strip fenced blocks like ```json ... ```
-      final firstNl = text.indexOf('\n');
-      if (firstNl >= 0) {
-        text = text.substring(firstNl + 1);
-      }
-      final fenceEnd = text.lastIndexOf('```');
-      if (fenceEnd >= 0) {
-        text = text.substring(0, fenceEnd);
-      }
-      text = text.trim();
-    }
-
-    // Fast path: payload is exactly a JSON object.
-    if (text.startsWith('{') && text.endsWith('}')) {
-      final decoded = jsonDecode(text);
-      if (decoded is Map<String, dynamic>) return decoded;
-    }
-
-    final jsonStart = text.indexOf('{');
-    final jsonEnd = text.lastIndexOf('}');
-    if (jsonStart < 0 || jsonEnd <= jsonStart) {
-      throw FormatException('No JSON object in Gemini reply');
-    }
-
-    final snippet = text.substring(jsonStart, jsonEnd + 1);
-    final decoded = jsonDecode(snippet);
-    if (decoded is! Map<String, dynamic>) {
-      throw FormatException('Gemini JSON was not an object');
-    }
-    return decoded;
-  }
+  // JSON extraction is handled server-side for triage; client receives clean JSON payload.
 
   Future<TriageResult> _buildClassifierTriage({
     required String transcript,
@@ -353,6 +257,32 @@ User situation text: "$transcript"
           : 'Offline keyword classifier (no cloud LLM on device).',
       isDegradedMode: true,
       source: TriageSource.offlineClassifier,
+    );
+  }
+
+  Future<TriageResult> _buildTier2Triage({
+    required String transcript,
+    required String location,
+    required int severityHint,
+    required String languageCode,
+  }) async {
+    final c = _tier2.classify(
+      transcript: transcript,
+      severityHint: severityHint,
+    );
+    final verified = await FirstAidStore.getVerifiedAdvice(c.firstAidQuery);
+    return TriageResult(
+      functionCall: 'trigger_sos',
+      location: location,
+      severityLevel: c.severityLevel.clamp(1, 5),
+      requiredServices: c.requiredServices,
+      firstAidQuery: verified,
+      compressedPayload: _buildCompressedPayload(location, c.severityLevel, c.requiredServices),
+      thinkingTrace: languageCode == 'hi'
+          ? 'स्थानीय मॉडल — नेटवर्क उपलब्ध नहीं।'
+          : 'Local tier-2 triage model (offline).',
+      isDegradedMode: true,
+      source: TriageSource.localTier2,
     );
   }
 

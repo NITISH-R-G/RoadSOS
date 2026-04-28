@@ -7,7 +7,7 @@
 
 ## 🚀 Key Features
 - **🚨 1-Tap SOS**: Immediate multi-channel dispatch (Mesh + DB + SMS).
-- **🧠 AI Triage**: Gemini Flash when `GEMINI_API_KEY` is set (copy `assets/env.template` → `assets/.env`); otherwise `OfflineTriageClassifier` (no fake delays).
+- **🧠 AI Triage**: Gemini Flash via **Supabase Edge Function** (server-side secret), with **Tier‑2 local model** + `OfflineTriageClassifier` fallback (no fake delays).
 - **🛰️ Offline-First Maps**: Regional facility syncing for hospitals and trauma centers.
 - **🛡️ Secure Mesh**: 256-bit AES-GCM encrypted BLE broadcasting.
 - **🔋 Background behavior (platform-dependent)**:

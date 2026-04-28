@@ -104,6 +104,7 @@ class EmergencySmsDispatchService {
       deviceDirectSmsSent: device,
       backendRelayAccepted: relay,
       primaryAutomatedBarMet: primary,
+      proofLevel: (device || relay) ? SmsDispatchProofLevel.accepted : SmsDispatchProofLevel.none,
       detail: detail,
     );
   }
@@ -169,7 +170,7 @@ class EmergencySmsDispatchService {
           appLog.d('SMS India relay accepted');
           final primary = _primaryAutomatedBar(deviceDirectSmsSent: false, backendRelayAccepted: true);
           final detail = primary
-              ? 'India relay accepted ✓'
+              ? 'India relay accepted ✓ (request handed off; not delivery-proof)'
               : 'India relay HTTP 2xx ✓ — primary (A) bar needs device SEND_SMS or '
                   'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true (audited SMS to 112).';
           return _outcome(device: false, relay: true, detail: detail);
@@ -232,7 +233,7 @@ class EmergencySmsDispatchService {
       return _outcome(
         device: false,
         relay: true,
-        detail: 'SMS relay reported sent to $emergencyNum ✓',
+        detail: 'SMS relay accepted for $emergencyNum ✓ (request handed off; not delivery-proof)',
       );
     }
     appLog.w('iOS backend SMS dispatch failed');
@@ -270,7 +271,7 @@ class EmergencySmsDispatchService {
         appLog.d('Android SMS dispatched via SMS_DISPATCH_URL (Twilio/backend)');
         final primary = _primaryAutomatedBar(deviceDirectSmsSent: false, backendRelayAccepted: true);
         final detail = primary
-            ? 'SMS dispatched via backend to $number ✓'
+            ? 'Backend relay accepted for $number ✓ (request handed off; not delivery-proof)'
             : 'Backend relay HTTP 2xx ✓ — primary bar needs device SEND_SMS or '
                 'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true.';
         return _outcome(device: false, relay: true, detail: detail);
@@ -286,7 +287,7 @@ class EmergencySmsDispatchService {
       return _outcome(
         device: true,
         relay: false,
-        detail: 'Sent SMS to $number ✓',
+        detail: 'Device SMS request accepted for $number ✓ (carrier delivery not confirmed)',
       );
     }
 
