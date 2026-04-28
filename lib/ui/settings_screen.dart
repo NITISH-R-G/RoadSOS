@@ -245,7 +245,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Text(
         title,
         style: TextStyle(
-          color: Colors.blue.withValues(alpha: ),
+          color: Colors.blue.withValues(alpha: 0.6),
           fontWeight: FontWeight.w900,
           fontSize: 10,
           letterSpacing: 1.5,

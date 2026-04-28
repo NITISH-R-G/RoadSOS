@@ -7,7 +7,7 @@
 
 ## 🚀 Key Features
 - **🚨 1-Tap SOS**: Immediate multi-channel dispatch (Mesh + DB + SMS).
-- **🧠 AI Triage**: Gemini Flash when `GEMINI_API_KEY` is set in `assets/.env`; otherwise deterministic keyword → severity mapping (no fake delays).
+- **🧠 AI Triage**: Gemini Flash when `GEMINI_API_KEY` is set (copy `assets/env.template` → `assets/.env`); otherwise `OfflineTriageClassifier` (no fake delays).
 - **🛰️ Offline-First Maps**: Regional facility syncing for hospitals and trauma centers.
 - **🛡️ Secure Mesh**: 256-bit AES-GCM encrypted BLE broadcasting.
 - **🔋 Background behavior (platform-dependent)**:
@@ -25,7 +25,7 @@ We follow a **Modular Feature-First** architecture. See [docs/ARCH.md](docs/ARCH
 - **Framework**: Flutter (Dart)
 - **Local DB**: PowerSync (SQLite)
 - **Backend**: Supabase
-- **Triage**: Google Gemini API (`gemini-1.5-flash`) + offline heuristics; optional Android **Accessibility** service for lock-screen volume SOS gesture.
+- **Triage**: Google Gemini API (`gemini-2.0-flash`) + offline classifier (`OfflineTriageClassifier`); optional Android **Accessibility** service for lock-screen volume SOS gesture.
 
 ## 🚦 Getting Started
 1. **Prerequisites**: [Flutter SDK](https://docs.flutter.dev/get-started/install)
@@ -33,7 +33,7 @@ We follow a **Modular Feature-First** architecture. See [docs/ARCH.md](docs/ARCH
    ```powershell
    ./scripts/setup.ps1
    ```
-3. **Environment**: Fill in the generated `.env` file.
+3. **Environment**: Copy `assets/env.template` to `assets/.env` and add keys (never commit real secrets).
 4. **Run**:
    ```bash
    flutter run

@@ -45,7 +45,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
           height: 200,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white10),
           ),
@@ -67,9 +67,9 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
                       decoration: BoxDecoration(
                         gradient: SweepGradient(
                           colors: [
-                            Colors.blue.withOpacity(0.0),
-                            Colors.blue.withOpacity(0.3),
-                            Colors.blue.withOpacity(0.0),
+                            Colors.blue.withValues(alpha: 0.0),
+                            Colors.blue.withValues(alpha: 0.3),
+                            Colors.blue.withValues(alpha: 0.0),
                           ],
                           stops: const [0.0, 0.5, 1.0],
                         ),
@@ -97,7 +97,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.5,
-                      color: Colors.blue.withOpacity(0.6),
+                      color: Colors.blue.withValues(alpha: 0.6),
                     ),
                   ),
                   Text(
@@ -124,7 +124,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
       height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
     );
   }

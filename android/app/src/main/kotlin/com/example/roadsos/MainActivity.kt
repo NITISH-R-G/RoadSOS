@@ -1,6 +1,7 @@
 package com.example.roadsos
 
-import android.os.Bundle
+import android.content.Intent
+import android.provider.Settings
 import android.view.KeyEvent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -16,6 +17,28 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+        methodChannel?.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "openAccessibilitySettings" -> {
+                    startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
+        deliverSosFromIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        deliverSosFromIntent(intent)
+    }
+
+    private fun deliverSosFromIntent(intent: Intent?) {
+        if (intent?.getBooleanExtra("hardware_sos", false) == true) {
+            methodChannel?.invokeMethod("triggerSOS", null)
+        }
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
