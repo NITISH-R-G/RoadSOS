@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
+import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart' as ble_adv;
 import 'package:country_codes/country_codes.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -19,7 +19,7 @@ import '../logging/app_log.dart';
 /// Scanning runs while the app process is alive (dashboard opens [MeshRadar] too).
 /// True background BLE on Android requires a foreground service — not bundled here.
 class MeshNetworkService {
-  final FlutterBlePeripheral _peripheral = FlutterBlePeripheral();
+  final ble_adv.FlutterBlePeripheral _peripheral = ble_adv.FlutterBlePeripheral();
 
   final _discoveredBeaconsController = StreamController<List<String>>.broadcast();
   Stream<List<String>> get discoveredBeacons => _discoveredBeaconsController.stream;
@@ -42,8 +42,8 @@ class MeshNetworkService {
       _discoveredBeaconsController.close();
     }
     if (!kIsWeb) {
-      _peripheral.stop();
-      FlutterBluePlus.stopScan();
+      unawaited(_peripheral.stop());
+      unawaited(FlutterBluePlus.stopScan());
     }
   }
 
@@ -115,7 +115,7 @@ class MeshNetworkService {
         appLog.w('BLE peripheral not supported on this device');
         return false;
       }
-      final AdvertiseData advertiseData = AdvertiseData(
+      final ble_adv.AdvertiseData advertiseData = ble_adv.AdvertiseData(
         manufacturerId: 0xFFFF,
         manufacturerData: Uint8List.fromList(utf8.encode(finalPayload)),
         includeDeviceName: false,

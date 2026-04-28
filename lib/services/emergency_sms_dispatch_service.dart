@@ -90,7 +90,7 @@ class EmergencySmsDispatchService {
     }
 
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return _dispatchAndroid(body, emergencyNum);
+      return _dispatchAndroid(cc, payload, lat, lng, body, emergencyNum);
     }
 
     appLog.w('Unsupported platform for automatic SMS');
@@ -146,18 +146,54 @@ class EmergencySmsDispatchService {
     );
   }
 
-  static Future<SmsDispatchOutcome> _dispatchAndroid(String body, String number) async {
-    final ok = await sendSmsDirectAndroid(number, body);
-    if (ok) {
+  /// Prefer [SMS_DISPATCH_URL] (Twilio / Supabase Edge) when configured; fall back to device [SEND_SMS].
+  static Future<SmsDispatchOutcome> _dispatchAndroid(
+    String? cc,
+    String payload,
+    double? lat,
+    double? lng,
+    String body,
+    String number,
+  ) async {
+    final relayUrl = dotenv.env['SMS_DISPATCH_URL']?.trim();
+    if (relayUrl != null && relayUrl.isNotEmpty) {
+      final relayOk = await _postJson(
+        relayUrl,
+        <String, dynamic>{
+          'channel': 'twilio_backend',
+          'destination': number,
+          'country_code': cc,
+          'payload': payload,
+          'latitude': lat,
+          'longitude': lng,
+          'body': body,
+        },
+      );
+      if (relayOk) {
+        appLog.d('Android SMS dispatched via SMS_DISPATCH_URL (Twilio/backend)');
+        return SmsDispatchOutcome(
+          pathConfirmedSent: true,
+          detail: 'SMS dispatched via backend to $number ✓',
+        );
+      }
+      appLog.w(
+        'Android backend SMS failed or unavailable — falling back to direct SEND_SMS',
+      );
+    }
+
+    final directOk = await sendSmsDirectAndroid(number, body);
+    if (directOk) {
       appLog.d('Android direct SMS send');
       return SmsDispatchOutcome(
         pathConfirmedSent: true,
         detail: 'Sent SMS to $number ✓',
       );
     }
+
     return SmsDispatchOutcome(
       pathConfirmedSent: false,
-      detail: 'SMS not sent — allow SMS permission or open the Messages app.',
+      detail:
+          'SMS not sent — configure SMS_DISPATCH_URL + SMS_DISPATCH_ANON_KEY or allow SEND_SMS.',
     );
   }
 
