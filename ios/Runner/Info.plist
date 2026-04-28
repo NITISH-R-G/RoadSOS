@@ -66,5 +66,21 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>RoadSOS uses your location for emergency alerts, map position, and vehicle speed checks for crash detection.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+		<string>remote-notification</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.example.roadsos.bg-refresh</string>
+	</array>
+	<key>NSHealthShareUsageDescription</key>
+	<string>RoadSOS reads Health data you allow (for example Fall Detection synced from Apple Watch) to complement on-device crash sensing. Apple system Crash Detection is not exposed to third-party apps via HealthKit today.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>RoadSOS does not write medical data to Health.</string>
 </dict>
 </plist>
