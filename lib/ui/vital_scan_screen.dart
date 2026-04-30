@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/vital_signs_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class VitalScanScreen extends ConsumerStatefulWidget {
   const VitalScanScreen({super.key});
@@ -99,6 +100,7 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
             _buildVitalsGrid(vitals),
             const SizedBox(height: 14),
             _buildInterpretationCard(vitals),
+            _buildMeasuresCard(vitals),
           ],
           const SizedBox(height: 24),
           Text(
@@ -185,6 +187,67 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMeasuresCard(VitalSigns vitals) {
+    if (vitals.measures.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                  const SizedBox(width: 12),
+                  const Text('Recommended Measures', style: TextStyle(color: Colors.orange, fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...vitals.measures.map((m) => Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('• ', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    Expanded(child: Text(m, style: const TextStyle(color: Colors.white, fontSize: 14))),
+                  ],
+                ),
+              )).toList(),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final uri = Uri(scheme: 'tel', path: '108');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  icon: const Icon(Icons.call),
+                  label: const Text('CALL EMERGENCY (108)'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
