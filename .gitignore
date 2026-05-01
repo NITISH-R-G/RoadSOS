@@ -8,6 +8,15 @@
 .build/
 .buildlog/
 .history
+# Cursor — version shared rules/skills/agents/hooks; ignore local-only junk
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+!.cursor/skills/
+!.cursor/skills/**
+!.cursor/agents/
+!.cursor/agents/**
+!.cursor/hooks.json
 .svn/
 .swiftpm/
 migrate_working_dir/
@@ -43,5 +52,5 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-.env
-.env
+# Local developer secrets (root only; committed template is assets/.env)
+/.env

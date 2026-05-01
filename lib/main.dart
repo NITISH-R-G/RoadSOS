@@ -1,82 +1,140 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dynamic_color/dynamic_color.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'database/app_database.dart';
+import 'services/sms_permission_bootstrap.dart';
+import 'services/first_aid_repository.dart';
 import 'services/hardware_trigger_service.dart';
+import 'services/ios_lifecycle_service.dart';
 import 'services/emergency_orchestrator.dart';
+import 'services/map_tile_cache.dart';
+import 'services/mesh_network_service.dart';
+import 'services/app_locale_controller.dart';
 import 'ui/dashboard.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'ui/consent_screen.dart';
+import 'ui/onboarding_gate.dart';
+import 'services/privacy_consent_service.dart';
+import 'services/nearby_sos_push_service.dart';
+import 'app_navigator.dart';
+import 'theme/roadsos_theme.dart';
+import 'config/runtime_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  await RuntimeConfig.bootstrap();
+  await bootstrapSupabaseAuth();
   await initializeDatabase();
+  await requestSmsPermissionEarlyIfAndroid();
+  await initializeFirstAidRepository();
+  await initializeFmtcMapCache();
   runApp(const ProviderScope(child: RoadSOSApp()));
 }
 
-/// Global SOS state — toggled by hardware trigger or UI button.
-final isSOSActiveProvider = StateProvider<bool>((ref) => false);
-
-class RoadSOSApp extends ConsumerWidget {
+class RoadSOSApp extends ConsumerStatefulWidget {
   const RoadSOSApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Wire hardware trigger service so it listens even when dashboard isn't visible
+  ConsumerState<RoadSOSApp> createState() => _RoadSOSAppState();
+}
+
+class _RoadSOSAppState extends ConsumerState<RoadSOSApp> {
+  bool _privacyReady = false;
+  bool _privacyConsent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    PrivacyConsentService.hasConsent().then((accepted) {
+      if (!mounted) return;
+      setState(() {
+        _privacyConsent = accepted;
+        _privacyReady = true;
+      });
+      if (accepted) {
+        NearbySosPushService.instance.configureAfterConsentIfNeeded();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.watch(hardwareTriggerServiceProvider);
-    final isSOSActive = ref.watch(isSOSActiveProvider);
+    ref.watch(iosLifecycleServiceProvider);
+    ref.watch(meshListeningBootstrapProvider);
+    final sosPhase =
+        ref.watch(emergencyOrchestratorProvider.select((s) => s.phase));
+    final appLocale = ref.watch(appLocaleProvider);
 
-    return DynamicColorBuilder(
-      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        ColorScheme lightScheme;
-        ColorScheme darkScheme;
+    ref.listen(appLocaleProvider, (_, next) {
+      ref.read(voiceAssistantServiceProvider).syncLocale(next);
+    });
 
-        if (isSOSActive) {
-          // Emergency Override Theme — high-contrast red/black for maximum readability
-          lightScheme = const ColorScheme.light(
-            primary: Colors.red,
-            onPrimary: Colors.white,
-            surface: Colors.black87,
-            onSurface: Colors.white,
-            error: Colors.redAccent,
-          );
-          darkScheme = const ColorScheme.dark(
-            primary: Colors.red,
-            onPrimary: Colors.white,
-            surface: Colors.black,
-            onSurface: Colors.white,
-            error: Colors.redAccent,
-          );
-        } else {
-          if (lightDynamic != null && darkDynamic != null) {
-            lightScheme = lightDynamic.harmonized();
-            darkScheme = darkDynamic.harmonized();
-          } else {
-            lightScheme = ColorScheme.fromSeed(seedColor: const Color(0xFF1A73E8));
-            darkScheme = ColorScheme.fromSeed(
-              seedColor: const Color(0xFF1A73E8),
-              brightness: Brightness.dark,
-            );
-          }
-        }
+    final theme = sosPhase == SOSPhase.idle
+        ? RoadSosTheme.buildOperationalDark()
+        : RoadSosTheme.buildEmergencyDark();
 
-        return MaterialApp(
-          title: 'RoadSOS',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            useMaterial3: true,
-            colorScheme: lightScheme,
-            fontFamily: 'Roboto',
-          ),
-          darkTheme: ThemeData(
-            useMaterial3: true,
-            colorScheme: darkScheme,
-            fontFamily: 'Roboto',
-          ),
-          themeMode: ThemeMode.dark,
-          home: const DashboardScreen(),
-        );
-      },
+    return MaterialApp(
+      navigatorKey: appNavigatorKey,
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      debugShowCheckedModeBanner: false,
+      locale: appLocale,
+      supportedLocales: kSupportedAppLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: theme,
+      darkTheme: theme,
+      themeMode: ThemeMode.dark,
+      home: _privacyHome(),
     );
   }
+
+  Widget _privacyHome() {
+    if (!_privacyReady) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (!_privacyConsent) {
+      return ConsentScreen(
+        onAccepted: () {
+          setState(() => _privacyConsent = true);
+          NearbySosPushService.instance.configureAfterConsentIfNeeded();
+        },
+      );
+    }
+    return const OnboardingGate(
+      child: _InitialTtsSync(child: DashboardScreen()),
+    );
+  }
+}
+
+/// One-shot TTS locale alignment on startup ([loadSaved] may update locale later;
+/// [ref.listen] on [appLocaleProvider] handles further changes).
+class _InitialTtsSync extends ConsumerStatefulWidget {
+  const _InitialTtsSync({required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<_InitialTtsSync> createState() => _InitialTtsSyncState();
+}
+
+class _InitialTtsSyncState extends ConsumerState<_InitialTtsSync> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final locale = ref.read(appLocaleProvider);
+      ref.read(voiceAssistantServiceProvider).syncLocale(locale);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

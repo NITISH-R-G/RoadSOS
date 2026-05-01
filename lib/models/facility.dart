@@ -8,6 +8,8 @@ class Facility {
   final double longitude;
   final String? contactNumber;
   final String? capabilities;
+  /// gov_nhm | gov_ayushman | osm | merged
+  final String? dataSource;
 
   const Facility({
     required this.id,
@@ -17,6 +19,7 @@ class Facility {
     required this.longitude,
     this.contactNumber,
     this.capabilities,
+    this.dataSource,
   });
 
   LatLng get location => LatLng(latitude, longitude);
@@ -30,6 +33,7 @@ class Facility {
       longitude: (map['longitude'] as num).toDouble(),
       contactNumber: map['contact_number'],
       capabilities: map['capabilities'],
+      dataSource: map['data_source'] as String?,
     );
   }
 }

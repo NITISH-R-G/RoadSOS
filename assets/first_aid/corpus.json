@@ -1,0 +1,163 @@
+[
+  {
+    "id": "general-road-emergency-india",
+    "title": "Motor vehicle / road traffic — first actions (India context)",
+    "body": "1) Make the scene safe: turn off ignitions, use hazard lights, use a triangle or flares if you can do it without risk.\n2) Call 108 (or 112 ERSS) and state location, number of people hurt, and whether anyone is trapped. Follow the dispatcher.\n3) Do not move injured people unless fire, drowning, or traffic puts them at immediate risk.\n4) Help breathing problems first; control severe bleeding with firm pressure.\n5) Stay until EMS arrives unless instructed otherwise.",
+    "tags": "road traffic motor vehicle accident mva rta crash general emergency trauma india 108 112",
+    "source": "Condensed from public first-responder training; align with current local EMS policy"
+  },
+  {
+    "id": "india-108-erss",
+    "title": "Calling 108 / 112 in India (ERSS)",
+    "body": "1) Dial 108 where available for ambulance-linked dispatch in many states; 112 is the national Emergency Response Support System number.\n2) Say where you are clearly (highway marker, landmark, GPS reading if asked).\n3) Describe consciousness, breathing, bleeding, and entrapment.\n4) Keep the line open; answer follow-up questions.\n5) If no signal, try SMS where your operator supports emergency SMS or move to regain signal — do not delay life-saving actions you are trained for.",
+    "tags": "108 112 india emergency ambulance dispatch erss",
+    "source": "Public information on Government of India ERSS; verify with state operator guidance"
+  },
+  {
+    "id": "who-bls-adult-cpr",
+    "title": "Adult CPR — chest compressions (BLS-aligned summary)",
+    "body": "1) Ensure safety; tap and shout; if unresponsive and not breathing normally (or only gasping), call emergency services / get an AED.\n2) Place hands on the lower half of the breastbone; compress hard and fast about 5–6 cm depth at 100–120/min, allowing full recoil.\n3) Minimize interruptions; if trained and willing, give 30 compressions then 2 rescue breaths; if not trained, continuous compressions are acceptable in many protocols.\n4) Use an AED as soon as it arrives — follow voice prompts.\n5) Continue until EMS takes over or the person shows obvious signs of life.",
+    "tags": "cpr cardiac arrest bls compressions aed breathing heart attack pulse",
+    "source": "Summary aligned with WHO/ILCOR lay-rescuer emphasis on quality compressions; confirm with current AHA/ERC/India RC guidelines"
+  },
+  {
+    "id": "recovery-position",
+    "title": "Recovery position (unresponsive, breathing normally)",
+    "body": "1) Use when an adult is unresponsive but breathing normally and no spinal injury is suspected.\n2) Kneel beside them; place the arm nearest you at a right angle.\n3) Bring the far arm across the chest; hold the far hip and roll toward you onto their side.\n4) Tilt the head slightly to keep the airway open; adjust the upper hand under the cheek if needed.\n5) Monitor breathing continuously until EMS arrives.",
+    "tags": "recovery position unconscious breathing airway",
+    "source": "Standard first-aid teaching; verify with national first-aid curriculum"
+  },
+  {
+    "id": "severe-bleeding",
+    "title": "Severe bleeding (life-threatening external bleeding)",
+    "body": "1) Apply firm, direct pressure with a clean cloth or gloved hands; add layers on top if blood soaks through — do not remove soaked dressings.\n2) Help the person lie down; elevate the bleeding part if fractures are not suspected.\n3) If limb bleeding cannot be controlled and you are trained, apply a commercial tourniquet 5–7 cm above the wound, tight enough to stop arterial bleeding; note time applied; do not loosen once placed — EMS will manage.\n4) Treat for shock: keep warm, reassure, monitor breathing.\n5) Never remove embedded objects — stabilize and pad around them.",
+    "tags": "bleeding hemorrhage tourniquet wound pressure arterial",
+    "source": "Bleeding-control consensus (Stop the Bleed-style principles); verify device-specific training"
+  },
+  {
+    "id": "burns-cooling",
+    "title": "Thermal burns — immediate cooling",
+    "body": "1) Cool the burn with cool running water for at least 10–20 minutes as soon as possible (small / moderate burns).\n2) Remove rings, watches, or tight clothing near the burn unless stuck to skin.\n3) Cover loosely with sterile wrap or clean plastic film — do not use fluffy cotton.\n4) Do not apply creams, oils, butter, or ice directly to deep burns.\n5) Seek urgent care for large/deep burns, airway involvement, chemical/electrical burns, or burns to face, hands, genitals, or joints.",
+    "tags": "burn scald thermal cool water fire skin",
+    "source": "WHO injury care summaries and major burn-center first-aid guidance"
+  },
+  {
+    "id": "fracture-splint",
+    "title": "Suspected fracture / limb injury",
+    "body": "1) Help the person stay still; do not force alignment.\n2) Splint in the position found using rigid boards, rolled newspapers, or slings as available.\n3) Check circulation beyond the injury (color, warmth, sensation, movement) before and after splinting.\n4) Apply ice packs wrapped in cloth for swelling if skin is intact.\n5) Arrange EMS transport — open fractures need urgent hospital care.",
+    "tags": "fracture broken bone splint limb orthopedic",
+    "source": "Orthopedic first-aid principles taught in standardized courses"
+  },
+  {
+    "id": "head-spinal-precaution",
+    "title": "Head injury & spinal precautions (road crashes)",
+    "body": "1) Assume spinal injury after significant crash forces until cleared by professionals.\n2) Keep the head aligned with the neck; stabilize manually if trained — avoid twisting.\n3) Do not remove helmets unless airway obstruction trained protocols require it.\n4) Monitor level of consciousness, pupil changes, vomiting, or worsening headache.\n5) Rapid EMS transport; even “mild” head injury warrants assessment if symptoms are worsening.",
+    "tags": "head injury concussion c spine spinal helmet",
+    "source": "Prehospital trauma spine-stabilization teaching (PHTLS-aligned summary)"
+  },
+  {
+    "id": "choking-adult",
+    "title": "Choking — responsive adult",
+    "body": "1) Ask “Can you speak?” If they cannot cough effectively, give 5 back blows between shoulder blades.\n2) Then 5 abdominal thrusts (Heimlich) in midline above the navel; repeat cycles.\n3) If the person becomes unresponsive, lower them carefully and start CPR — look in the mouth for visible object each time before breaths.\n4) Call emergency services if not already done.\n5) Pregnant or very large persons: use chest thrusts instead of abdominal thrusts.",
+    "tags": "choking heimlich airway obstructed swallow",
+    "source": "ILCOR/AHA choking algorithm summary for lay rescuers"
+  },
+  {
+    "id": "shock-care",
+    "title": "Shock (circulatory compromise) after trauma",
+    "body": "1) Lay the person flat unless breathing is easier sitting (e.g., heart-related symptoms per local protocol).\n2) Keep them warm with a blanket; loosen tight clothing.\n3) Do not give food or drink.\n4) Control obvious bleeding and cover open wounds.\n5) Monitor breathing and responsiveness; be ready to start CPR if breathing stops.",
+    "tags": "shock trauma pale weak pulse rapid",
+    "source": "Trauma first-aid fundamentals; professional care required"
+  },
+  {
+    "id": "eye-injury",
+    "title": "Eye injury & chemical exposure",
+    "body": "1) For chemicals: flush the eye immediately with clean water or saline for 15–20 minutes; remove contact lenses after the first few minutes if easy.\n2) Do not rub the eye.\n3) Cover penetrating injuries with a rigid shield (cup) — do not apply pressure on the globe.\n4) Impaled objects: stabilize in place — do not remove.\n5) Seek emergency ophthalmology / EMS depending on severity.",
+    "tags": "eye chemical burn cornea vision",
+    "source": "Ophthalmic emergency triage summaries"
+  },
+  {
+    "id": "chest-pain-suspected-mi",
+    "title": "Chest pain / suspected heart attack",
+    "body": "1) Call EMS immediately — do not self-transport if symptoms are severe.\n2) Help the person rest in a comfortable position.\n3) If not allergic and locally appropriate, chewing aspirin may be advised by dispatch — follow professional instruction.\n4) If unconscious and not breathing normally, begin CPR and use AED if available.\n5) Note time of symptom onset for clinicians.",
+    "tags": "chest pain heart attack mi stemi cardiac",
+    "source": "Public ACS first-aid messaging; aspirin use per local medical direction"
+  },
+  {
+    "id": "stroke-fast",
+    "title": "Stroke recognition (FAST-style summary)",
+    "body": "1) Face drooping — ask them to smile; unevenness suggests stroke.\n2) Arm drift — raise both arms; one drifting is concerning.\n3) Speech — slurred or strange words.\n4) Time — call EMS immediately; note time last known well.\n5) Do not give food, drink, or aspirin unless EMS instructs — stroke treatment is time-critical.",
+    "tags": "stroke fast brain cva paralysis slurred",
+    "source": "WHO stroke awareness materials; FAST acronym in public campaigns"
+  },
+  {
+    "id": "seizure-first-aid",
+    "title": "Seizure (convulsion) — bystander care",
+    "body": "1) Time the seizure; cushion the head; clear nearby sharp objects.\n2) Do not restrain or put anything in the mouth.\n3) After it stops, place in recovery position if breathing normally.\n4) Call EMS for first seizure, prolonged seizure >5 minutes, repeated seizures, pregnancy, injury, or breathing difficulty.\n5) Stay with the person until they are fully oriented.",
+    "tags": "seizure epilepsy convulsion fitting",
+    "source": "Epilepsy foundation / ILAE public guidance"
+  },
+  {
+    "id": "hypoglycemia",
+    "title": "Diabetic emergency — low blood sugar",
+    "body": "1) If conscious and able to swallow, give fast-acting sugar (glucose gel, juice, sweets).\n2) Recheck responsiveness in 10–15 minutes; repeat once if needed per training.\n3) If unconscious, do not give food — place in recovery position if breathing normally; call EMS.\n4) If not breathing normally, begin CPR.\n5) Always encourage medical follow-up after significant hypoglycemia.",
+    "tags": "diabetes insulin sugar hypo low glucose",
+    "source": "Diabetes first-aid basics; glucose dosing per clinician on repeated events"
+  },
+  {
+    "id": "heat-illness",
+    "title": "Heat exhaustion / heat stroke",
+    "body": "1) Move to shade/cool area; loosen clothing.\n2) Cool with fans, wet cloths, or immersion if safe for responsive adults.\n3) Sip cool water if fully conscious and not vomiting.\n4) Heat stroke (altered mental status, hot dry skin): call EMS immediately — rapid cooling is critical.\n5) Monitor breathing while cooling.",
+    "tags": "heat stroke sun exhaustion dehydration hot weather",
+    "source": "WHO heat-health action plan public advice"
+  },
+  {
+    "id": "hypothermia-cold",
+    "title": "Hypothermia (cold exposure)",
+    "body": "1) Move to shelter; remove wet clothing; insulate from the ground.\n2) Rewarm gradually with blankets; give warm sweet drinks only if fully conscious.\n3) Handle gently — rough movement can trigger arrhythmia in severe hypothermia.\n4) Do not rub frostbitten tissue; protect and seek care.\n5) Call EMS for confusion, severe shivering stopping, or unconsciousness.",
+    "tags": "cold hypothermia frostbite winter exposure",
+    "source": "Wilderness / EMS hypothermia triage summaries"
+  },
+  {
+    "id": "drowning",
+    "title": "Drowning / rescued from water",
+    "body": "1) Ensure scene safety — use rescue aids; avoid unsupported water entry unless trained.\n2) If breathing normally, keep warm and monitor.\n3) If not breathing, open airway; give 5 rescue breaths then start CPR if trained.\n4) All submersion victims should be medically evaluated — secondary drowning risk is evaluated in hospital.\n5) Call EMS for any breathing difficulty after water incident.",
+    "tags": "drowning water rescue swimming pool lake",
+    "source": "ILCOR drowning resuscitation summaries for lay rescuers"
+  },
+  {
+    "id": "electrical-injury",
+    "title": "Electrical injury / lightning",
+    "body": "1) Ensure power is off before touching the victim — use non-conductive tools.\n2) Call EMS; begin CPR if unresponsive and not breathing normally.\n3) Expect hidden deep burns — cover burns lightly.\n4) Monitor rhythm risk — continue care until EMS arrives.\n5) Lightning: reverse triage — apparently dead victims may respond to CPR.",
+    "tags": "electric shock lightning wire burn power",
+    "source": "Electrical injury emergency management principles"
+  },
+  {
+    "id": "anaphylaxis-note",
+    "title": "Severe allergic reaction (possible anaphylaxis)",
+    "body": "1) Call EMS immediately for difficulty breathing, throat/lip swelling, widespread hives with systemic symptoms.\n2) Help the person sit up if breathing is difficult (unless hypotensive — then lie with legs elevated per training).\n3) If prescribed, assist with auto-injector use as labeled — thigh, hold, seek help.\n4) Be prepared to start CPR if breathing stops.\n5) Avoid known triggers while waiting for EMS.",
+    "tags": "allergy anaphylaxis epipen hive breathing",
+    "source": "WAO anaphylaxis public guidance; injector use per prescription"
+  },
+  {
+    "id": "penetrating-trauma",
+    "title": "Penetrating trauma (stab / impalement)",
+    "body": "1) Control external bleeding without removing embedded objects.\n2) Stabilize impaled objects with bulky dressings; move as one unit.\n3) Seal open chest wounds that suck with a commercial or improvised chest seal only if trained — otherwise keep still and support breathing.\n4) Call EMS; monitor for tension pneumothorax signs (training issue).\n5) Do not pull objects from deep wounds.",
+    "tags": "stab wound chest seal impaled knife",
+    "source": "Tactical / prehospital penetrating trauma basics"
+  },
+  {
+    "id": "puncture-tire-roadside",
+    "title": "Roadside mechanical — safety first (non-medical)",
+    "body": "1) Pull fully off the travel lane; hazard lights on; reflective vest if available.\n2) Use wheel wedges; work on flat, stable ground — not in live traffic.\n3) Call police/road assistance on high-speed corridors if unsafe to change a wheel yourself.\n4) For medical needs (injury after crash), revert to EMS and trauma first-aid topics.\n5) Never work under a vehicle supported only by a jack.",
+    "tags": "puncture flat tire mechanic roadside safety towing",
+    "source": "General road-safety guidance; align with NH / state highway rules"
+  },
+  {
+    "id": "psychological-first-aid",
+    "title": "Psychological first aid after a frightening crash",
+    "body": "1) Stay calm; offer a safe, quiet space away from hazards.\n2) Listen without forcing the person to retell trauma; avoid judgment.\n3) Help them contact family or friends; keep children with caregivers.\n4) Encourage professional mental health follow-up after serious events.\n5) Do not dismiss dissociation, trembling, or confusion — these are stress responses.",
+    "tags": "panic anxiety stress ptsd mental health bystander",
+    "source": "WHO Psychological First Aid (PFA) field guide — condensed"
+  }
+]

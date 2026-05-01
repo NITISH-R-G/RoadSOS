@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../services/user_profile_service.dart';
 import 'profile_editor_screen.dart';
 
@@ -10,10 +11,9 @@ class MedicalCardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider);
     
-    // Create a QR data string that responders can scan
-    final qrData = Uri.encodeComponent(
-      'ROADSOS_ID: ${profile.fullName} | Blood: ${profile.bloodType} | Allergies: ${profile.allergies} | Meds: ${profile.medications}'
-    );
+    // QR contains a short, offline-safe summary (no network dependency).
+    final qrData =
+        'ROADSOS_MEDICAL_V1|NAME:${profile.fullName}|BLOOD:${profile.bloodType}|ALLERGIES:${profile.allergies}|MEDS:${profile.medications}|CONTACT:${profile.emergencyContact}';
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -39,15 +39,17 @@ class MedicalCardScreen extends ConsumerWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Image.network(
-                'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=$qrData',
-                width: 200,
-                height: 200,
+              child: QrImageView(
+                data: qrData,
+                version: QrVersions.auto,
+                size: 200,
+                gapless: false,
+                backgroundColor: Colors.white,
               ),
             ),
             const SizedBox(height: 12),
             const Text(
-              'SCAN FOR FULL MEDICAL HISTORY',
+              'SCAN FOR MEDICAL SUMMARY',
               style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.white54),
             ),
             
@@ -61,23 +63,8 @@ class MedicalCardScreen extends ConsumerWidget {
             _buildInfoRow(Icons.contact_phone, 'EMERGENCY CONTACT', profile.emergencyContact.isEmpty ? 'NOT SET' : profile.emergencyContact),
             
             const Spacer(),
-            ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Generating High-Res QR Wallpaper...')),
-                );
-              },
-              icon: const Icon(Icons.wallpaper),
-              label: const Text('SAVE AS WALLPAPER'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-            ),
-            const SizedBox(height: 12),
             const Text(
-              'TIP: Setting this as your lock screen can save minutes during rescue.',
+              'Tip: Keep this screen open for responders. For lock-screen wallpaper export, use your device screenshot tools.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white38, fontSize: 12),
             ),
@@ -108,6 +95,6 @@ class MedicalCardScreen extends ConsumerWidget {
   }
 
   Widget _buildDivider() {
-    return Divider(color: Colors.white.withOpacity(0.1), height: 1);
+    return Divider(color: Colors.white.withValues(alpha: 0.1), height: 1);
   }
 }

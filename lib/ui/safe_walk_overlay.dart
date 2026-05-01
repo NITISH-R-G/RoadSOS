@@ -20,7 +20,7 @@ class SafeWalkOverlay extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: monitor.alertTriggered ? Colors.red.withOpacity(0.9) : Colors.blue.withOpacity(0.9),
+            color: monitor.alertTriggered ? Colors.red.withValues(alpha: 0.9) : Colors.blue.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
           ),
@@ -50,7 +50,8 @@ class SafeWalkOverlay extends ConsumerWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => ref.read(proactiveMonitorProvider.notifier).endSafeWalk(),
+                // "I'm safe" should acknowledge the check-in without stopping Safe Walk monitoring.
+                onPressed: () => ref.read(proactiveMonitorProvider.notifier).confirmImSafe(),
                 child: const Text('I AM SAFE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ],

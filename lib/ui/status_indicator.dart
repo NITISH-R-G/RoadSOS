@@ -42,8 +42,6 @@ class StatusIndicatorBar extends ConsumerWidget {
     switch (state) {
       case ModelState.ready:
         return Colors.green;
-      case ModelState.loading:
-        return Colors.amber;
       case ModelState.degraded:
         return Colors.orange;
       case ModelState.error:
@@ -72,9 +70,9 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(isActive ? 0.15 : 0.05),
+        color: color.withValues(alpha: isActive ? 0.15 : 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

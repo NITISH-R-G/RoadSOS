@@ -30,21 +30,25 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  path: ^1.9.1
+  flutter_markdown: ^0.7.7
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  google_fonts: ^6.3.3
   supabase_flutter: ^2.12.4
   powersync: ^2.0.1
   sqlite3_flutter_libs: ^0.6.0+eol
   path_provider: ^2.1.5
-  flutter_riverpod: 2.5.1
-  dynamic_color: ^1.8.1
+  flutter_riverpod: ^2.5.1
   flutter_blue_plus: ^2.2.1
   url_launcher: ^6.3.2
   geolocator: ^14.0.2
   uuid: ^4.5.3
-  llamadart: ^0.6.10
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
   flutter_map_animations: ^0.7.0
@@ -52,7 +56,7 @@ dependencies:
   flutter_ble_peripheral: ^2.1.0
   country_codes: ^3.3.0
   http: ^1.6.0
-  flutter_dotenv: ^6.0.0
+  flutter_dotenv: ^6.0.1
   flutter_tts: ^4.2.5
   speech_to_text: ^7.3.0
   cryptography: ^2.9.0
@@ -61,10 +65,20 @@ dependencies:
   flutter_background_service: ^5.1.0
   flutter_local_notifications: ^21.0.0
   package_info_plus: ^9.0.1
-  flutter_sms: ^3.0.1
+  telephony: ^0.2.0
   encrypt: ^5.0.3
   crypto: ^3.0.7
   flutter_secure_storage: ^10.0.0
+  logger: ^2.6.2
+  firebase_core: ^3.8.1
+  firebase_messaging: ^15.2.5
+  permission_handler: ^11.4.0
+  flutter_map_tile_caching: ^10.0.0
+  
+  # Your module packages
+  image_picker: ^1.1.2
+  flutter_inappwebview: ^6.0.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
@@ -76,18 +90,26 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  build_runner: ^2.13.1
+  build_runner: ^2.14.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
 flutter:
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/env.template
+    - assets/first_aid/corpus.json
+    - assets/data/government_facilities_seed.json
+    - assets/legal/privacy_policy_en.txt
+    - assets/legal/privacy_policy_hi.txt
 
   # To add assets to your application, add an assets section, like this:
   

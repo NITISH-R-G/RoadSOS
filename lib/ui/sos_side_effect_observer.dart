@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/emergency_orchestrator.dart';
-import '../services/voice_assistant_service.dart';
 
 /// SOSSideEffectObserver: Handles platform side-effects (TTS, Haptics) 
 /// based on SOS state changes. Decouples UI logic from services.

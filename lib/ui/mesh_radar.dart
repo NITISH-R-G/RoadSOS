@@ -45,7 +45,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
           height: 200,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white10),
           ),
@@ -53,28 +53,54 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
             alignment: Alignment.center,
             children: [
               // Radar circles
-              ...List.generate(3, (i) => _buildCircle(i)),
+              ...List.generate(5, (i) => _buildCircle(i)),
               
-              // Scanning sweep
+              // Orbiting dot with pulsing glow
               AnimatedBuilder(
                 animation: _rotationController,
                 builder: (context, child) {
-                  return Transform.rotate(
-                    angle: _rotationController.value * 2 * pi,
-                    child: Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        gradient: SweepGradient(
-                          colors: [
-                            Colors.blue.withOpacity(0.0),
-                            Colors.blue.withOpacity(0.3),
-                            Colors.blue.withOpacity(0.0),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
+                  final currentAngle = _rotationController.value * 2 * pi;
+                  final orbitRadius = 75.0;
+                  final currentX = cos(currentAngle) * orbitRadius;
+                  final currentY = sin(currentAngle) * orbitRadius;
+                  
+                  // Pulsing effect using sine wave
+                  final pulseValue = (sin(currentAngle * 3) + 1) / 2; // Range 0 to 1, pulses every ~1.3 seconds
+                  
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Radar beam (light blue sweep from center to dot)
+                      CustomPaint(
+                        painter: _RadarBeamPainter(currentAngle, orbitRadius),
+                        size: const Size(180, 180),
+                      ),
+                      
+                      // Main orbiting dot with pulsing glow
+                      Transform.translate(
+                        offset: Offset(currentX, currentY),
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF00FFFF).withValues(alpha: 0.3 + (pulseValue * 0.7)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF00FFFF),
+                                blurRadius: 5 + (pulseValue * 15),
+                                spreadRadius: 1 + (pulseValue * 3),
+                              ),
+                              BoxShadow(
+                                color: const Color(0xFF00FFFF).withValues(alpha: 0.2 + (pulseValue * 0.3)),
+                                blurRadius: 10 + (pulseValue * 20),
+                                spreadRadius: 2 + (pulseValue * 4),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   );
                 },
               ),
@@ -97,7 +123,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.5,
-                      color: Colors.blue.withOpacity(0.6),
+                      color: Colors.blue.withValues(alpha: 0.6),
                     ),
                   ),
                   Text(
@@ -106,6 +132,15 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Foreground only',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white.withValues(alpha: 0.35),
                     ),
                   ),
                 ],
@@ -124,7 +159,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
       height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
     );
   }
@@ -146,3 +181,64 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
     );
   }
 }
+
+class _RadarBeamPainter extends CustomPainter {
+  final double currentAngle;
+  final double orbitRadius;
+
+  _RadarBeamPainter(this.currentAngle, this.orbitRadius);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    
+    // Draw sweeping radar beam from center to orbiting dot
+    final dotX = cos(currentAngle) * orbitRadius;
+    final dotY = sin(currentAngle) * orbitRadius;
+    
+    // Create a sweep gradient effect from center to dot
+    final beamPaint = Paint()
+      ..color = const Color(0xFF00FFFF).withValues(alpha: 0.25)
+      ..style = PaintingStyle.fill;
+    
+    // Draw a triangular beam shape from center to dot
+    final beamWidth = 0.3; // Width of the beam in radians
+    
+    final path = Path();
+    path.moveTo(center.dx, center.dy); // Start at center
+    
+    // First edge of beam
+    final angle1 = currentAngle - beamWidth / 2;
+    path.lineTo(
+      center.dx + cos(angle1) * orbitRadius,
+      center.dy + sin(angle1) * orbitRadius,
+    );
+    
+    // Arc to dot
+    path.lineTo(
+      center.dx + dotX,
+      center.dy + dotY,
+    );
+    
+    // Second edge of beam
+    final angle2 = currentAngle + beamWidth / 2;
+    path.lineTo(
+      center.dx + cos(angle2) * orbitRadius,
+      center.dy + sin(angle2) * orbitRadius,
+    );
+    
+    path.close();
+    canvas.drawPath(path, beamPaint);
+    
+    // Add a glow effect with lighter color
+    final glowPaint = Paint()
+      ..color = const Color(0xFF00FFFF).withValues(alpha: 0.15)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    
+    canvas.drawPath(path, glowPaint);
+  }
+
+  @override
+  bool shouldRepaint(_RadarBeamPainter oldDelegate) => true;
+}
+

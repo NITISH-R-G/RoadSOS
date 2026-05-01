@@ -1,25 +1,33 @@
-import 'dart:math';
+import 'dart:math' show min;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/emergency_orchestrator.dart';
+
+import '../logging/app_log.dart';
 import '../services/ai_triage_service.dart';
-import 'status_indicator.dart';
-import 'sos_countdown_widget.dart';
-import 'triage_result_card.dart';
-import 'map_widget.dart';
-import 'mesh_radar.dart';
-import 'incident_reporting_screen.dart';
-import 'medical_card_screen.dart';
-import 'ai_explainability_view.dart';
+import '../services/emergency_orchestrator.dart';
+import '../services/proactive_monitor_service.dart';
 import 'crisis_companion_overlay.dart';
+import 'dispatch_status_panel.dart';
+import 'first_aid_screen.dart';
+import 'incident_reporting_screen.dart';
+import 'map_widget.dart';
+import 'medical_card_screen.dart';
+import 'mesh_chat_screen.dart';
+import 'mesh_radar.dart';
 import 'responder_dashboard.dart';
 import 'safe_walk_overlay.dart';
-import 'sos_side_effect_observer.dart';
-import 'mesh_chat_screen.dart';
-import 'vital_scan_screen.dart';
 import 'settings_screen.dart';
+import 'sos_activity_log_screen.dart';
+import 'sos_countdown_widget.dart';
+import 'sos_side_effect_observer.dart';
+import 'status_indicator.dart';
+import 'triage_result_card.dart';
+import 'vital_scan_screen.dart';
 
+/// Main shell: idle = single giant SOS (panic-first); other phases show honest dispatch status.
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -31,7 +39,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-  late AnimationController _glowController;
 
   @override
   void initState() {
@@ -42,15 +49,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.025).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
     _pulseController.repeat(reverse: true);
-
-    _glowController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat(reverse: true);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(aiTriageServiceProvider).initializeModel();
@@ -60,48 +62,197 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   @override
   void dispose() {
     _pulseController.dispose();
-    _glowController.dispose();
     super.dispose();
   }
 
   Future<void> _checkInitialPermissions() async {
-    print('[System] 🔋 Checking safety permissions...');
+    appLog.d('Checking safety permissions');
+  }
+
+  void _openEmergencyToolsSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      backgroundColor: scheme.surfaceContainerHighest,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              bottom: MediaQuery.paddingOf(ctx).bottom + 16,
+              top: 8,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.sosIdleToolsTitle,
+                    style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: scheme.onSurface,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  const SizedBox(height: 180, child: MeshRadar()),
+                  const SizedBox(height: 24),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      StatusIndicatorBar(),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.start,
+                    children: [
+                      _sheetAction(
+                        ctx,
+                        Icons.camera_enhance,
+                        l10n.actionScene,
+                        () => Navigator.push(
+                          ctx,
+                          MaterialPageRoute(builder: (_) => const IncidentReportingScreen()),
+                        ),
+                      ),
+                      _sheetAction(
+                        ctx,
+                        Icons.qr_code,
+                        l10n.actionMedicalId,
+                        () => Navigator.push(
+                          ctx,
+                          MaterialPageRoute(builder: (_) => const MedicalCardScreen()),
+                        ),
+                      ),
+                      _sheetAction(
+                        ctx,
+                        Icons.health_and_safety,
+                        l10n.actionResponder,
+                        () => Navigator.push(
+                          ctx,
+                          MaterialPageRoute(builder: (_) => const ResponderDashboard()),
+                        ),
+                      ),
+                      _sheetAction(
+                        ctx,
+                        Icons.directions_walk,
+                        l10n.actionSafeWalk,
+                        () => _showSafeWalkDialog(ctx),
+                      ),
+                      _sheetAction(
+                        ctx,
+                        Icons.health_and_safety_outlined,
+                        l10n.actionFirstAid,
+                        () => Navigator.push(
+                          ctx,
+                          MaterialPageRoute(builder: (_) => const FirstAidScreen()),
+                        ),
+                      ),
+                      _sheetAction(
+                        ctx,
+                        Icons.monitor_heart,
+                        l10n.actionVitalScan,
+                        () => Navigator.push(
+                          ctx,
+                          MaterialPageRoute(builder: (_) => const VitalScanScreen()),
+                        ),
+                      ),
+                      _sheetAction(
+                        ctx,
+                        Icons.forum,
+                        l10n.actionMeshChat,
+                        () => Navigator.push(
+                          ctx,
+                          MaterialPageRoute(builder: (_) => const MeshChatScreen()),
+                        ),
+                      ),
+                      _sheetAction(
+                        ctx,
+                        Icons.fact_check_outlined,
+                        'Activity log',
+                        () => Navigator.push(
+                          ctx,
+                          MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+                        ),
+                      ),
+                      _sheetAction(
+                        ctx,
+                        Icons.settings,
+                        l10n.actionSettings,
+                        () => Navigator.push(
+                          ctx,
+                          MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _sheetAction(
+    BuildContext context,
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surface,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: scheme.primary, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurface.withValues(alpha: 0.92),
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final sosState = ref.watch(emergencyOrchestratorProvider);
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final idle = sosState.phase == SOSPhase.idle;
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.emergency_share, color: Colors.red, size: 20),
-            ),
-            const SizedBox(width: 12),
-            const Text('RoadSOS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
-          ],
-        ),
-        actions: const [
-          StatusIndicatorBar(),
-          SizedBox(width: 16),
-        ],
-      ),
+      backgroundColor: idle ? Colors.black : scheme.surface,
+      appBar: idle ? null : _buildEmergencyAppBar(context),
       body: Stack(
         children: [
           AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            child: _buildBody(sosState),
+            duration: const Duration(milliseconds: 350),
+            child: KeyedSubtree(
+              key: ValueKey<SOSPhase>(sosState.phase),
+              child: _buildBody(context, sosState),
+            ),
           ),
           const CrisisCompanionOverlay(),
           const SafeWalkOverlay(),
@@ -111,324 +262,475 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
   }
 
-  Widget _buildBody(SOSState sosState) {
+  PreferredSizeWidget _buildEmergencyAppBar(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    return AppBar(
+      backgroundColor: scheme.surface.withValues(alpha: 0.94),
+      elevation: 0,
+      scrolledUnderElevation: 2,
+      title: Row(
+        children: [
+          Icon(Icons.emergency_share, color: scheme.error, size: 26),
+          const SizedBox(width: 10),
+          Text(
+            l10n.dashboardTitle,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: scheme.onSurface,
+                ),
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(
+          tooltip: 'Activity log',
+          icon: const Icon(Icons.fact_check_outlined),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+          ),
+        ),
+        const StatusIndicatorBar(),
+        const SizedBox(width: 16),
+      ],
+    );
+  }
+
+  Widget _buildBody(BuildContext context, SOSState sosState) {
     switch (sosState.phase) {
       case SOSPhase.idle:
-        return _buildIdleView();
+        return _buildPanicIdleView(context);
       case SOSPhase.countdown:
-        return _buildCountdownView(sosState);
+        return _buildCountdownView(context, sosState);
+      case SOSPhase.gpsLocking:
+      case SOSPhase.triaging:
+        return _buildPipelineProgressView(context, sosState);
+      case SOSPhase.dispatching:
+        return _buildDispatchingView(context, sosState);
+      case SOSPhase.active:
+        return _buildActiveSessionView(context, sosState);
       default:
-        return _buildActiveView(sosState);
+        return _buildActiveSessionView(context, sosState);
     }
   }
 
-  Widget _buildIdleView() {
-    return SafeArea(
-      child: Column(
-        children: [
-          const Spacer(),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: MeshRadar(),
-          ),
-          const SizedBox(height: 32),
-          
-          // Animated SOS Button
-          AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              final scale = 1.0 + (_pulseController.value * 0.03);
-              final glowRadius = 20.0 + (_glowController.value * 30);
+  Widget _buildPanicIdleView(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
 
-              return Transform.scale(
-                scale: scale,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final totalH = constraints.maxHeight;
+        final btnH = totalH * 0.55;
+        final titleSize = min(72.0, btnH * 0.16);
+
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: SizedBox(height: 180, child: MeshRadar()),
+              ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: GestureDetector(
-                  onLongPress: () {
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
                     HapticFeedback.heavyImpact();
-                    ref
-                        .read(emergencyOrchestratorProvider.notifier)
-                        .triggerSOS();
+                    ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
                   },
-                  child: Container(
-                    width: 220,
-                    height: 220,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const RadialGradient(
-                        colors: [
-                          Color(0xFFFF1744),
-                          Color(0xFFD50000),
-                          Color(0xFFB71C1C),
-                        ],
-                        stops: [0.0, 0.6, 1.0],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF1744).withOpacity(0.3),
-                          blurRadius: glowRadius,
-                          spreadRadius: glowRadius / 4,
-                        ),
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.4),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.emergency_share, size: 40, color: Colors.white),
-                          SizedBox(height: 4),
-                          Text(
-                            'SOS',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 42,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 4,
+                  child: AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _pulseAnimation.value,
+                        child: child,
+                      );
+                    },
+                    child: SizedBox(
+                      height: btnH,
+                      width: double.infinity,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(52),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color(0xFFFF453A),
+                                Color(0xFFB00020),
+                              ],
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF453A).withValues(alpha: 0.42),
+                                blurRadius: 40,
+                                spreadRadius: 2,
+                              ),
+                            ],
                           ),
-                        ],
+                          alignment: Alignment.center,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                l10n.sosButton,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: titleSize,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  l10n.sosButtonSub,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.94),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              );
-            },
-          ),
-
-          const SizedBox(height: 24),
-          Text(
-            'LONG PRESS TO ACTIVATE',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withOpacity(0.4),
-              letterSpacing: 2,
-            ),
-          ),
-          const SizedBox(height: 32),
-
-          // Action Items Row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildActionItem(
-                  icon: Icons.camera_enhance, 
-                  label: 'SCENE', 
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IncidentReportingScreen()))
+              ),
+              const SizedBox(height: 24),
+              SafeArea(
+                minimum: const EdgeInsets.only(bottom: 12),
+                child: TextButton.icon(
+                  onPressed: () => _openEmergencyToolsSheet(context),
+                  icon: const Icon(Icons.apps, color: Colors.white70),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white.withValues(alpha: 0.88),
+                    minimumSize: const Size(120, 52),
+                  ),
+                  label: Text(
+                    l10n.sosIdleTools,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
-                _buildActionItem(
-                  icon: Icons.qr_code, 
-                  label: 'MEDICAL ID', 
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicalCardScreen()))
-                ),
-                _buildActionItem(
-                  icon: Icons.health_and_safety, 
-                  label: 'RESPONDER', 
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResponderDashboard()))
-                ),
-                _buildActionItem(
-                  icon: Icons.monitor_heart, 
-                  label: 'VITAL SCAN', 
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VitalScanScreen()))
-                ),
-                _buildActionItem(
-                  icon: Icons.forum, 
-                  label: 'MESH CHAT', 
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MeshChatScreen()))
-                ),
-                _buildActionItem(
-                  icon: Icons.settings, 
-                  label: 'SETTINGS', 
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Nearby Facilities Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+              ),
+              
+              // Nearby Facilities Section (Merged from HEAD)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'NEARBY EMERGENCY HELP',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white38,
-                        letterSpacing: 1.5,
+                    Row(
+                      children: [
+                        Text(
+                          'NEARBY EMERGENCY HELP',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white.withValues(alpha: 0.38),
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.radar, size: 10, color: Colors.green),
+                              SizedBox(width: 4),
+                              Text(
+                                '800m',
+                                style: TextStyle(fontSize: 9, color: Colors.green),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const _FacilityListItem(
+                      name: 'IITM Apollo Hospital',
+                      type: 'Trauma Center',
+                      distance: '0.4 km',
+                      icon: Icons.local_hospital,
+                      color: Colors.redAccent,
+                    ),
+                    const SizedBox(height: 8),
+                    const _FacilityListItem(
+                      name: 'Emergency Response Hub',
+                      type: 'Quick Response Team',
+                      distance: '1.2 km',
+                      icon: Icons.health_and_safety,
+                      color: Colors.blueAccent,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Info cards (Merged from HEAD)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: _InfoCard(
+                        icon: Icons.volume_up,
+                        title: 'Hardware SOS',
+                        subtitle: 'Vol ↑↓ x3 in 2s',
+                        color: Colors.blue,
                       ),
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.radar, size: 10, color: Colors.green),
-                          SizedBox(width: 4),
-                          Text(
-                            '800m',
-                            style: TextStyle(fontSize: 9, color: Colors.green),
-                          ),
-                        ],
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: _InfoCard(
+                        icon: Icons.bluetooth,
+                        title: 'Mesh Network',
+                        subtitle: 'BLE relay ready',
+                        color: Colors.teal,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                _FacilityListItem(
-                  name: 'IITM Apollo Hospital',
-                  type: 'Trauma Center',
-                  distance: '0.4 km',
-                  icon: Icons.local_hospital,
-                  color: Colors.redAccent,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Gemma is a trademark of Google LLC',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  fontSize: 10,
                 ),
-                const SizedBox(height: 8),
-                _FacilityListItem(
-                  name: 'Emergency Response Hub',
-                  type: 'Quick Response Team',
-                  distance: '1.2 km',
-                  icon: Icons.health_and_safety,
-                  color: Colors.blueAccent,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 32),
+            ],
           ),
-
-          const SizedBox(height: 24),
-
-          // Info cards
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.volume_up,
-                    title: 'Hardware SOS',
-                    subtitle: 'Vol ↑↓ x3 in 2s',
-                    color: Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.bluetooth,
-                    title: 'Mesh Network',
-                    subtitle: 'BLE relay ready',
-                    color: Colors.teal,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.psychology,
-                    title: 'Edge AI',
-                    subtitle: 'Gemma 4 on-device',
-                    color: Colors.purple,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.visibility,
-                    title: 'Witness SOS',
-                    subtitle: 'Report for others',
-                    color: Colors.amber,
-                    onTap: () {
-                       ref.read(emergencyOrchestratorProvider.notifier).triggerBystanderSOS();
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.cloud_off,
-                    title: 'Offline-First',
-                    subtitle: 'PowerSync active',
-                    color: Colors.orange,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Attribution
-          Text(
-            'Gemma is a trademark of Google LLC',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.2),
-              fontSize: 10,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Spacer(),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildCountdownView(SOSState state) {
+  Future<void> _showSafeWalkDialog(BuildContext context) async {
+    final destCtrl = TextEditingController();
+    var minutes = 30;
+    final monitor = ref.read(proactiveMonitorProvider);
+
+    if (monitor.isMonitoring) {
+      // Quick stop
+      ref.read(proactiveMonitorProvider.notifier).endSafeWalk();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Safe Walk ended.')),
+        );
+      }
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              bottom: MediaQuery.paddingOf(ctx).bottom + 16,
+              top: 8,
+            ),
+            child: StatefulBuilder(
+              builder: (ctx, setModal) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Safe Walk',
+                      style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: destCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Destination (optional)',
+                        hintText: 'e.g., Home, Hostel, Station',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Text('ETA minutes:'),
+                        const SizedBox(width: 12),
+                        DropdownButton<int>(
+                          value: minutes,
+                          items: const [10, 15, 20, 30, 45, 60]
+                              .map((m) => DropdownMenuItem(value: m, child: Text('$m')))
+                              .toList(),
+                          onChanged: (v) => setModal(() => minutes = v ?? 30),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'If you miss check-in after ETA, RoadSOS will escalate to SOS after a 60s grace window.',
+                      style: Theme.of(ctx).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          ref.read(proactiveMonitorProvider.notifier).startSafeWalk(
+                                destCtrl.text.trim().isEmpty ? 'your destination' : destCtrl.text.trim(),
+                                Duration(minutes: minutes),
+                              );
+                          Navigator.pop(ctx);
+                        },
+                        icon: const Icon(Icons.directions_walk),
+                        label: const Text('START SAFE WALK'),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCountdownView(BuildContext context, SOSState state) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Center(
       child: SOSCountdownWidget(
         secondsRemaining: state.countdownSeconds,
+        warningText: l10n.sosDispatchWarning,
+        cancelLabel: l10n.cancelSos,
+        secondsLabel: l10n.secondsLabel,
         onCancel: () => ref.read(emergencyOrchestratorProvider.notifier).cancelSos(),
       ),
     );
   }
 
-  Widget _buildActiveView(SOSState state) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          if (state.triageResult != null) TriageResultCard(result: state.triageResult!),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 300,
-            child: Center(child: Text("Map Placeholder")),
-          ),
-        ],
+  Widget _buildPipelineProgressView(BuildContext context, SOSState state) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+
+    final headline = state.phase == SOSPhase.gpsLocking
+        ? l10n.orchestratorAcquiringLocation
+        : l10n.orchestratorAiBrief;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              strokeWidth: 5,
+              color: scheme.primary,
+            ),
+            const SizedBox(height: 28),
+            Text(
+              headline,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                    height: 1.35,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildActionItem({required IconData icon, required String label, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
-            child: Icon(icon, color: Colors.white, size: 28),
-          ),
-          const SizedBox(height: 12),
-          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white38)),
-        ],
+  Widget _buildDispatchingView(BuildContext context, SOSState state) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.orchestratorDispatching,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: scheme.onSurface,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            DispatchStatusPanel(channels: state.dispatchChannels),
+            const SizedBox(height: 24),
+            Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: scheme.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveSessionView(BuildContext context, SOSState state) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (state.dispatchChannels.isNotEmpty) ...[
+              DispatchStatusPanel(channels: state.dispatchChannels),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+                ),
+                icon: const Icon(Icons.history_edu_outlined),
+                label: const Text('Full activity log & insurer note'),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (state.triageResult != null)
+              TriageResultCard(result: state.triageResult!),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 300,
+              child: RoadSosMap(state: state),
+            ),
+          ],
+        ),
       ),
     );
   }
