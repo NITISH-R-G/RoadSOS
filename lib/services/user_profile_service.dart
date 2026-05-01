@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class UserProfile {
   final String fullName;
@@ -49,9 +49,11 @@ class UserProfileService extends StateNotifier<UserProfile> {
     _loadProfile();
   }
 
+  static const _storage = FlutterSecureStorage();
+  static const _key = 'roadsos.user_profile.v1';
+
   Future<void> _loadProfile() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString('user_profile');
+    final data = await _storage.read(key: _key);
     if (data != null) {
       state = UserProfile.fromMap(json.decode(data));
     }
@@ -59,17 +61,16 @@ class UserProfileService extends StateNotifier<UserProfile> {
 
   Future<void> updateProfile(UserProfile newProfile) async {
     state = newProfile;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_profile', newProfile.toJson());
+    await _storage.write(key: _key, value: newProfile.toJson());
   }
 
-  /// Gemma Risk Analysis: Evaluates the profile for emergency considerations.
+  /// Risk hint for allergies (deterministic — no on-device LLM).
   Future<String> getMedicalRiskBrief() async {
     // Prompt: "Analyze this profile for emergency responders: $state"
     if (state.bloodType == 'Unknown' && state.allergies == 'None') {
       return "Low specific medical risk detected.";
     }
-    return "Gemma: Prioritizing allergy protocols for ${state.allergies}.";
+    return 'Allergy alert: prioritize avoiding exposure to ${state.allergies}.';
   }
 }
 

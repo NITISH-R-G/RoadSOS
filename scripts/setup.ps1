@@ -12,11 +12,27 @@ if (!(Get-Command flutter -ErrorAction SilentlyContinue)) {
 Write-Host "📦 Fetching dependencies..." -ForegroundColor Yellow
 flutter pub get
 
-# 3. Handle .env
-if (!(Test-Path .env)) {
-    Write-Host "📄 Creating .env template..." -ForegroundColor Yellow
-    "SUPABASE_URL=YOUR_URL`nSUPABASE_ANON_KEY=YOUR_KEY`nPOWERSYNC_URL=YOUR_URL" | Out-File .env
-    Write-Host "⚠️ Created .env. Please fill in your Supabase/PowerSync credentials." -ForegroundColor Red
+# 3. Handle dotenv (Flutter loads assets/.env)
+$assetsDir = Join-Path $PSScriptRoot "..\\assets"
+$envTemplatePath = Join-Path $assetsDir "env.template"
+$envPath = Join-Path $assetsDir ".env"
+
+if (!(Test-Path $assetsDir)) {
+    Write-Error "Expected assets directory not found: $assetsDir"
+    exit 1
+}
+
+if (!(Test-Path $envTemplatePath)) {
+    Write-Error "Expected env template not found: $envTemplatePath"
+    exit 1
+}
+
+if (!(Test-Path $envPath)) {
+    Write-Host "📄 Creating assets/.env from assets/env.template..." -ForegroundColor Yellow
+    Copy-Item $envTemplatePath $envPath
+    Write-Host "⚠️ Created assets/.env. Fill in values locally and avoid committing secrets." -ForegroundColor Red
+} else {
+    Write-Host "📄 Found assets/.env (leaving as-is)." -ForegroundColor Green
 }
 
 # 4. Run Analysis

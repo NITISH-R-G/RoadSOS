@@ -1,26 +1,33 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-/// Circular countdown timer with a large cancel button.
-/// Displayed during the 10-second SOS cancellation window.
+/// Pre-dispatch cancellation window. Copy is honest: nothing is sent until the pipeline runs.
 class SOSCountdownWidget extends StatelessWidget {
   final int secondsRemaining;
   final VoidCallback onCancel;
+
+  /// User-visible explanation (localized). Must not imply help is already notified.
+  final String warningText;
+  final String cancelLabel;
+  final String secondsLabel;
 
   const SOSCountdownWidget({
     super.key,
     required this.secondsRemaining,
     required this.onCancel,
+    required this.warningText,
+    required this.cancelLabel,
+    required this.secondsLabel,
   });
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final progress = secondsRemaining / 10.0;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Countdown ring
         SizedBox(
           width: 220,
           height: 220,
@@ -32,19 +39,19 @@ class SOSCountdownWidget extends StatelessWidget {
                 children: [
                   Text(
                     '$secondsRemaining',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 72,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: scheme.onSurface,
                       fontFamily: 'RobotoMono',
                     ),
                   ),
-                  const Text(
-                    'SECONDS',
+                  Text(
+                    secondsLabel,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white70,
+                      color: scheme.onSurface.withValues(alpha: 0.76),
                       letterSpacing: 3,
                     ),
                   ),
@@ -55,25 +62,27 @@ class SOSCountdownWidget extends StatelessWidget {
         ),
         const SizedBox(height: 32),
 
-        // Warning text
         Container(
+          constraints: const BoxConstraints(maxWidth: 340),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.red.withOpacity(0.1),
+            color: scheme.error.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.red.withOpacity(0.3)),
+            border: Border.all(color: scheme.error.withValues(alpha: 0.45)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'SOS will dispatch when timer reaches 0',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+              Icon(Icons.info_outline_rounded, color: scheme.error, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  warningText,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
                 ),
               ),
             ],
@@ -81,24 +90,23 @@ class SOSCountdownWidget extends StatelessWidget {
         ),
         const SizedBox(height: 40),
 
-        // Cancel button
         SizedBox(
           width: 280,
           height: 56,
           child: ElevatedButton.icon(
             onPressed: onCancel,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey.shade800,
-              foregroundColor: Colors.white,
+              backgroundColor: scheme.surfaceContainerHighest,
+              foregroundColor: scheme.onSurface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),
               ),
               elevation: 4,
             ),
             icon: const Icon(Icons.close, size: 22),
-            label: const Text(
-              'CANCEL SOS',
-              style: TextStyle(
+            label: Text(
+              cancelLabel,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.5,
@@ -111,9 +119,9 @@ class SOSCountdownWidget extends StatelessWidget {
   }
 }
 
-/// Draws the animated countdown ring.
+/// Draws the countdown ring using precise alpha compositing.
 class _CountdownRingPainter extends CustomPainter {
-  final double progress; // 1.0 = full, 0.0 = empty
+  final double progress;
 
   _CountdownRingPainter({required this.progress});
 
@@ -122,31 +130,28 @@ class _CountdownRingPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 - 8;
 
-    // Background ring
     final bgPaint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
+      ..color = Colors.white.withValues(alpha: 0.14)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6;
     canvas.drawCircle(center, radius, bgPaint);
 
-    // Progress arc
     final progressPaint = Paint()
-      ..color = progress > 0.3 ? Colors.red : Colors.red.shade900
+      ..color = progress > 0.3 ? const Color(0xFFFF453A) : const Color(0xFF880E1F)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6
       ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
-      -pi / 2, // Start from top
+      -pi / 2,
       2 * pi * progress,
       false,
       progressPaint,
     );
 
-    // Glow effect
     final glowPaint = Paint()
-      ..color = Colors.red.withOpacity(0.15 * progress)
+      ..color = const Color(0xFFFF453A).withValues(alpha: 0.15 * progress.clamp(0.0, 1.0))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 16
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);

@@ -8,6 +8,9 @@ const schema = Schema([
     Column.real('longitude'),
     Column.text('contact_number'),
     Column.text('capabilities'),
+    Column.text('data_source'),
+    Column.text('state_code'),
+    Column.text('district'),
   ]),
   Table('reported_incidents', [
     Column.real('latitude'),
@@ -16,5 +19,7 @@ const schema = Schema([
     Column.text('services_needed'),
     Column.text('status'),
     Column.text('reported_at'),
-  ])
+    Column.text('created_at'),
+    Column.integer('extended_retention'),
+  ]),
 ]);
