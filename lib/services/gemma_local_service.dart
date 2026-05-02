@@ -212,7 +212,9 @@ class GemmaLocalService {
   Stream<String> generateStream(String prompt) async* {
     if (!_available || _plugin == null) return;
     try {
-      yield* _plugin!.getResponseAsync(prompt: prompt).whereType<String>();
+      await for (final token in _plugin!.getResponseAsync(prompt: prompt)) {
+        if (token != null) yield token;
+      }
     } catch (e, st) {
       appLog.w('[GemmaLocal] generateStream() failed', error: e, stackTrace: st);
     }

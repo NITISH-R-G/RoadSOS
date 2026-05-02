@@ -199,6 +199,17 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
     state = state.copyWith(sceneContext: context);
   }
 
+  void completeGuidanceStep(int stepNumber) {
+    final updated = state.guidanceSteps.map((s) {
+      return s.stepNumber == stepNumber ? s.copyWith(completed: true) : s;
+    }).toList();
+    state = state.copyWith(guidanceSteps: updated);
+  }
+
+  void resetInterview() {
+    state = AssistantState();
+  }
+
   Future<String> getNextWitnessQuestion(
     String previousAnswer, {
     String languageCode = 'en',

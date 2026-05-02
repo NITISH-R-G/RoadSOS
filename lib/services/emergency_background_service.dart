@@ -217,7 +217,7 @@ class EmergencyBackgroundService {
 
   static Future<void> ensureNotificationChannel() async {
     if (kIsWeb || !Platform.isAndroid) return;
-    const plugin = FlutterLocalNotificationsPlugin();
+    final plugin = FlutterLocalNotificationsPlugin();
     const channel = AndroidNotificationChannel(
       _kChannelId,
       _kChannelName,
