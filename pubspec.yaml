@@ -67,7 +67,7 @@ dependencies:
   # Satisfies Cactus + LiteRT special prizes.
   # Requires model download (~2.4 GB) during onboarding — see GemmaLocalService.
   # pub.dev: https://pub.dev/packages/flutter_gemma
-  flutter_gemma: ^0.3.0
+  flutter_gemma: ^0.14.1
 
   # Firebase — required by NearbySosPushService (opt-in bystander alerts).
   # The service degrades gracefully when google-services.json is absent.
