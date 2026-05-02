@@ -132,6 +132,21 @@
             tools:replace="android:exported">
         </service>
 
+        <!-- Quick Settings tile — lets users toggle crash monitoring from the
+             notification shade without opening the app (Android 7.0+, API 24).
+             Exported=true is required so the system can bind to TileService.
+             BIND_QUICK_SETTINGS_TILE prevents third-party apps from binding. -->
+        <service
+            android:name=".SosQuickSettingsTile"
+            android:exported="true"
+            android:icon="@drawable/ic_qs_crash_monitor"
+            android:label="@string/qs_tile_label_on"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

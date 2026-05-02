@@ -12,6 +12,7 @@ import 'crash_tuning.dart';
 import 'driving_mode_service.dart';
 import 'emergency_orchestrator.dart';
 import 'gyroscope_fusion_service.dart';
+import 'remote_crash_config.dart';
 
 class _SpeedSample {
   final DateTime t;
@@ -121,6 +122,11 @@ class CrashDetectionService {
       Duration(milliseconds: CrashTuning.speedHistoryHorizonMs),
     );
     _speedHistory.removeWhere((s) => s.t.isBefore(cutoff));
+
+    // Update zone classifier with GPS lat/lng + speed.
+    // Region lookup (crash_config_regions geofences) has priority over the
+    // speed heuristic, enabling admin-defined per-geography tuning.
+    RemoteCrashConfig.instance.updateLocation(p.latitude, p.longitude, kmh);
   }
 
   void _onAccelerometer(UserAccelerometerEvent event) {

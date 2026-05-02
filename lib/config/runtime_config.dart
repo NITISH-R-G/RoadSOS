@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../logging/app_log.dart';
+import '../services/remote_crash_config.dart';
 
 /// Bootstraps runtime configuration without bundling secrets as app assets.
 ///
@@ -12,6 +13,8 @@ import '../logging/app_log.dart';
 /// - GEMMA_API_KEY is set as a Supabase Edge Function secret (never on the client).
 /// - TWILIO_* credentials are set as Supabase Edge Function secrets.
 /// - SUPABASE_URL + SUPABASE_ANON_KEY are the only credentials on the mobile client.
+/// - Crash thresholds are fetched live from the `crash_config` Supabase table
+///   via [RemoteCrashConfig] — no app release needed to tune sensitivity.
 class RuntimeConfig {
   RuntimeConfig._();
 
@@ -51,25 +54,16 @@ class RuntimeConfig {
     // ── Map ────────────────────────────────────────────────────────────────
     _setIfDefined('MAP_TILE_URL_TEMPLATE');
 
-    // ── Crash detection tuning ─────────────────────────────────────────────
-    // All keys consumed by CrashTuning. Previously these were wired in
-    // CrashTuning but never passed through RuntimeConfig, so --dart-define
-    // values were silently ignored. Fixed here.
-    _setIfDefined('CRASH_IMPACT_THRESHOLD_MS2');
-    _setIfDefined('CRASH_MIN_APPROACH_SPEED_KMH');
-    _setIfDefined('CRASH_STOPPED_SPEED_KMH');
-    _setIfDefined('CRASH_SUDDEN_DECEL_DELTA_KMH');
-    _setIfDefined('CRASH_SPEED_HISTORY_HORIZON_MS');
-    _setIfDefined('CRASH_STILLNESS_STDDEV_MAX_MS2');
-    _setIfDefined('CRASH_STILLNESS_SAMPLE_WINDOW_MS');
-    _setIfDefined('CRASH_PRE_IMPACT_LOOKBACK_MS');
-    _setIfDefined('CRASH_POST_IMPACT_WINDOW_MS');
-    _setIfDefined('CRASH_INTER_SPIKE_DEBOUNCE_MS');
-    _setIfDefined('CRASH_SOS_COOLDOWN_MS');
-
     // ── Connectivity-aware triage ──────────────────────────────────────────
     // Set to 'false' to always attempt Tier 1 cloud even when offline probe says no.
     _setIfDefined('CONNECTIVITY_AWARE_TRIAGE');
+
+    // ── Remote crash thresholds — Phase 1 (cache only) ────────────────────
+    // Loads the last persisted threshold values and geofence regions from
+    // SharedPreferences so CrashTuning is ready before the first GPS event.
+    // Does NOT touch the network. Phase 2 (Supabase fetch) happens in main()
+    // after bootstrapSupabaseAuth() completes.
+    await RemoteCrashConfig.instance.loadCachedValues();
   }
 
   static void _setIfDefined(String key) {
@@ -108,29 +102,6 @@ class RuntimeConfig {
         return const String.fromEnvironment('EMERGENCY_NUMBER_FALLBACK');
       case 'MAP_TILE_URL_TEMPLATE':
         return const String.fromEnvironment('MAP_TILE_URL_TEMPLATE');
-      // Crash tuning
-      case 'CRASH_IMPACT_THRESHOLD_MS2':
-        return const String.fromEnvironment('CRASH_IMPACT_THRESHOLD_MS2');
-      case 'CRASH_MIN_APPROACH_SPEED_KMH':
-        return const String.fromEnvironment('CRASH_MIN_APPROACH_SPEED_KMH');
-      case 'CRASH_STOPPED_SPEED_KMH':
-        return const String.fromEnvironment('CRASH_STOPPED_SPEED_KMH');
-      case 'CRASH_SUDDEN_DECEL_DELTA_KMH':
-        return const String.fromEnvironment('CRASH_SUDDEN_DECEL_DELTA_KMH');
-      case 'CRASH_SPEED_HISTORY_HORIZON_MS':
-        return const String.fromEnvironment('CRASH_SPEED_HISTORY_HORIZON_MS');
-      case 'CRASH_STILLNESS_STDDEV_MAX_MS2':
-        return const String.fromEnvironment('CRASH_STILLNESS_STDDEV_MAX_MS2');
-      case 'CRASH_STILLNESS_SAMPLE_WINDOW_MS':
-        return const String.fromEnvironment('CRASH_STILLNESS_SAMPLE_WINDOW_MS');
-      case 'CRASH_PRE_IMPACT_LOOKBACK_MS':
-        return const String.fromEnvironment('CRASH_PRE_IMPACT_LOOKBACK_MS');
-      case 'CRASH_POST_IMPACT_WINDOW_MS':
-        return const String.fromEnvironment('CRASH_POST_IMPACT_WINDOW_MS');
-      case 'CRASH_INTER_SPIKE_DEBOUNCE_MS':
-        return const String.fromEnvironment('CRASH_INTER_SPIKE_DEBOUNCE_MS');
-      case 'CRASH_SOS_COOLDOWN_MS':
-        return const String.fromEnvironment('CRASH_SOS_COOLDOWN_MS');
       // Connectivity
       case 'CONNECTIVITY_AWARE_TRIAGE':
         return const String.fromEnvironment('CONNECTIVITY_AWARE_TRIAGE');

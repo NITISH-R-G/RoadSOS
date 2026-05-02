@@ -2,12 +2,18 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../logging/app_log.dart';
+
+// MethodChannel shared with MainActivity for hardware-button events.
+// We reuse it here to sync the QS tile's SharedPreferences state.
+const _kHardwareButtonsChannel =
+    MethodChannel('com.codestreak.roadsos/hardware_buttons');
 
 /// IPC command constants between the UI isolate and the background isolate.
 class BgCommand {
@@ -84,12 +90,23 @@ class EmergencyBackgroundService {
     if (!running) await _service.startService();
     _service.invoke(BgCommand.startCrashMonitor);
     appLog.i('[BgService] Crash monitor started.');
+    _syncQsTile(active: true);
   }
 
   static Future<void> stopCrashMonitor() async {
     if (!_initialized) return;
     _service.invoke(BgCommand.stopCrashMonitor);
     appLog.i('[BgService] Crash monitor stopped.');
+    _syncQsTile(active: false);
+  }
+
+  /// Writes the crash-monitor state to Android SharedPreferences so the
+  /// Quick Settings tile reflects the current monitoring status.
+  static void _syncQsTile({required bool active}) {
+    if (kIsWeb || !Platform.isAndroid) return;
+    _kHardwareButtonsChannel
+        .invokeMethod<void>('setCrashMonitorActive', active)
+        .catchError((_) {/* activity may not be in foreground; tile will sync on next panel open */});
   }
 
   static Future<void> startSafeWalk({required Duration duration}) async {
