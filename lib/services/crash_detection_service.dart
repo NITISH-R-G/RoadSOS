@@ -26,9 +26,13 @@ class _SpeedSample {
 ///   Gate 3 — Post-impact speed collapses or car stops
 ///   Gate 4 — Device becomes still (not a pothole bounce)
 ///
-/// Gyroscope fusion (new in this revision):
-///   At the moment of an accelerometer spike, [GyroscopeFusionService] reports
-///   the peak angular velocity in the preceding 1.5 seconds.
+/// Gyroscope fusion:
+///   Uses the shared [gyroscopeFusionServiceProvider] instance — same sensor
+///   stream consumed by [TriageValidationAgent]. A single gyroscope
+///   subscription services both crash detection and triage validation,
+///   eliminating the duplicate subscription that existed when each service
+///   created its own [GyroscopeFusionService].
+///
 ///   - gyro > 3.5 rad/s → vehicle rolling / spinning → confidence ×1.4 (lower effective threshold)
 ///   - gyro < 1.5 rad/s → vertical bounce → confidence ×0.6–0.85 (raise effective threshold)
 ///   - no gyro available → multiplier = 1.0 (backward-compatible with accel-only mode)
@@ -38,17 +42,14 @@ class _SpeedSample {
 ///   < 1 rad/s rotation (car continues forward). Real crashes produce both
 ///   a strong linear deceleration AND a rotational signature. Gyro fusion
 ///   reduces false-positive SOS triggers by ~40% in simulation.
-///
-/// Driving mode integration:
-///   When [DrivingModeService] reports [DrivingMode.driving], the gyro
-///   multiplier is applied with a slightly lower angular floor — highway
-///   crash signatures are cleaner and distinguishable at higher confidence.
 class CrashDetectionService {
   CrashDetectionService(this._ref);
 
   final Ref _ref;
 
-  final GyroscopeFusionService _gyro = GyroscopeFusionService();
+  // Shared gyroscope instance — avoids duplicate sensor subscription.
+  // The provider is non-autoDispose and starts tracking on creation.
+  GyroscopeFusionService get _gyro => _ref.read(gyroscopeFusionServiceProvider);
 
   StreamSubscription<UserAccelerometerEvent>? _accelSub;
   StreamSubscription<Position>? _positionSub;
@@ -62,7 +63,8 @@ class CrashDetectionService {
 
   void startMonitoring() {
     stopMonitoring();
-    _gyro.startTracking();
+    // Gyroscope is managed by gyroscopeFusionServiceProvider — no manual
+    // startTracking() needed here; the provider starts it on first read.
     _startGpsSpeed();
     _accelSub = SensorsPlatform.instance
         .userAccelerometerEventStream()
@@ -121,9 +123,6 @@ class CrashDetectionService {
   void _onAccelerometer(UserAccelerometerEvent event) {
     final mag = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
 
-    // Gyro-adjusted effective threshold:
-    // When angular velocity is low (pothole/drop), raise the bar.
-    // When angular velocity is high (collision rotation), lower the bar.
     final now = DateTime.now();
     final gyroPeak = _gyro.peakRadPerSecAt(now);
     final gyroMult = GyroscopeFusionService.confidenceMultiplier(gyroPeak);
@@ -247,7 +246,6 @@ class CrashDetectionService {
     }
   }
 
-  /// Sample user acceleration for [stillnessSampleWindowMs]; low std-dev ⇒ device at rest.
   Future<bool> _measureStillness() async {
     final magnitudes = <double>[];
     final sub = SensorsPlatform.instance.userAccelerometerEventStream().listen(
@@ -277,11 +275,11 @@ class CrashDetectionService {
   }
 
   void stopMonitoring() {
-    _gyro.stopTracking();
     _accelSub?.cancel();
     _accelSub = null;
     _positionSub?.cancel();
     _positionSub = null;
+    // Gyroscope lifecycle is managed by gyroscopeFusionServiceProvider.
   }
 }
 
