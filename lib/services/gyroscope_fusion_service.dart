@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 import '../logging/app_log.dart';
@@ -95,3 +96,13 @@ class _GyroSample {
   final double radPerSec;
   const _GyroSample(this.t, this.radPerSec);
 }
+
+/// Non-autoDispose: gyro history must survive widget rebuilds so the crash peak
+/// recorded at SOS trigger is still readable when the validation agent runs
+/// a few seconds later during GPS lock + triage.
+final gyroscopeFusionServiceProvider = Provider<GyroscopeFusionService>((ref) {
+  final svc = GyroscopeFusionService();
+  svc.startTracking();
+  ref.onDispose(svc.stopTracking);
+  return svc;
+});

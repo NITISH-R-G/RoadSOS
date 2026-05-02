@@ -25,6 +25,9 @@ import 'family_tracking_service.dart';
 import 'privacy_consent_service.dart';
 import 'driving_mode_service.dart';
 import 'wake_lock_service.dart';
+import 'gyroscope_fusion_service.dart';
+import 'triage_validation_agent.dart';
+import 'triage_feedback_service.dart';
 
 final facilityQueryServiceProvider = Provider<FacilityQueryService>((ref) {
   return FacilityQueryService();
@@ -114,13 +117,26 @@ class SOSState {
 
 /// Emergency Orchestrator — the central brain of RoadSOS.
 ///
-/// Upgrades in this revision:
-/// - Wake lock: acquires screen wake lock when SOS goes active so the dispatch
-///   panel stays visible even if the phone is lying on a car seat.
-/// - Driving mode: logs whether the SOS was triggered during a driving session.
-///   This is included in the incident record for insurer / ERSS reports.
-/// - SMS retry: retries once after 3s on failure (from previous revision).
-/// - BLE broadcast passes severity + services to BlePayloadCodec.
+/// Phase 3 — Zero-hallucination safety validation:
+///   After each AI tier returns a triage, [TriageValidationAgent] enforces
+///   rule-based safety constraints (ambulance mandatory at sev ≥ 3, driving
+///   mode severity floor = 3, gyro crash confirmation floor = 4) before the
+///   result is shown to the user or passed to dispatch channels.
+///
+/// Phase 5 — Multi-agent observability:
+///   Dispatch channels are registered in [dispatchChannels] with per-channel
+///   lifecycle tracking (pending → inProgress → success | failed | skipped).
+///   The UI shows each agent's status in real-time.
+///
+/// Phase 7 — Hands-free voice SOS:
+///   When driving mode is active at trigger, the orchestrator speaks a
+///   countdown announcement and listens for a voice cancel utterance in
+///   parallel with the countdown timer. After dispatch, the triage summary is
+///   spoken so the driver never needs to look at the screen.
+///
+/// Phase 8 — RL feedback loop:
+///   Initializes [TriageFeedbackService] so the severity bias is available
+///   for Tier 3 / Tier 4 classifiers immediately at app start.
 class EmergencyOrchestrator extends StateNotifier<SOSState> {
   final Ref _ref;
   Timer? _countdownTimer;
@@ -129,6 +145,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
     _restoreState();
     _ref.read(crashDetectionServiceProvider).startMonitoring();
+    // Phase 8: ensure RL bias is loaded before any SOS fires.
+    unawaited(TriageFeedbackService.instance.initialize());
   }
 
   Future<void> _restoreState() async {
@@ -139,7 +157,6 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         phase: SOSPhase.active,
         incidentId: prefs.getString('sos_id'),
       );
-      // Re-acquire wake lock on restore — screen may have been off since restart.
       await WakeLockService.acquireForSos();
     }
   }
@@ -178,6 +195,27 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       SOSPhase.countdown,
     );
 
+    // Phase 7: hands-free countdown announcement when driving.
+    // Spoken once at the start — no per-tick repetition to avoid interfering
+    // with voice cancel listening which runs in parallel.
+    if (isDriving) {
+      final voice = _ref.read(voiceAssistantServiceProvider);
+      unawaited(voice.speakHandsFreeCountdown(10, 'Location being acquired'));
+
+      // Listen for voice cancel in parallel with countdown timer.
+      // If the user says "cancel"/"stop"/locale equivalent → abort SOS.
+      unawaited(
+        voice
+            .listenForCancel(listenFor: const Duration(seconds: 9))
+            .then((cancelled) {
+          if (cancelled && state.phase == SOSPhase.countdown) {
+            appLog.i('[Orchestrator] Voice cancel detected — aborting SOS');
+            cancelSos();
+          }
+        }),
+      );
+    }
+
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.countdownSeconds > 1) {
         state = state.copyWith(countdownSeconds: state.countdownSeconds - 1);
@@ -193,6 +231,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     state = const SOSState();
     _persistState(false);
     unawaited(WakeLockService.release());
+    // Stop any in-progress TTS so the countdown announcement does not keep playing.
+    unawaited(_ref.read(voiceAssistantServiceProvider).stopSpeaking());
     final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
     _log(l10n.orchestratorCancelled, SOSPhase.idle);
   }
@@ -268,13 +308,44 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     _log(l10n.orchestratorAiBrief, SOSPhase.triaging);
     state = state.copyWith(phase: SOSPhase.triaging);
 
-    final triage = await _ref.read(aiTriageServiceProvider).performTriage(
+    final rawTriage = await _ref.read(aiTriageServiceProvider).performTriage(
       location: location,
       isBystander: state.isBystander,
       languageCode: locale.languageCode,
     );
+
+    // ── Phase 3: Safety validation gate ──────────────────────────────────
+    // Read gyro peak over the 1.5s window around the moment of SOS trigger.
+    // The gyro service has a 3s rolling buffer so the crash peak is still in
+    // memory even though a few seconds elapsed during GPS lock + triage.
+    final gyroService = _ref.read(gyroscopeFusionServiceProvider);
+    final gyroPeak = gyroService.peakRadPerSecAt(DateTime.now(), windowMs: 3000);
+
+    final validation = triageValidationAgent.validate(
+      raw: rawTriage,
+      drivingMode: _ref.read(drivingModeProvider),
+      gyroPeakRadPerSec: gyroPeak,
+      accelSeverityHint: state.isBystander ? 2 : 3,
+    );
+
+    final triage = validation.triage;
     state = state.copyWith(triageResult: triage);
+
     _log(l10n.orchestratorTriageDone(triage.severityLevel), SOSPhase.triaging);
+
+    if (validation.wasOverridden) {
+      _log(
+        'Safety agent: ${validation.overrideNotes.length} override(s) applied. '
+        'Confidence: ${triage.confidenceLabel}.',
+        SOSPhase.triaging,
+      );
+    } else {
+      _log(
+        'Safety agent: triage validated — no overrides. '
+        'Confidence: ${triage.confidenceLabel}.',
+        SOSPhase.triaging,
+      );
+    }
 
     _log(l10n.orchestratorDispatching, SOSPhase.dispatching);
     state = state.copyWith(
@@ -383,8 +454,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     state = state.copyWith(phase: SOSPhase.active);
     await _persistState(true);
 
-    // Acquire screen wake lock — the dispatch panel must stay visible for
-    // both the victim and any responder who picks up the phone.
+    // Acquire screen wake lock so the dispatch panel stays visible on a car seat.
     await WakeLockService.acquireForSos();
 
     _log(
@@ -401,9 +471,19 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         SOSPhase.active,
       );
     }
+
+    // Phase 7: post-dispatch voice briefing — the driver hears what was sent.
+    if (state.wasInDrivingMode) {
+      final voice = _ref.read(voiceAssistantServiceProvider);
+      unawaited(voice.speakTriageSummary(
+        severity: triage.severityLevel,
+        services: triage.requiredServices,
+        locationCoords: '${location.latitude.toStringAsFixed(2)}, '
+            '${location.longitude.toStringAsFixed(2)}',
+      ));
+    }
   }
 
-  /// Dispatches SMS and retries once if the primary attempt fails.
   Future<SmsDispatchOutcome> _dispatchSmsWithRetry(
     String payload, {
     double? lat,

@@ -37,6 +37,12 @@ enum TriageSource {
 enum ModelState { unloaded, ready, error, degraded }
 
 /// Triage result from any tier in the Gemma 4 inference stack.
+///
+/// Phase 3 additions:
+///   [confidence]       — 0.0–1.0 calibrated score based on source tier + signals.
+///   [validationFlags]  — rule codes fired by [TriageValidationAgent].
+///   [wasOverridden]    — true if any rule-based override changed the AI output.
+///   [validationNotes]  — human-readable explanation of each override (shown in UI).
 class TriageResult {
   final String functionCall;
   final String location;
@@ -47,9 +53,23 @@ class TriageResult {
   final String? thinkingTrace;
   final bool isDegradedMode;
   final TriageSource source;
-
-  /// Whether Gemma 4 vision analyzed a crash-scene photo.
   final bool visionUsed;
+
+  // ── Phase 3: Zero-hallucination fields ───────────────────────────────────
+  /// Calibrated confidence in this triage result (0.0 = none, 1.0 = certain).
+  /// Computed by [TriageValidationAgent] after the producing tier completes.
+  /// Tier baseline: Cloud=0.92, OnDevice=0.74, Heuristic=0.58, Classifier=0.42.
+  final double confidence;
+
+  /// Rule codes from [TriageValidationAgent] that fired on this result.
+  /// Empty list means no overrides were needed.
+  final List<String> validationFlags;
+
+  /// True if [TriageValidationAgent] changed severity or services.
+  final bool wasOverridden;
+
+  /// Human-readable notes for each override — shown in [AiExplainabilityView].
+  final List<String> validationNotes;
 
   const TriageResult({
     required this.functionCall,
@@ -62,6 +82,11 @@ class TriageResult {
     this.isDegradedMode = false,
     this.source = TriageSource.offlineClassifier,
     this.visionUsed = false,
+    // Phase 3 fields — default to unvalidated state so existing call-sites compile.
+    this.confidence = 0.70,
+    this.validationFlags = const [],
+    this.wasOverridden = false,
+    this.validationNotes = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -77,6 +102,10 @@ class TriageResult {
         'degraded_mode': isDegradedMode,
         'source': source.name,
         'vision_used': visionUsed,
+        'confidence': confidence,
+        'validation_flags': validationFlags,
+        'was_overridden': wasOverridden,
+        'validation_notes': validationNotes,
       };
 
   String get sourceLabel {
@@ -94,6 +123,13 @@ class TriageResult {
       case TriageSource.webDemo:
         return 'Web demo';
     }
+  }
+
+  /// Human-readable confidence label for display.
+  String get confidenceLabel {
+    if (confidence >= 0.80) return 'High';
+    if (confidence >= 0.60) return 'Moderate';
+    return 'Low';
   }
 }
 
@@ -114,6 +150,11 @@ class TriageResult {
 /// [CameraTriageService.captureBystanderPhoto]. Gemma 4 27B is multimodal —
 /// it analyzes the photo for fire, smoke, entrapment, and vehicle damage
 /// alongside the audio transcript. This is a key Gemma-4-specific capability.
+///
+/// Phase 3: The [TriageValidationAgent] runs in the [EmergencyOrchestrator]
+/// after this service returns, enforcing rule-based safety constraints before
+/// dispatch. This service intentionally does not call the validation agent —
+/// separation of concerns keeps triage and safety validation independent.
 class AiTriageService {
   static const _classifier = OfflineTriageClassifier();
   static const _tier3 = Tier2LocalTriageModel();
@@ -128,14 +169,11 @@ class AiTriageService {
 
   AiTriageService(this._gemmaLocal, this._connectivity);
 
-  /// Returns true when connectivity-aware tier-skip is enabled (default: true).
   bool get _connectivityAwareTriage {
     final v = dotenv.env['CONNECTIVITY_AWARE_TRIAGE']?.trim().toLowerCase();
     return v == null || v.isEmpty || v == 'true' || v == '1';
   }
 
-  /// Initializes the triage pipeline.
-  /// Starts Gemma 4 E4B on-device load in background (non-blocking).
   Future<void> initializeModel() async {
     _state = ModelState.unloaded;
     if (kIsWeb) {
@@ -153,7 +191,6 @@ class AiTriageService {
       '  Tier 4: Keyword classifier\n'
       '  Connectivity-aware: $_connectivityAwareTriage',
     );
-    // Load on-device Gemma 4 E4B in background — never blocks SOS dispatch.
     unawaited(_gemmaLocal.initialize());
   }
 
@@ -174,19 +211,12 @@ class AiTriageService {
 
     const CapturedScenePhoto? scenePhoto = null;
 
-    // Connectivity-aware Tier 1 skip.
-    // When clearly offline, skipping the cloud call and its 5-second timeout
-    // shaves up to 5 seconds off the total SOS dispatch time. In cases where
-    // the connectivity probe is wrong (edge signal), Tier 1 will simply time
-    // out normally since we still attempt it when quality is 'cellular'.
     final skipCloud = _connectivityAwareTriage &&
         _connectivity.currentQuality == NetworkQuality.none;
 
     if (skipCloud) {
       appLog.d('[Triage] Connectivity=none — skipping Tier 1 cloud (saves 5s timeout)');
     } else {
-      // Tier 1: Cloud Gemma 4 27B.
-      // Timeout is 5s for cellular (tight) and 8s for wifi (generous).
       final cloudTimeout = _connectivity.currentQuality == NetworkQuality.wifi
           ? const Duration(seconds: 8)
           : const Duration(seconds: 5);
@@ -206,7 +236,6 @@ class AiTriageService {
       }
     }
 
-    // Tier 2: On-device Gemma 4 E4B (offline-capable).
     if (_gemmaLocal.isAvailable) {
       try {
         final onDevice = await _callGemma4OnDevice(
@@ -224,7 +253,6 @@ class AiTriageService {
       }
     }
 
-    // Tier 3: Weighted local heuristic.
     appLog.d('[Triage] Tier 3 — local heuristic model');
     return _buildTier3Triage(
       transcript: audioTranscript,
