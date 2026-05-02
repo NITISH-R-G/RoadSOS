@@ -65,6 +65,14 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
         '— ${v.interpretation}';
   }
 
+  /// Alias used by VitalScanScreen.
+  void setManual({
+    required int bpm,
+    required int respiratoryRate,
+    required double bloodOxygen,
+  }) =>
+      recordManual(bpm: bpm, respiratoryRate: respiratoryRate, bloodOxygen: bloodOxygen);
+
   void clear() => state = null;
 
   String _interpretForDispatch({

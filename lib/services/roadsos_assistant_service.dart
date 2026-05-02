@@ -331,3 +331,6 @@ final roadSosAssistantServiceProvider =
     StateNotifierProvider<RoadSosAssistantService, AssistantState>((ref) {
   return RoadSosAssistantService();
 });
+
+/// Alias used by UI files.
+final roadsosAssistantProvider = roadSosAssistantServiceProvider;

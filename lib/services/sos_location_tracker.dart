@@ -112,8 +112,12 @@ class SosLocationTracker {
     if (kIsWeb) return;
 
     try {
-      if (!isSupabaseSdkInitialized) return;
-      final client = Supabase.instance.client;
+      SupabaseClient client;
+      try {
+        client = Supabase.instance.client;
+      } catch (_) {
+        return;
+      }
 
       await client.from('incident_live_links').update({
         'latitude'   : pos.latitude,
