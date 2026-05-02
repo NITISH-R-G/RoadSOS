@@ -5,6 +5,25 @@
 -keep class io.flutter.util.** { *; }
 -keep class io.flutter.view.** { *; }
 
+# ─── Play Core / deferred components ─────────────────────────────────────────
+# Flutter's FlutterPlayStoreSplitApplication references Play Core classes for
+# dynamic feature delivery.  This project uses --split-per-abi (build-time ABI
+# splits), NOT Play Store dynamic delivery, so these classes are never reached
+# at runtime.  Suppress R8 "Missing class" errors without adding the full
+# play-core dependency.
+-dontwarn com.google.android.play.core.**
+-keep class com.google.android.play.core.splitcompat.** { *; }
+-keep class com.google.android.play.core.splitinstall.** { *; }
+-keep class com.google.android.play.core.tasks.** { *; }
+
+# ─── Annotation-processor internals (shaded into runtime classpath) ───────────
+# Some transitive dependencies (AutoValue, javapoet) shade annotation-processor
+# classes into their JARs. These are compile-time only; suppress R8 errors.
+-dontwarn javax.lang.model.**
+-dontwarn javax.annotation.processing.**
+-dontwarn autovalue.shaded.**
+-dontwarn com.google.auto.value.**
+
 # ─── Dart/Flutter JNI bridge ─────────────────────────────────────────────────
 -keepclassmembers class * {
     native <methods>;
