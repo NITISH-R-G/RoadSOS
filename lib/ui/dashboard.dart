@@ -17,6 +17,8 @@ import 'map_widget.dart';
 import 'medical_card_screen.dart';
 import 'mesh_chat_screen.dart';
 import 'mesh_radar.dart';
+import 'offline_map_screen.dart';
+import 'profile_editor_screen.dart';
 import 'responder_dashboard.dart';
 import 'safe_walk_overlay.dart';
 import 'settings_screen.dart';
@@ -27,7 +29,10 @@ import 'status_indicator.dart';
 import 'triage_result_card.dart';
 import 'vital_scan_screen.dart';
 
-/// Main shell: idle = single giant SOS (panic-first); other phases show honest dispatch status.
+/// Main shell — panic-first design with a discoverable bottom navigation bar.
+///
+/// Idle:     3-tab NavigationBar — SOS | Safety Tools | My Profile
+/// Active:   Full-screen emergency UI (countdown → GPS lock → dispatch → live)
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -37,13 +42,19 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with TickerProviderStateMixin {
+  int _tab = 0;
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+
+  static const _kRed = Color(0xFFE8281A);
+  static const _kSurface = Color(0xFF111418);
+  static const _kNavBg = Color(0xFF0D1014);
 
   @override
   void initState() {
     super.initState();
-    _checkInitialPermissions();
+    appLog.d('DashboardScreen init');
 
     _pulseController = AnimationController(
       vsync: this,
@@ -65,176 +76,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     super.dispose();
   }
 
-  Future<void> _checkInitialPermissions() async {
-    appLog.d('Checking safety permissions');
-  }
-
-  void _openEmergencyToolsSheet(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      backgroundColor: scheme.surfaceContainerHighest,
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.paddingOf(ctx).bottom + 16,
-              top: 8,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.sosIdleToolsTitle,
-                    style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: scheme.onSurface,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  const SizedBox(height: 180, child: MeshRadar()),
-                  const SizedBox(height: 24),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      StatusIndicatorBar(),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    alignment: WrapAlignment.start,
-                    children: [
-                      _sheetAction(
-                        ctx,
-                        Icons.camera_enhance,
-                        l10n.actionScene,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const IncidentReportingScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.qr_code,
-                        l10n.actionMedicalId,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const MedicalCardScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.health_and_safety,
-                        l10n.actionResponder,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const ResponderDashboard()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.directions_walk,
-                        l10n.actionSafeWalk,
-                        () => _showSafeWalkDialog(ctx),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.health_and_safety_outlined,
-                        l10n.actionFirstAid,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const FirstAidScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.monitor_heart,
-                        l10n.actionVitalScan,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const VitalScanScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.forum,
-                        l10n.actionMeshChat,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const MeshChatScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.fact_check_outlined,
-                        'Activity log',
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.settings,
-                        l10n.actionSettings,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _sheetAction(
-    BuildContext context,
-    IconData icon,
-    String label,
-    VoidCallback onTap,
-  ) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: scheme.primary, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: scheme.onSurface.withAlpha(235),
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // ─────────────────────────────────────────────────────────────────────────
+  // Build
+  // ─────────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -243,27 +87,92 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final idle = sosState.phase == SOSPhase.idle;
     final drivingMode = ref.watch(drivingModeProvider);
 
+    // Emergency active → full-screen (no nav bar, no distractions).
+    if (!idle) {
+      return Scaffold(
+        backgroundColor: scheme.surface,
+        appBar: _emergencyAppBar(context),
+        body: Stack(
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 350),
+              child: KeyedSubtree(
+                key: ValueKey<SOSPhase>(sosState.phase),
+                child: _emergencyBody(context, sosState),
+              ),
+            ),
+            const CrisisCompanionOverlay(),
+            const SafeWalkOverlay(),
+            const SOSSideEffectObserver(),
+          ],
+        ),
+      );
+    }
+
+    // Idle → 3-tab layout.
     return Scaffold(
-      backgroundColor: idle ? Colors.black : scheme.surface,
-      appBar: idle ? null : _buildEmergencyAppBar(context),
+      backgroundColor: Colors.black,
+      appBar: _idleAppBar(context),
       body: Stack(
         children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            child: KeyedSubtree(
-              key: ValueKey<SOSPhase>(sosState.phase),
-              child: _buildBody(context, sosState, drivingMode),
-            ),
+          IndexedStack(
+            index: _tab,
+            children: [
+              _sosTab(context, drivingMode),
+              _toolsTab(context),
+              _profileTab(context),
+            ],
           ),
           const CrisisCompanionOverlay(),
           const SafeWalkOverlay(),
           const SOSSideEffectObserver(),
         ],
       ),
+      bottomNavigationBar: _navBar(context),
     );
   }
 
-  PreferredSizeWidget _buildEmergencyAppBar(BuildContext context) {
+  // ─────────────────────────────────────────────────────────────────────────
+  // App bars
+  // ─────────────────────────────────────────────────────────────────────────
+
+  PreferredSizeWidget _idleAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.black,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: _kRed,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Icon(Icons.emergency_share, color: Colors.white, size: 16),
+          ),
+          const SizedBox(width: 10),
+          const Text(
+            'RoadSOS',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+      actions: const [
+        StatusIndicatorBar(),
+        SizedBox(width: 12),
+      ],
+    );
+  }
+
+  PreferredSizeWidget _emergencyAppBar(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
@@ -294,134 +203,144 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ),
         ),
         const StatusIndicatorBar(),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
       ],
     );
   }
 
-  Widget _buildBody(BuildContext context, SOSState sosState, DrivingMode drivingMode) {
-    switch (sosState.phase) {
-      case SOSPhase.idle:
-        return _buildPanicIdleView(context, drivingMode);
-      case SOSPhase.countdown:
-        return _buildCountdownView(context, sosState);
-      case SOSPhase.gpsLocking:
-      case SOSPhase.triaging:
-        return _buildPipelineProgressView(context, sosState);
-      case SOSPhase.dispatching:
-        return _buildDispatchingView(context, sosState);
-      case SOSPhase.active:
-        return _buildActiveSessionView(context, sosState);
-      default:
-        return _buildActiveSessionView(context, sosState);
-    }
+  // ─────────────────────────────────────────────────────────────────────────
+  // Bottom navigation bar
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Widget _navBar(BuildContext context) {
+    return NavigationBar(
+      selectedIndex: _tab,
+      onDestinationSelected: (i) => setState(() => _tab = i),
+      backgroundColor: _kNavBg,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.black,
+      elevation: 8,
+      indicatorColor: _kRed.withAlpha(38),
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.emergency_outlined, color: Colors.white54),
+          selectedIcon: Icon(Icons.emergency, color: _kRed),
+          label: 'SOS',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.apps_outlined, color: Colors.white54),
+          selectedIcon: Icon(Icons.apps, color: _kRed),
+          label: 'Safety Tools',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.person_outline, color: Colors.white54),
+          selectedIcon: Icon(Icons.person, color: _kRed),
+          label: 'My Profile',
+        ),
+      ],
+    );
   }
 
-  Widget _buildPanicIdleView(BuildContext context, DrivingMode drivingMode) {
+  // ─────────────────────────────────────────────────────────────────────────
+  // Tab 0 — SOS (panic button)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Widget _sosTab(BuildContext context, DrivingMode drivingMode) {
     final l10n = AppLocalizations.of(context)!;
     final isDriving = drivingMode == DrivingMode.driving;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final totalH = constraints.maxHeight;
-        // Reserve 36px for the driving mode banner when active.
-        final bannerH = isDriving ? 36.0 : 0.0;
-        final btnH = (totalH - bannerH) * 0.8;
-        final titleSize = min(96.0, btnH * 0.14);
+    return LayoutBuilder(builder: (context, constraints) {
+      final totalH = constraints.maxHeight;
+      final bannerH = isDriving ? 36.0 : 0.0;
+      final btnH = (totalH - bannerH) * 0.78;
+      final titleSize = min(96.0, btnH * 0.14);
 
-        return Column(
-          children: [
-            // ── Driving mode banner ───────────────────────────────────────
-            if (isDriving)
-              Container(
-                height: 36,
-                color: const Color(0xFFFF9500), // system orange
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.directions_car, color: Colors.black, size: 16),
-                    SizedBox(width: 6),
-                    Text(
-                      'DRIVING MODE — Crash detection armed',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                      ),
+      return Column(
+        children: [
+          // Driving mode banner
+          if (isDriving)
+            Container(
+              height: 36,
+              color: const Color(0xFFFF9500),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.directions_car, color: Colors.black, size: 16),
+                  SizedBox(width: 6),
+                  Text(
+                    'DRIVING MODE — Crash detection armed',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
 
-            // ── Main SOS button ───────────────────────────────────────────
-            Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () =>
-                        ref.read(emergencyOrchestratorProvider.notifier).triggerSOS(),
-                    child: AnimatedBuilder(
-                      animation: _pulseAnimation,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: _pulseAnimation.value,
-                          child: child,
-                        );
-                      },
-                      child: SizedBox(
-                        height: btnH,
-                        width: double.infinity,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(52),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Color(0xFFFF453A),
-                                  Color(0xFFB00020),
-                                ],
+          // SOS button — takes up most of the screen
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () =>
+                      ref.read(emergencyOrchestratorProvider.notifier).triggerSOS(),
+                  child: AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) =>
+                        Transform.scale(scale: _pulseAnimation.value, child: child),
+                    child: SizedBox(
+                      height: btnH,
+                      width: double.infinity,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(52),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFFFF453A), Color(0xFFB00020)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF453A).withAlpha(107),
+                                blurRadius: 40,
+                                spreadRadius: 2,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF453A).withAlpha(107),
-                                  blurRadius: 40,
-                                  spreadRadius: 2,
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                l10n.sosButton,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: titleSize,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
                                 ),
-                              ],
-                            ),
-                            alignment: Alignment.center,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  l10n.sosButton,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: titleSize,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 2,
+                              ),
+                              const SizedBox(height: 12),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  l10n.sosButtonSub,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Color(0xF0FFFFFF),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                const SizedBox(height: 12),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    l10n.sosButtonSub,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Color(0xF0FFFFFF),
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -430,140 +349,353 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 ),
               ),
             ),
+          ),
 
-            // ── Emergency tools button ────────────────────────────────────
-            SafeArea(
-              minimum: const EdgeInsets.only(bottom: 12),
-              child: TextButton(
-                onPressed: () => _openEmergencyToolsSheet(context),
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xE0FFFFFF),
-                  minimumSize: const Size(120, 52),
-                ),
-                child: Text(
-                  l10n.sosIdleTools,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
+          // Discovery hint
+          SafeArea(
+            minimum: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'All safety features are in "Safety Tools" below',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withAlpha(80),
+                fontSize: 13,
               ),
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      );
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Tab 1 — Safety Tools (all features, always visible)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Widget _toolsTab(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      children: [
+        // Radar + status at the top
+        const SizedBox(
+          height: 160,
+          child: MeshRadar(),
+        ),
+        const SizedBox(height: 8),
+        const Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: EdgeInsets.only(right: 4, bottom: 4),
+            child: StatusIndicatorBar(),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // ── Emergency Response ──────────────────────────────────────────
+        _sectionLabel('EMERGENCY RESPONSE'),
+        const SizedBox(height: 8),
+        _toolCard(
+          context,
+          icon: Icons.directions_walk,
+          color: const Color(0xFF00B8A0),
+          title: 'Safe Walk',
+          subtitle: 'Auto-SOS if you don\'t check in at destination',
+          onTap: () => _showSafeWalkDialog(context),
+        ),
+        _toolCard(
+          context,
+          icon: Icons.camera_enhance,
+          color: const Color(0xFFF59220),
+          title: 'Capture Scene',
+          subtitle: 'Document crash with AI-powered photo analysis',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const IncidentReportingScreen()),
+          ),
+        ),
+        _toolCard(
+          context,
+          icon: Icons.health_and_safety,
+          color: const Color(0xFF4CAF50),
+          title: 'Responder View',
+          subtitle: 'Live map with nearby SOS signals',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const ResponderDashboard()),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // ── Health & Safety ─────────────────────────────────────────────
+        _sectionLabel('HEALTH & SAFETY'),
+        const SizedBox(height: 8),
+        _toolCard(
+          context,
+          icon: Icons.health_and_safety_outlined,
+          color: const Color(0xFF4CAF50),
+          title: 'First Aid Guide',
+          subtitle: 'Step-by-step emergency instructions',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const FirstAidScreen()),
+          ),
+        ),
+        _toolCard(
+          context,
+          icon: Icons.monitor_heart,
+          color: const Color(0xFFE8281A),
+          title: 'Vital Scan',
+          subtitle: 'Check heart rate & oxygen saturation',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const VitalScanScreen()),
+          ),
+        ),
+        _toolCard(
+          context,
+          icon: Icons.qr_code,
+          color: const Color(0xFF2196F3),
+          title: 'Medical ID',
+          subtitle: 'Show responders your blood type, allergies, contacts',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const MedicalCardScreen()),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // ── Connectivity ────────────────────────────────────────────────
+        _sectionLabel('CONNECTIVITY'),
+        const SizedBox(height: 8),
+        _toolCard(
+          context,
+          icon: Icons.forum,
+          color: const Color(0xFF9C27B0),
+          title: 'Mesh Chat',
+          subtitle: 'Offline Bluetooth messaging — no signal needed',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const MeshChatScreen()),
+          ),
+        ),
+        _toolCard(
+          context,
+          icon: Icons.map_outlined,
+          color: const Color(0xFF00B8A0),
+          title: 'Offline Maps',
+          subtitle: 'Download maps for no-signal areas',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const OfflineMapScreen()),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // ── Records ─────────────────────────────────────────────────────
+        _sectionLabel('RECORDS'),
+        const SizedBox(height: 8),
+        _toolCard(
+          context,
+          icon: Icons.fact_check_outlined,
+          color: Colors.white70,
+          title: 'Activity Log',
+          subtitle: 'GPS, triage, SMS — for police & insurer records',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+          ),
+        ),
+      ],
     );
   }
 
-  Future<void> _showSafeWalkDialog(BuildContext context) async {
-    final destCtrl = TextEditingController();
-    var minutes = 30;
-    final monitor = ref.read(proactiveMonitorProvider);
+  // ─────────────────────────────────────────────────────────────────────────
+  // Tab 2 — My Profile
+  // ─────────────────────────────────────────────────────────────────────────
 
-    if (monitor.isMonitoring) {
-      ref.read(proactiveMonitorProvider.notifier).endSafeWalk();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Safe Walk ended.')),
-        );
-      }
-      return;
-    }
+  Widget _profileTab(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: [
+        _sectionLabel('MY INFORMATION'),
+        const SizedBox(height: 8),
+        _toolCard(
+          context,
+          icon: Icons.person,
+          color: const Color(0xFF2196F3),
+          title: 'Edit Profile',
+          subtitle: 'Name, blood type, emergency contacts',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const ProfileEditorScreen()),
+          ),
+        ),
+        _toolCard(
+          context,
+          icon: Icons.qr_code,
+          color: const Color(0xFF00B8A0),
+          title: 'Medical ID Card',
+          subtitle: 'Quick-access health info for emergency responders',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const MedicalCardScreen()),
+          ),
+        ),
 
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-      builder: (ctx) {
-        return SafeArea(
+        const SizedBox(height: 20),
+        _sectionLabel('SETTINGS & PRIVACY'),
+        const SizedBox(height: 8),
+        _toolCard(
+          context,
+          icon: Icons.settings,
+          color: Colors.white70,
+          title: 'All Settings',
+          subtitle: 'Language, offline maps, notifications, privacy',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+          ),
+        ),
+        _toolCard(
+          context,
+          icon: Icons.history,
+          color: Colors.white54,
+          title: 'Activity Log',
+          subtitle: 'Full SOS history for insurance & police records',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Shared widgets
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Widget _sectionLabel(String label) {
+    return Text(
+      label,
+      style: TextStyle(
+        color: Colors.white.withAlpha(100),
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.4,
+      ),
+    );
+  }
+
+  Widget _toolCard(
+    BuildContext context, {
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: _kSurface,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          splashColor: color.withAlpha(20),
+          highlightColor: color.withAlpha(10),
           child: Padding(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.paddingOf(ctx).bottom + 16,
-              top: 8,
-            ),
-            child: StatefulBuilder(
-              builder: (ctx, setModal) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Safe Walk',
-                      style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: destCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Destination (optional)',
-                        hintText: 'e.g., Home, Hostel, Station',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Text('ETA minutes:'),
-                        const SizedBox(width: 12),
-                        DropdownButton<int>(
-                          value: minutes,
-                          items: const [10, 15, 20, 30, 45, 60]
-                              .map((m) => DropdownMenuItem(value: m, child: Text('$m')))
-                              .toList(),
-                          onChanged: (v) => setModal(() => minutes = v ?? 30),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: color.withAlpha(28),
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'If you miss check-in after ETA, RoadSOS will escalate to SOS after a 60s grace window.',
-                      style: Theme.of(ctx).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 52,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          ref.read(proactiveMonitorProvider.notifier).startSafeWalk(
-                                destCtrl.text.trim().isEmpty ? 'your destination' : destCtrl.text.trim(),
-                                Duration(minutes: minutes),
-                              );
-                          Navigator.pop(ctx);
-                        },
-                        icon: const Icon(Icons.directions_walk),
-                        label: const Text('START SAFE WALK'),
                       ),
-                    ),
-                  ],
-                );
-              },
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: Colors.white.withAlpha(120),
+                          fontSize: 12,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right,
+                  color: Colors.white.withAlpha(60),
+                  size: 20,
+                ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
-  Widget _buildCountdownView(BuildContext context, SOSState state) {
-    final l10n = AppLocalizations.of(context)!;
+  // ─────────────────────────────────────────────────────────────────────────
+  // Emergency phase views (shown when !idle)
+  // ─────────────────────────────────────────────────────────────────────────
 
+  Widget _emergencyBody(BuildContext context, SOSState sosState) {
+    switch (sosState.phase) {
+      case SOSPhase.countdown:
+        return _countdownView(context, sosState);
+      case SOSPhase.gpsLocking:
+      case SOSPhase.triaging:
+        return _pipelineProgressView(context, sosState);
+      case SOSPhase.dispatching:
+        return _dispatchingView(context, sosState);
+      case SOSPhase.active:
+      default:
+        return _activeSessionView(context, sosState);
+    }
+  }
+
+  Widget _countdownView(BuildContext context, SOSState state) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: SOSCountdownWidget(
         secondsRemaining: state.countdownSeconds,
         warningText: l10n.sosDispatchWarning,
         cancelLabel: l10n.cancelSos,
         secondsLabel: l10n.secondsLabel,
-        onCancel: () => ref.read(emergencyOrchestratorProvider.notifier).cancelSos(),
+        onCancel: () =>
+            ref.read(emergencyOrchestratorProvider.notifier).cancelSos(),
       ),
     );
   }
 
-  Widget _buildPipelineProgressView(BuildContext context, SOSState state) {
+  Widget _pipelineProgressView(BuildContext context, SOSState state) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
-
     final headline = state.phase == SOSPhase.gpsLocking
         ? l10n.orchestratorAcquiringLocation
         : l10n.orchestratorAiBrief;
@@ -574,10 +706,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              strokeWidth: 5,
-              color: scheme.primary,
-            ),
+            CircularProgressIndicator(strokeWidth: 5, color: scheme.primary),
             const SizedBox(height: 28),
             Text(
               headline,
@@ -594,7 +723,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
   }
 
-  Widget _buildDispatchingView(BuildContext context, SOSState state) {
+  Widget _dispatchingView(BuildContext context, SOSState state) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
 
@@ -630,7 +759,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
   }
 
-  Widget _buildActiveSessionView(BuildContext context, SOSState state) {
+  Widget _activeSessionView(BuildContext context, SOSState state) {
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -643,7 +772,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               OutlinedButton.icon(
                 onPressed: () => Navigator.push(
                   context,
-                  MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+                  MaterialPageRoute<void>(
+                      builder: (_) => const SosActivityLogScreen()),
                 ),
                 icon: const Icon(Icons.history_edu_outlined),
                 label: const Text('Full activity log & insurer note'),
@@ -653,11 +783,107 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             if (state.triageResult != null)
               TriageResultCard(result: state.triageResult!),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 300,
-              child: RoadSosMap(state: state),
-            ),
+            SizedBox(height: 300, child: RoadSosMap(state: state)),
           ],
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Safe Walk dialog
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Future<void> _showSafeWalkDialog(BuildContext context) async {
+    final destCtrl = TextEditingController();
+    var minutes = 30;
+    final monitor = ref.read(proactiveMonitorProvider);
+
+    if (monitor.isMonitoring) {
+      ref.read(proactiveMonitorProvider.notifier).endSafeWalk();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Safe Walk ended.')),
+        );
+      }
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: MediaQuery.paddingOf(ctx).bottom + 16,
+            top: 8,
+          ),
+          child: StatefulBuilder(
+            builder: (ctx, setModal) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Safe Walk',
+                  style: Theme.of(ctx)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: destCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Destination (optional)',
+                    hintText: 'e.g., Home, Hostel, Station',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Text('ETA minutes:'),
+                    const SizedBox(width: 12),
+                    DropdownButton<int>(
+                      value: minutes,
+                      items: const [10, 15, 20, 30, 45, 60]
+                          .map((m) => DropdownMenuItem(
+                              value: m, child: Text('$m')))
+                          .toList(),
+                      onChanged: (v) => setModal(() => minutes = v ?? 30),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'If you miss check-in after ETA, RoadSOS will escalate to '
+                  'SOS after a 60s grace window.',
+                  style: Theme.of(ctx).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      ref
+                          .read(proactiveMonitorProvider.notifier)
+                          .startSafeWalk(
+                            destCtrl.text.trim().isEmpty
+                                ? 'your destination'
+                                : destCtrl.text.trim(),
+                            Duration(minutes: minutes),
+                          );
+                      Navigator.pop(ctx);
+                    },
+                    icon: const Icon(Icons.directions_walk),
+                    label: const Text('START SAFE WALK'),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
