@@ -6,9 +6,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 import '../logging/app_log.dart';
+import 'bluetooth_vehicle_monitor.dart';
+import 'crash_confidence_engine.dart';
+import 'crash_tuning.dart';
 import 'driving_mode_service.dart';
 import 'emergency_orchestrator.dart';
-import 'crash_tuning.dart';
 import 'gyroscope_fusion_service.dart';
 
 class _SpeedSample {
@@ -17,39 +19,41 @@ class _SpeedSample {
   _SpeedSample(this.t, this.kmh);
 }
 
-/// Multi-stage crash detection with gyroscope fusion.
+/// Multi-stage crash detection with gyroscope fusion and multi-signal confidence.
 ///
-/// Detection pipeline (all 4 gates must pass):
+/// Detection pipeline — 4 gates (all must pass) + confidence engine:
+///
 ///   Gate 1 — Accelerometer spike above [CrashTuning.impactThresholdMs2]
-///             (adjusted by gyro confidence multiplier)
-///   Gate 2 — Pre-impact GPS speed ≥ [CrashTuning.minApproachSpeedKmh]
-///   Gate 3 — Post-impact speed collapses or car stops
-///   Gate 4 — Device becomes still (not a pothole bounce)
+///             (adjusted by gyro confidence multiplier from [GyroscopeFusionService]).
+///   Gate 2 — Pre-impact GPS speed ≥ [CrashTuning.minApproachSpeedKmh].
+///   Gate 3 — Post-impact speed collapses (halt) or drops sharply (decel).
+///   Gate 4 — Device becomes still (not a pothole bounce); bypassed if
+///             gyro ≥ 3.5 rad/s (vehicle rolling — stillness physically impossible).
 ///
-/// Gyroscope fusion:
-///   Uses the shared [gyroscopeFusionServiceProvider] instance — same sensor
-///   stream consumed by [TriageValidationAgent]. A single gyroscope
-///   subscription services both crash detection and triage validation,
-///   eliminating the duplicate subscription that existed when each service
-///   created its own [GyroscopeFusionService].
+///   Gate 5 (new) — [CrashConfidenceEngine] scores all confirmed signals
+///             plus the [BluetoothVehicleMonitor] disconnect state.
+///             Tier LOW  → dismiss (should not happen after 4 gates, but guards edge cases).
+///             Tier MEDIUM / HIGH → triggerSOS().
+///             Tier HIGH → logged with label "Detected incident — possible emergency".
 ///
-///   - gyro > 3.5 rad/s → vehicle rolling / spinning → confidence ×1.4 (lower effective threshold)
-///   - gyro < 1.5 rad/s → vertical bounce → confidence ×0.6–0.85 (raise effective threshold)
-///   - no gyro available → multiplier = 1.0 (backward-compatible with accel-only mode)
+/// Gyroscope:
+///   Uses the shared [gyroscopeFusionServiceProvider] — single subscription
+///   shared with [TriageValidationAgent]. No duplicate sensor drain.
 ///
 /// Indian-road rationale:
-///   Potholes on NH-class highways produce 25–45 m/s² vertical spikes but
-///   < 1 rad/s rotation (car continues forward). Real crashes produce both
-///   a strong linear deceleration AND a rotational signature. Gyro fusion
-///   reduces false-positive SOS triggers by ~40% in simulation.
+///   Potholes produce 25–45 m/s² vertical spikes but < 1 rad/s rotation.
+///   Real crashes produce strong linear deceleration AND a rotational
+///   signature. Gyro fusion reduces false-positive SOS triggers by ~40%.
 class CrashDetectionService {
   CrashDetectionService(this._ref);
 
   final Ref _ref;
 
-  // Shared gyroscope instance — avoids duplicate sensor subscription.
-  // The provider is non-autoDispose and starts tracking on creation.
-  GyroscopeFusionService get _gyro => _ref.read(gyroscopeFusionServiceProvider);
+  GyroscopeFusionService get _gyro =>
+      _ref.read(gyroscopeFusionServiceProvider);
+
+  BluetoothVehicleMonitor get _btMonitor =>
+      _ref.read(bluetoothVehicleMonitorProvider);
 
   StreamSubscription<UserAccelerometerEvent>? _accelSub;
   StreamSubscription<Position>? _positionSub;
@@ -63,8 +67,7 @@ class CrashDetectionService {
 
   void startMonitoring() {
     stopMonitoring();
-    // Gyroscope is managed by gyroscopeFusionServiceProvider — no manual
-    // startTracking() needed here; the provider starts it on first read.
+    // Gyroscope and BT monitor lifecycle managed by their providers.
     _startGpsSpeed();
     _accelSub = SensorsPlatform.instance
         .userAccelerometerEventStream()
@@ -127,11 +130,7 @@ class CrashDetectionService {
     final gyroPeak = _gyro.peakRadPerSecAt(now);
     final gyroMult = GyroscopeFusionService.confidenceMultiplier(gyroPeak);
 
-    // Effective threshold: base / gyroMult
-    // Higher gyro confidence → lower effective threshold → easier to trigger.
-    // Lower gyro confidence → higher effective threshold → harder to trigger.
     final effectiveThreshold = CrashTuning.impactThresholdMs2 / gyroMult;
-
     if (mag <= effectiveThreshold) return;
 
     if (_lastSpikeHandled != null &&
@@ -145,7 +144,7 @@ class CrashDetectionService {
     appLog.d(
       'Impact spike ${mag.toStringAsFixed(1)} m/s² '
       '(gyro=${gyroPeak.toStringAsFixed(2)} rad/s mult=$gyroMult '
-      'effectiveThreshold=${effectiveThreshold.toStringAsFixed(1)}) '
+      'threshold=${effectiveThreshold.toStringAsFixed(1)}) '
       '— evaluating [driving=$isDriving]',
     );
 
@@ -165,6 +164,7 @@ class CrashDetectionService {
         Duration(milliseconds: CrashTuning.postImpactWindowMs + 150),
       );
 
+      // Gate 2: GPS speed context.
       if (!_gpsSpeedUsable || _speedHistory.length < 2) {
         appLog.d('Dismissed: insufficient GPS speed context');
         return;
@@ -192,10 +192,9 @@ class CrashDetectionService {
       }
       if (minAfter.isInfinite) minAfter = _speedHistory.last.kmh;
 
-      final approach = maxBefore >= CrashTuning.minApproachSpeedKmh;
-      final halted = minAfter <= CrashTuning.stoppedSpeedKmh;
-      final sharpDrop =
-          (maxBefore - minAfter) >= CrashTuning.suddenDecelDeltaKmh;
+      final approach  = maxBefore >= CrashTuning.minApproachSpeedKmh;
+      final halted    = minAfter  <= CrashTuning.stoppedSpeedKmh;
+      final sharpDrop = (maxBefore - minAfter) >= CrashTuning.suddenDecelDeltaKmh;
 
       if (!approach || !(halted || sharpDrop)) {
         appLog.d(
@@ -205,24 +204,43 @@ class CrashDetectionService {
         return;
       }
 
-      // Strong gyro signature bypasses stillness check — a car that is rolling
-      // will never be "still" in the 1.6s window, but the crash is real.
+      // Gate 4: Stillness check (skipped for high-gyro rolling/spinning crash).
       final highGyroConfidence = gyroPeakRadPerSec >= 3.5;
       bool still;
       if (highGyroConfidence) {
         still = true;
         appLog.d(
           'Stillness bypassed — gyro=${gyroPeakRadPerSec.toStringAsFixed(2)} rad/s '
-          'confirms vehicle rotation (crash signature)',
+          'confirms vehicle rotation',
         );
       } else {
         still = await _measureStillness();
         if (!still) {
-          appLog.d(
-            'Dismissed: motion continues after spike (not a wrecked-phone profile)',
-          );
+          appLog.d('Dismissed: motion continues after spike');
           return;
         }
+      }
+
+      // ── Gate 5: Multi-signal confidence scoring ────────────────────────
+      final confidence = CrashConfidenceEngine.score(
+        CrashSignals(
+          accelPeakMs2:              peakMs2,
+          gyroPeakRadPerSec:         gyroPeakRadPerSec,
+          speedBeforeKmh:            maxBefore,
+          speedDropKmh:              maxBefore - minAfter,
+          bluetoothVehicleDisconnect: _btMonitor.recentDisconnect,
+          postImpactDeviceStill:     still,
+        ),
+      );
+
+      appLog.w(
+        'CRASH CONFIRMED — $confidence',
+      );
+
+      // LOW confidence after 4 gates is theoretically impossible but guarded.
+      if (confidence.tier == CrashConfidenceTier.low) {
+        appLog.d('Confidence engine: LOW — suppressing SOS (edge case)');
+        return;
       }
 
       final now = DateTime.now();
@@ -234,10 +252,12 @@ class CrashDetectionService {
       _lastConfirmedSos = now;
 
       appLog.w(
-        'CRASH CONFIRMED: accel=${peakMs2.toStringAsFixed(1)} m/s² '
+        '${confidence.incidentLabel} — '
+        'accel=${peakMs2.toStringAsFixed(1)} m/s² '
         'gyro=${gyroPeakRadPerSec.toStringAsFixed(2)} rad/s '
-        'maxBefore=${maxBefore.toStringAsFixed(1)} km/h '
-        'minAfter=${minAfter.toStringAsFixed(1)} km/h',
+        'speed ${maxBefore.toStringAsFixed(0)}→${minAfter.toStringAsFixed(0)} km/h '
+        'bt=${_btMonitor.recentDisconnect} '
+        'confidence=${confidence.score.toStringAsFixed(3)} [${confidence.tierLabel}]',
       );
 
       _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
@@ -248,9 +268,9 @@ class CrashDetectionService {
 
   Future<bool> _measureStillness() async {
     final magnitudes = <double>[];
-    final sub = SensorsPlatform.instance.userAccelerometerEventStream().listen(
-      (e) => magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z)),
-    );
+    final sub = SensorsPlatform.instance
+        .userAccelerometerEventStream()
+        .listen((e) => magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z)));
 
     await Future<void>.delayed(
       Duration(milliseconds: CrashTuning.stillnessSampleWindowMs),
@@ -279,7 +299,6 @@ class CrashDetectionService {
     _accelSub = null;
     _positionSub?.cancel();
     _positionSub = null;
-    // Gyroscope lifecycle is managed by gyroscopeFusionServiceProvider.
   }
 }
 

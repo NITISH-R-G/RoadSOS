@@ -15,7 +15,10 @@ import 'services/connectivity_service.dart';
 import 'services/driving_mode_service.dart';
 import 'services/emergency_background_service.dart';
 import 'services/agent_health_service.dart';
+import 'services/bluetooth_vehicle_monitor.dart';
+import 'services/inactivity_crash_detector.dart';
 import 'services/predictive_sos_preloader.dart';
+import 'services/sos_location_tracker.dart';
 import 'ui/dashboard.dart';
 import 'ui/consent_screen.dart';
 import 'ui/onboarding_gate.dart';
@@ -94,6 +97,18 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp> {
 
     // Phase 4: Start agent health polling — shows readiness before SOS fires.
     ref.watch(agentHealthServiceProvider).startPolling();
+
+    // Phase 6: BT vehicle disconnect monitor — seeds provider so it starts
+    // polling Bluetooth connected devices immediately at app launch.
+    ref.watch(bluetoothVehicleMonitorProvider);
+
+    // Phase 1: Incapacitation / unconscious-driver detector — must be alive
+    // from the moment driving mode could activate (non-autoDispose).
+    ref.watch(inactivityCrashDetectorProvider);
+
+    // Phase 4: SOS live location tracker — attaches listener to orchestrator;
+    // begins streaming GPS updates to family contacts when SOS goes active.
+    ref.watch(sosLocationTrackerProvider);
 
     final sosPhase =
         ref.watch(emergencyOrchestratorProvider.select((s) => s.phase));
