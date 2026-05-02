@@ -52,11 +52,15 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
                 AnimatedBuilder(
                   animation: _controller,
                   builder: (context, child) {
-                    return CustomPaint(
-                      size: const Size(200, 200),
-                      painter: _SweepPainter(_controller.value),
+                    return Transform.rotate(
+                      angle: _controller.value * math.pi * 2,
+                      child: child,
                     );
                   },
+                  child: const CustomPaint(
+                    size: Size(200, 200),
+                    painter: _SweepPainter(),
+                  ),
                 ),
                 ..._buildBeaconDots(beacons),
                 const Icon(Icons.my_location, color: Colors.blue, size: 24),
@@ -108,7 +112,7 @@ class _RadarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue.withOpacity(0.1)
+      ..color = Colors.blue.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -123,8 +127,7 @@ class _RadarPainter extends CustomPainter {
 }
 
 class _SweepPainter extends CustomPainter {
-  final double sweep;
-  _SweepPainter(this.sweep);
+  const _SweepPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -136,12 +139,11 @@ class _SweepPainter extends CustomPainter {
       startAngle: 0,
       endAngle: math.pi * 2,
       colors: [
-        Colors.blue.withOpacity(0),
-        Colors.blue.withOpacity(0.5),
-        Colors.blue.withOpacity(0),
+        Colors.blue.withValues(alpha: 0),
+        Colors.blue.withValues(alpha: 0.5),
+        Colors.blue.withValues(alpha: 0),
       ],
       stops: const [0.0, 0.5, 1.0],
-      transform: GradientRotation(sweep * math.pi * 2),
     );
 
     final paint = Paint()
@@ -152,7 +154,7 @@ class _SweepPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _IncidentDot extends StatelessWidget {
