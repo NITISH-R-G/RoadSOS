@@ -31,7 +31,9 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
 
   @override
   Widget build(BuildContext context) {
-    final beaconsStream = ref.watch(meshNetworkServiceProvider).discoveredBeacons;
+    final beaconsStream = ref
+        .watch(meshNetworkServiceProvider)
+        .discoveredBeacons;
 
     return StreamBuilder<List<String>>(
       stream: beaconsStream,
@@ -49,14 +51,14 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
                   painter: _RadarPainter(_controller),
                 ),
                 // Radar Pulse
-                AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return CustomPaint(
-                      size: const Size(200, 200),
-                      painter: _SweepPainter(_controller.value),
-                    );
-                  },
+                // ⚡ Bolt Optimization: Use RotationTransition with a static child to prevent
+                // the expensive SweepGradient shader from being rebuilt on every frame.
+                RotationTransition(
+                  turns: _controller,
+                  child: const CustomPaint(
+                    size: Size(200, 200),
+                    painter: _SweepPainter(),
+                  ),
                 ),
                 ..._buildBeaconDots(beacons),
                 const Icon(Icons.my_location, color: Colors.blue, size: 24),
@@ -64,7 +66,9 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
             ),
             const SizedBox(height: 16),
             Text(
-              beacons.isEmpty ? 'SCANNING (NO PEERS)' : 'PEERS DETECTED: ${beacons.length}',
+              beacons.isEmpty
+                  ? 'SCANNING (NO PEERS)'
+                  : 'PEERS DETECTED: ${beacons.length}',
               style: const TextStyle(
                 color: Colors.blue,
                 fontSize: 10,
@@ -85,17 +89,13 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
     for (final id in ids) {
       final h = id.hashCode;
       final angle = ((h % 360) * math.pi) / 180.0;
-      final r =
-          (math.sqrt(((h >> 8).abs() % 1000) / 1000.0) * maxR).clamp(18.0, maxR);
+      final r = (math.sqrt(((h >> 8).abs() % 1000) / 1000.0) * maxR).clamp(
+        18.0,
+        maxR,
+      );
       final x = center + math.cos(angle) * r;
       final y = center + math.sin(angle) * r;
-      out.add(
-        Positioned(
-          left: x,
-          top: y,
-          child: const _IncidentDot(),
-        ),
-      );
+      out.add(Positioned(left: x, top: y, child: const _IncidentDot()));
     }
     return out;
   }
@@ -123,8 +123,7 @@ class _RadarPainter extends CustomPainter {
 }
 
 class _SweepPainter extends CustomPainter {
-  final double sweep;
-  _SweepPainter(this.sweep);
+  const _SweepPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -141,7 +140,6 @@ class _SweepPainter extends CustomPainter {
         Colors.blue.withOpacity(0),
       ],
       stops: const [0.0, 0.5, 1.0],
-      transform: GradientRotation(sweep * math.pi * 2),
     );
 
     final paint = Paint()
@@ -152,7 +150,7 @@ class _SweepPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _IncidentDot extends StatelessWidget {
