@@ -19,9 +19,7 @@ import 'mesh_radar.dart';
 import 'responder_dashboard.dart';
 import 'safe_walk_overlay.dart';
 import 'settings_screen.dart';
-<<<<<<< HEAD
 import 'vehicle_rescue_screen.dart';
-=======
 import 'sos_activity_log_screen.dart';
 import 'sos_countdown_widget.dart';
 import 'sos_side_effect_observer.dart';
@@ -30,7 +28,6 @@ import 'triage_result_card.dart';
 import 'vital_scan_screen.dart';
 
 /// Main shell: idle = single giant SOS (panic-first); other phases show honest dispatch status.
->>>>>>> origin/main
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -185,6 +182,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
                         ),
                       ),
+                      _sheetAction(
+                      ctx,
+                      Icons.car_crash,
+                      'Vehicle Rescue',
+                      () => Navigator.push(
+                      ctx,
+                      MaterialPageRoute(
+                      builder: (_) => const VehicleRescueScreen(),
+                    ),
+                  ),
+                ),
                       _sheetAction(
                         ctx,
                         Icons.settings,
@@ -421,7 +429,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     decoration: TextDecoration.underline,
                   ),
                 ),
-<<<<<<< HEAD
                 _buildActionItem(
                   icon: Icons.health_and_safety, 
                   label: 'RESPONDER', 
@@ -454,9 +461,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))
                 ),
               ],
-=======
-              ),
->>>>>>> origin/main
             ),
           ],
         );
