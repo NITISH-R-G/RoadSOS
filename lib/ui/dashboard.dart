@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -795,8 +797,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> _showSafeWalkDialog(BuildContext context) async {
-    final destCtrl = TextEditingController();
-    var minutes = 30;
     final monitor = ref.read(proactiveMonitorProvider);
 
     if (monitor.isMonitoring) {
@@ -809,80 +809,129 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       return;
     }
 
+    String selectedDestination = '';
+
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: EdgeInsets.only(
             left: 16,
             right: 16,
-            bottom: MediaQuery.paddingOf(ctx).bottom + 16,
+            bottom: MediaQuery.viewInsetsOf(ctx).bottom + 16,
             top: 8,
           ),
-          child: StatefulBuilder(
-            builder: (ctx, setModal) => Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Safe Walk',
-                  style: Theme.of(ctx)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: destCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Destination (optional)',
-                    hintText: 'e.g., Home, Hostel, Station',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Text('ETA minutes:'),
-                    const SizedBox(width: 12),
-                    DropdownButton<int>(
-                      value: minutes,
-                      items: const [10, 15, 20, 30, 45, 60]
-                          .map((m) => DropdownMenuItem(
-                              value: m, child: Text('$m')))
-                          .toList(),
-                      onChanged: (v) => setModal(() => minutes = v ?? 30),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'If you miss check-in after ETA, RoadSOS will escalate to '
-                  'SOS after a 60s grace window.',
-                  style: Theme.of(ctx).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      ref
-                          .read(proactiveMonitorProvider.notifier)
-                          .startSafeWalk(
-                            destCtrl.text.trim().isEmpty
-                                ? 'your destination'
-                                : destCtrl.text.trim(),
-                            Duration(minutes: minutes),
-                          );
-                      Navigator.pop(ctx);
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Safe Walk',
+                style: Theme.of(ctx)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 12),
+              Autocomplete<String>(
+                optionsBuilder: (TextEditingValue textEditingValue) async {
+                  if (textEditingValue.text.isEmpty) {
+                    return const Iterable<String>.empty();
+                  }
+                  try {
+                    final uri = Uri.parse(
+                        'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5');
+                    final response = await http.get(uri, headers: {
+                      'User-Agent': 'RoadSOS/1.0',
+                    });
+                    if (response.statusCode == 200) {
+                      final List<dynamic> data = json.decode(response.body);
+                      return data.map((e) => e['display_name'] as String).toList();
+                    }
+                  } catch (e) {
+                    appLog.w('Error fetching location suggestions: $e');
+                  }
+                  return const Iterable<String>.empty();
+                },
+                onSelected: (String selection) {
+                  selectedDestination = selection;
+                },
+                fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+                  return TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    onEditingComplete: onEditingComplete,
+                    onChanged: (val) {
+                      selectedDestination = val;
                     },
-                    icon: const Icon(Icons.directions_walk),
-                    label: const Text('START SAFE WALK'),
-                  ),
+                    decoration: const InputDecoration(
+                      labelText: 'Destination (optional)',
+                      hintText: 'e.g., Home, Hostel, Station',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                    ),
+                  );
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4.0,
+                      borderRadius: BorderRadius.circular(8),
+                      color: Theme.of(context).colorScheme.surface,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300),
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          itemCount: options.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final option = options.elementAt(index);
+                            return InkWell(
+                              onTap: () {
+                                onSelected(option);
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Text(
+                                  option,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'A 30-minute safety check timer will start now.\nIf you miss the check-in, RoadSOS will escalate to SOS after a 60s grace window.',
+                style: Theme.of(ctx).textTheme.bodySmall?.copyWith(height: 1.4),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    ref.read(proactiveMonitorProvider.notifier).startSafeWalk(
+                          selectedDestination.trim().isEmpty
+                              ? 'your destination'
+                              : selectedDestination.trim(),
+                          const Duration(minutes: 30),
+                        );
+                    Navigator.pop(ctx);
+                  },
+                  icon: const Icon(Icons.directions_walk),
+                  label: const Text('START SAFE WALK'),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
