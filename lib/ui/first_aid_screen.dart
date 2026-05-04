@@ -126,7 +126,7 @@ class _FirstAidScreenState extends State<FirstAidScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A1A2E),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.withOpacity(0.25)),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
                   ),
                   child: SingleChildScrollView(
                     child: SelectableText(

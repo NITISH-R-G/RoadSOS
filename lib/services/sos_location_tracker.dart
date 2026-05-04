@@ -103,7 +103,7 @@ class SosLocationTracker {
     if (pos == null || id == null) {
       _missedUpdates++;
       if (_missedUpdates >= _maxMissedUpdates) {
-        appLog.w('[SosLocationTracker] ${_maxMissedUpdates} missed GPS updates — stopping');
+        appLog.w('[SosLocationTracker] $_maxMissedUpdates missed GPS updates — stopping');
         _stop();
       }
       return;

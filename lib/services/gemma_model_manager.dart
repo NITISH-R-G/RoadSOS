@@ -37,9 +37,6 @@ class GemmaModelManager {
 
   /// HuggingFace token creation page.
   static const String hfTokenUrl = 'https://huggingface.co/settings/tokens';
-
-  static CancelToken? _activeToken;
-
   // ── Path ──────────────────────────────────────────────────────────────────
 
   /// Full path to the model file (may or may not exist).
@@ -117,7 +114,6 @@ class GemmaModelManager {
     };
 
     final client = http.Client();
-    _activeToken = cancelToken;
 
     try {
       final request = http.Request('GET', Uri.parse(modelDownloadUrl));
@@ -186,7 +182,6 @@ class GemmaModelManager {
       appLog.i('[GemmaModel] ✓ Download complete — ${(finalSize / 1e6).round()} MB at $path');
     } finally {
       client.close();
-      _activeToken = null;
     }
   }
 

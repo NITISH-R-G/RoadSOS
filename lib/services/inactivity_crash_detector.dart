@@ -39,7 +39,6 @@ class InactivityCrashDetector {
   final Ref _ref;
 
   static const double _stillnessRmsThresholdMs2 = 1.8;
-  static const int    _stillnessWindowSec        = 5;   // RMS sample window
   static const int    _incapacitationThresholdSec = 50; // sustained stillness
   static const int    _cooldownMs                = 5 * 60 * 1000;
   static const int    _minDrivingSecondsBeforeArming = 60;
@@ -51,7 +50,6 @@ class InactivityCrashDetector {
   DateTime? _drivingActiveSince;
   DateTime? _stilnessStartedAt;
   DateTime? _lastTrigger;
-  bool _armed = false;
 
   InactivityCrashDetector(this._ref);
 
@@ -89,7 +87,6 @@ class InactivityCrashDetector {
 
     if (mode != DrivingMode.driving) {
       // Reset arming when not driving.
-      _armed            = false;
       _drivingActiveSince = null;
       _stilnessStartedAt  = null;
       return;
@@ -102,7 +99,6 @@ class InactivityCrashDetector {
 
     // Arm only after minimum driving duration.
     if (drivingSeconds < _minDrivingSecondsBeforeArming) return;
-    _armed = true;
 
     // Check for sustained stillness.
     final rms = _computeRms();
@@ -155,7 +151,6 @@ class InactivityCrashDetector {
     _rmsWindow.clear();
     _stilnessStartedAt  = null;
     _drivingActiveSince = null;
-    _armed              = false;
   }
 
   void dispose() => stopMonitoring();

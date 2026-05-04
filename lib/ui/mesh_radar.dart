@@ -45,7 +45,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
           height: 200,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white10),
           ),
@@ -84,7 +84,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
                           height: 10,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFF00FFFF).withOpacity(0.3 + (pulseValue * 0.7)),
+                            color: const Color(0xFF00FFFF).withValues(alpha: 0.3 + (pulseValue * 0.7)),
                             boxShadow: [
                               BoxShadow(
                                 color: const Color(0xFF00FFFF),
@@ -92,7 +92,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
                                 spreadRadius: 1 + (pulseValue * 3),
                               ),
                               BoxShadow(
-                                color: const Color(0xFF00FFFF).withOpacity(0.2 + (pulseValue * 0.3)),
+                                color: const Color(0xFF00FFFF).withValues(alpha: 0.2 + (pulseValue * 0.3)),
                                 blurRadius: 10 + (pulseValue * 20),
                                 spreadRadius: 2 + (pulseValue * 4),
                               ),
@@ -123,7 +123,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.5,
-                      color: Colors.blue.withOpacity(0.6),
+                      color: Colors.blue.withValues(alpha: 0.6),
                     ),
                   ),
                   Text(
@@ -140,7 +140,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white.withOpacity(0.35),
+                      color: Colors.white.withValues(alpha: 0.35),
                     ),
                   ),
                 ],
@@ -159,7 +159,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProvider
       height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
     );
   }
@@ -198,7 +198,7 @@ class _RadarBeamPainter extends CustomPainter {
     
     // Create a sweep gradient effect from center to dot
     final beamPaint = Paint()
-      ..color = const Color(0xFF00FFFF).withOpacity(0.25)
+      ..color = const Color(0xFF00FFFF).withValues(alpha: 0.25)
       ..style = PaintingStyle.fill;
     
     // Draw a triangular beam shape from center to dot
@@ -232,7 +232,7 @@ class _RadarBeamPainter extends CustomPainter {
     
     // Add a glow effect with lighter color
     final glowPaint = Paint()
-      ..color = const Color(0xFF00FFFF).withOpacity(0.15)
+      ..color = const Color(0xFF00FFFF).withValues(alpha: 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     
     canvas.drawPath(path, glowPaint);

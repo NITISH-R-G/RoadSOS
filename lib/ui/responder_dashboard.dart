@@ -26,7 +26,7 @@ class ResponderDashboard extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
@@ -60,7 +60,7 @@ class ResponderDashboard extends ConsumerWidget {
                     return Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.04),
+                        color: Colors.white.withValues(alpha: 0.04),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.white10),
                       ),
@@ -105,9 +105,9 @@ class ResponderDashboard extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: active ? Colors.red.withOpacity(0.10) : Colors.white.withOpacity(0.04),
+        color: active ? Colors.red.withValues(alpha: 0.10) : Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: active ? Colors.red.withOpacity(0.30) : Colors.white10),
+        border: Border.all(color: active ? Colors.red.withValues(alpha: 0.30) : Colors.white10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
