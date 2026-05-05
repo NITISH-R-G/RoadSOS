@@ -9,7 +9,17 @@
 Write-Host "Verifying RoadSOS..." -ForegroundColor Cyan
 
 if (!(Get-Command flutter -ErrorAction SilentlyContinue)) {
-    Write-Error "Flutter is not installed. Please install Flutter before continuing."
+    $winFlutter = "$env:LOCALAPPDATA\Android\flutter\bin\flutter.bat"
+    if (Test-Path $winFlutter) {
+        Write-Host "Flutter found at Android SDK path; add to PATH:" -ForegroundColor Yellow
+        Write-Host "  $winFlutter" -ForegroundColor Gray
+        Write-Host "Or run: `$env:Path = `"$(Split-Path $winFlutter -Parent);`" + `$env:Path" -ForegroundColor Gray
+    }
+    Write-Error @"
+Flutter is not on PATH. Install: https://docs.flutter.dev/get-started/install/windows
+Then reopen the terminal and run this script again from the repo root:
+  .\scripts\verify.ps1
+"@
     exit 1
 }
 
