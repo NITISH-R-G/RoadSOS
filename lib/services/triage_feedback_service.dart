@@ -48,7 +48,7 @@ class TriageFeedbackService {
     _count = prefs.getInt(_kCount)    ?? 0;
     appLog.d(
       '[Feedback] RL bias=${_bias.toStringAsFixed(2)} n=$_count '
-      '(active=${isLearningActive})',
+      '(active=$isLearningActive)',
     );
   }
 

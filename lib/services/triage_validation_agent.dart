@@ -58,7 +58,7 @@ class TriageValidationAgent {
     // A person triggering SOS while driving is almost certainly in a crash.
     // Minimum severity 3 (moderate) regardless of transcript context.
     if (drivingMode == DrivingMode.driving && severity < 3) {
-      overrides.add('Severity raised ${severity}→3 (driving mode active at SOS trigger).');
+      overrides.add('Severity raised $severity→3 (driving mode active at SOS trigger).');
       severity = 3;
       flags.add('severity_floor_driving_mode');
     }
@@ -68,7 +68,7 @@ class TriageValidationAgent {
     // collision. Minimum severity 4 (severe).
     if (gyroPeakRadPerSec >= 3.5 && severity < 4) {
       overrides.add(
-        'Severity raised ${severity}→4 (gyro ${gyroPeakRadPerSec.toStringAsFixed(1)} rad/s '
+        'Severity raised $severity→4 (gyro ${gyroPeakRadPerSec.toStringAsFixed(1)} rad/s '
         'confirms vehicle roll/spin — high-energy crash).',
       );
       severity = 4;

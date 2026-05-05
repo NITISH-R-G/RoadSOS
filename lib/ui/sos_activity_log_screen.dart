@@ -78,9 +78,9 @@ class SosActivityLogScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.12),
+        color: Colors.blue.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.35)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.35)),
       ),
       child: const Text(
         'This log shows what the app attempted: GPS coordinates, AI triage, mesh/SMS/cloud steps, '
@@ -95,7 +95,7 @@ class SosActivityLogScreen extends ConsumerWidget {
     return Text(
       t,
       style: TextStyle(
-        color: Colors.blue.withOpacity(0.75),
+        color: Colors.blue.withValues(alpha: 0.75),
         fontWeight: FontWeight.w900,
         fontSize: 10,
         letterSpacing: 1.5,
@@ -109,7 +109,7 @@ class SosActivityLogScreen extends ConsumerWidget {
     final coarseLat = r.latitude.toStringAsFixed(3);
     final coarseLng = r.longitude.toStringAsFixed(3);
     return Card(
-      color: Colors.white.withOpacity(0.05),
+      color: Colors.white.withValues(alpha: 0.05),
       margin: const EdgeInsets.only(bottom: 14),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -125,7 +125,7 @@ class SosActivityLogScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               'GPS shared (coarse by default)',
-              style: TextStyle(color: Colors.blue.withOpacity(0.8), fontWeight: FontWeight.w800, fontSize: 10),
+              style: TextStyle(color: Colors.blue.withValues(alpha: 0.8), fontWeight: FontWeight.w800, fontSize: 10),
             ),
             const SizedBox(height: 4),
             SelectableText('$coarseLat, $coarseLng (±${r.accuracyM.round()} m • ${r.locationSource})',
@@ -138,7 +138,7 @@ class SosActivityLogScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               'AI triage',
-              style: TextStyle(color: Colors.blue.withOpacity(0.8), fontWeight: FontWeight.w800, fontSize: 10),
+              style: TextStyle(color: Colors.blue.withValues(alpha: 0.8), fontWeight: FontWeight.w800, fontSize: 10),
             ),
             const SizedBox(height: 4),
             Text(
@@ -155,14 +155,14 @@ class SosActivityLogScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               'Sync / storage',
-              style: TextStyle(color: Colors.blue.withOpacity(0.8), fontWeight: FontWeight.w800, fontSize: 10),
+              style: TextStyle(color: Colors.blue.withValues(alpha: 0.8), fontWeight: FontWeight.w800, fontSize: 10),
             ),
             const SizedBox(height: 4),
             Text(r.syncStatusLine, style: const TextStyle(color: Colors.white70, fontSize: 13)),
             const SizedBox(height: 14),
             Text(
               'Channels',
-              style: TextStyle(color: Colors.blue.withOpacity(0.8), fontWeight: FontWeight.w800, fontSize: 10),
+              style: TextStyle(color: Colors.blue.withValues(alpha: 0.8), fontWeight: FontWeight.w800, fontSize: 10),
             ),
             const SizedBox(height: 8),
             DispatchStatusPanel(channels: r.channels),

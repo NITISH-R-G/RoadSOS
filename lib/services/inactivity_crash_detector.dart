@@ -39,7 +39,9 @@ class InactivityCrashDetector {
   final Ref _ref;
 
   static const double _stillnessRmsThresholdMs2 = 1.8;
-  static const int    _stillnessWindowSec        = 5;   // RMS sample window
+  /// RMS rolling window duration (~50 Hz accelerometer samples).
+  static const int _stillnessWindowSec = 5;
+  static const int _accelApproxHz = 50;
   static const int    _incapacitationThresholdSec = 50; // sustained stillness
   static const int    _cooldownMs                = 5 * 60 * 1000;
   static const int    _minDrivingSecondsBeforeArming = 60;
@@ -51,7 +53,6 @@ class InactivityCrashDetector {
   DateTime? _drivingActiveSince;
   DateTime? _stilnessStartedAt;
   DateTime? _lastTrigger;
-  bool _armed = false;
 
   InactivityCrashDetector(this._ref);
 
@@ -73,8 +74,9 @@ class InactivityCrashDetector {
   void _onAccel(UserAccelerometerEvent e) {
     final mag = sqrt(e.x * e.x + e.y * e.y + e.z * e.z);
     _rmsWindow.add(mag);
-    // Keep a 5-second rolling window (sensors fire at ~50 Hz → 250 samples).
-    if (_rmsWindow.length > 250) _rmsWindow.removeAt(0);
+    // Rolling window ≈ [_stillnessWindowSec] at ~[_accelApproxHz] Hz.
+    final maxSamples = _stillnessWindowSec * _accelApproxHz;
+    if (_rmsWindow.length > maxSamples) _rmsWindow.removeAt(0);
   }
 
   double _computeRms() {
@@ -88,8 +90,6 @@ class InactivityCrashDetector {
     final now  = DateTime.now();
 
     if (mode != DrivingMode.driving) {
-      // Reset arming when not driving.
-      _armed            = false;
       _drivingActiveSince = null;
       _stilnessStartedAt  = null;
       return;
@@ -102,7 +102,6 @@ class InactivityCrashDetector {
 
     // Arm only after minimum driving duration.
     if (drivingSeconds < _minDrivingSecondsBeforeArming) return;
-    _armed = true;
 
     // Check for sustained stillness.
     final rms = _computeRms();
@@ -155,7 +154,6 @@ class InactivityCrashDetector {
     _rmsWindow.clear();
     _stilnessStartedAt  = null;
     _drivingActiveSince = null;
-    _armed              = false;
   }
 
   void dispose() => stopMonitoring();
