@@ -17,7 +17,7 @@ class MeshMessage {
 class MeshChatService extends StateNotifier<List<MeshMessage>> {
   final MeshNetworkService _meshService;
   StreamSubscription<MeshPacket>? _packetSub;
-  
+
   MeshChatService(this._meshService) : super([]) {
     _listenForIncomingMessages();
   }
@@ -40,7 +40,7 @@ class MeshChatService extends StateNotifier<List<MeshMessage>> {
       timestamp: DateTime.now(),
     );
     state = [...state, newMessage];
-    
+
     // Broadcast via Mesh
     await _meshService.startBroadcasting('MSG:$content');
   }
@@ -61,7 +61,10 @@ class MeshChatService extends StateNotifier<List<MeshMessage>> {
   }
 }
 
-final meshChatProvider = StateNotifierProvider.autoDispose<MeshChatService, List<MeshMessage>>((ref) {
-  final mesh = ref.watch(meshNetworkServiceProvider);
-  return MeshChatService(mesh);
-});
+final meshChatProvider =
+    StateNotifierProvider.autoDispose<MeshChatService, List<MeshMessage>>((
+      ref,
+    ) {
+      final mesh = ref.watch(meshNetworkServiceProvider);
+      return MeshChatService(mesh);
+    });

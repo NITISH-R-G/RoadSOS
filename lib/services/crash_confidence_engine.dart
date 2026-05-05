@@ -77,10 +77,10 @@ class CrashConfidenceResult {
   });
 
   String get tierLabel => switch (tier) {
-        CrashConfidenceTier.low    => 'LOW',
-        CrashConfidenceTier.medium => 'MEDIUM',
-        CrashConfidenceTier.high   => 'HIGH',
-      };
+    CrashConfidenceTier.low => 'LOW',
+    CrashConfidenceTier.medium => 'MEDIUM',
+    CrashConfidenceTier.high => 'HIGH',
+  };
 
   /// Factual, non-speculative label for emergency messaging (Phase 7 constraint).
   String get incidentLabel => tier == CrashConfidenceTier.high
@@ -98,31 +98,31 @@ abstract final class CrashConfidenceEngine {
 
   // ── Weight constants ──────────────────────────────────────────────────────
 
-  static const double _wAccel    = 0.30;
-  static const double _wGyro     = 0.22;
-  static const double _wSpeed    = 0.20;
-  static const double _wDrop     = 0.15;
-  static const double _wBt       = 0.08;
-  static const double _wStill    = 0.05;
+  static const double _wAccel = 0.30;
+  static const double _wGyro = 0.22;
+  static const double _wSpeed = 0.20;
+  static const double _wDrop = 0.15;
+  static const double _wBt = 0.08;
+  static const double _wStill = 0.05;
 
   // ── Normalisation reference maxima ────────────────────────────────────────
 
   /// Accel normalised against 120 m/s² (severe but survivable crash reference).
-  static const double _accelMax  = 120.0;
+  static const double _accelMax = 120.0;
 
   /// Gyro normalised against 8 rad/s (vehicle roll / high-speed spin cap).
-  static const double _gyroMax   = 8.0;
+  static const double _gyroMax = 8.0;
 
   /// Speed reference: 120 km/h highway limit (India NH).
-  static const double _speedMax  = 120.0;
+  static const double _speedMax = 120.0;
 
   /// Drop reference: full speed-to-zero scenario.
-  static const double _dropMax   = 120.0;
+  static const double _dropMax = 120.0;
 
   // ── Tier thresholds ───────────────────────────────────────────────────────
 
   static const double _mediumThreshold = 0.35;
-  static const double _highThreshold   = 0.65;
+  static const double _highThreshold = 0.65;
 
   /// Compute a confidence score from raw sensor signals.
   ///
@@ -130,38 +130,39 @@ abstract final class CrashConfidenceEngine {
   /// will cause undefined behaviour.
   static CrashConfidenceResult score(CrashSignals s) {
     // Per-signal normalised contributions (each in [0.0, 1.0]).
-    final accelN  = (s.accelPeakMs2.clamp(0.0, _accelMax) / _accelMax);
-    final gyroN   = (s.gyroPeakRadPerSec.clamp(0.0, _gyroMax) / _gyroMax);
-    final speedN  = (s.speedBeforeKmh.clamp(0.0, _speedMax) / _speedMax);
-    final dropN   = (s.speedDropKmh.clamp(0.0, _dropMax) / _dropMax);
-    final btN     = s.bluetoothVehicleDisconnect ? 1.0 : 0.0;
-    final stillN  = s.postImpactDeviceStill ? 1.0 : 0.0;
+    final accelN = (s.accelPeakMs2.clamp(0.0, _accelMax) / _accelMax);
+    final gyroN = (s.gyroPeakRadPerSec.clamp(0.0, _gyroMax) / _gyroMax);
+    final speedN = (s.speedBeforeKmh.clamp(0.0, _speedMax) / _speedMax);
+    final dropN = (s.speedDropKmh.clamp(0.0, _dropMax) / _dropMax);
+    final btN = s.bluetoothVehicleDisconnect ? 1.0 : 0.0;
+    final stillN = s.postImpactDeviceStill ? 1.0 : 0.0;
 
-    final raw = accelN  * _wAccel
-              + gyroN   * _wGyro
-              + speedN  * _wSpeed
-              + dropN   * _wDrop
-              + btN     * _wBt
-              + stillN  * _wStill;
+    final raw =
+        accelN * _wAccel +
+        gyroN * _wGyro +
+        speedN * _wSpeed +
+        dropN * _wDrop +
+        btN * _wBt +
+        stillN * _wStill;
 
     final clamped = raw.clamp(0.0, 1.0);
 
     final tier = clamped >= _highThreshold
         ? CrashConfidenceTier.high
         : clamped >= _mediumThreshold
-            ? CrashConfidenceTier.medium
-            : CrashConfidenceTier.low;
+        ? CrashConfidenceTier.medium
+        : CrashConfidenceTier.low;
 
     return CrashConfidenceResult(
       score: clamped,
       tier: tier,
       breakdown: {
-        'accel': accelN  * _wAccel,
-        'gyro' : gyroN   * _wGyro,
-        'speed': speedN  * _wSpeed,
-        'drop' : dropN   * _wDrop,
-        'bt'   : btN     * _wBt,
-        'still': stillN  * _wStill,
+        'accel': accelN * _wAccel,
+        'gyro': gyroN * _wGyro,
+        'speed': speedN * _wSpeed,
+        'drop': dropN * _wDrop,
+        'bt': btN * _wBt,
+        'still': stillN * _wStill,
       },
     );
   }

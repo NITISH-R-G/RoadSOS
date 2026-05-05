@@ -30,8 +30,12 @@ class FamilyTrackingService {
     final digits = raw.replaceAll(RegExp(r'\D'), '');
     if (digits.length < 10) return null;
     if (digits.length == 10) return digits;
-    if (digits.length == 11 && digits.startsWith('0')) return digits.substring(1);
-    if (digits.length >= 12 && digits.startsWith('91')) return digits.substring(digits.length - 10);
+    if (digits.length == 11 && digits.startsWith('0')) {
+      return digits.substring(1);
+    }
+    if (digits.length >= 12 && digits.startsWith('91')) {
+      return digits.substring(digits.length - 10);
+    }
     return digits.length > 10 ? digits.substring(digits.length - 10) : digits;
   }
 
@@ -50,7 +54,10 @@ class FamilyTrackingService {
     final client = Supabase.instance.client;
     final user = client.auth.currentUser;
     if (user == null) {
-      return (ok: false, detail: 'No auth session — sign in anonymously for family link.');
+      return (
+        ok: false,
+        detail: 'No auth session — sign in anonymously for family link.',
+      );
     }
 
     final baseUrl = dotenv.env['SUPABASE_URL']?.trim() ?? '';
@@ -61,8 +68,9 @@ class FamilyTrackingService {
     final token = const Uuid().v4();
     final rawSummary =
         '${triage.functionCall} · sev ${triage.severityLevel} · ${triage.compressedPayload}';
-    final triageSummary =
-        rawSummary.length > 1200 ? '${rawSummary.substring(0, 1197)}…' : rawSummary;
+    final triageSummary = rawSummary.length > 1200
+        ? '${rawSummary.substring(0, 1197)}…'
+        : rawSummary;
 
     final expiresAt = DateTime.now().toUtc().add(const Duration(hours: 24));
 
@@ -98,7 +106,8 @@ class FamilyTrackingService {
     if (phone == null || phone.isEmpty) {
       return (
         ok: true,
-        detail: 'Family link active — add a phone in Medical profile to auto-SMS.',
+        detail:
+            'Family link active — add a phone in Medical profile to auto-SMS.',
       );
     }
 
@@ -113,12 +122,14 @@ class FamilyTrackingService {
       if (sent) {
         return (
           ok: true,
-          detail: 'Family link sent SMS to contact ending …${phone.substring(phone.length - 4)} ✓',
+          detail:
+              'Family link sent SMS to contact ending …${phone.substring(phone.length - 4)} ✓',
         );
       }
       return (
         ok: true,
-        detail: 'Link ready — SMS failed (permission?). Open link: $trackingUrl',
+        detail:
+            'Link ready — SMS failed (permission?). Open link: $trackingUrl',
       );
     }
 

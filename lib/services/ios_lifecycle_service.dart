@@ -17,8 +17,9 @@ final iosLifecycleServiceProvider = Provider<IosLifecycleService>((ref) {
 class IosLifecycleService {
   IosLifecycleService();
 
-  static const MethodChannel _channel =
-      MethodChannel('com.codestreak.roadsos/ios_lifecycle');
+  static const MethodChannel _channel = MethodChannel(
+    'com.codestreak.roadsos/ios_lifecycle',
+  );
 
   void attach() {
     if (kIsWeb) return;

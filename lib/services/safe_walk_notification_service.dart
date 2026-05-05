@@ -66,14 +66,13 @@ class SafeWalkNotificationService {
       );
       await _local
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(channel);
     }
   }
 
-  Future<void> showCheckInNow({
-    required String destination,
-  }) async {
+  Future<void> showCheckInNow({required String destination}) async {
     if (kIsWeb) return;
 
     try {
@@ -154,4 +153,3 @@ class SafeWalkNotificationService {
     );
   }
 }
-

@@ -16,8 +16,9 @@ const _prefsKey = 'app_locale_language_code';
 
 Locale _resolvePlatformLocale() {
   final platform = WidgetsBinding.instance.platformDispatcher.locale;
-  if (kSupportedAppLocales
-      .any((e) => e.languageCode == platform.languageCode)) {
+  if (kSupportedAppLocales.any(
+    (e) => e.languageCode == platform.languageCode,
+  )) {
     return Locale(platform.languageCode);
   }
   return const Locale('en');
@@ -38,8 +39,9 @@ class AppLocaleController extends StateNotifier<Locale> {
   }
 
   Future<void> setLocale(Locale locale) async {
-    if (!kSupportedAppLocales
-        .any((l) => l.languageCode == locale.languageCode)) {
+    if (!kSupportedAppLocales.any(
+      (l) => l.languageCode == locale.languageCode,
+    )) {
       return;
     }
     state = Locale(locale.languageCode);
@@ -48,7 +50,8 @@ class AppLocaleController extends StateNotifier<Locale> {
   }
 }
 
-final appLocaleProvider =
-    StateNotifierProvider<AppLocaleController, Locale>((ref) {
+final appLocaleProvider = StateNotifierProvider<AppLocaleController, Locale>((
+  ref,
+) {
   return AppLocaleController();
 });
