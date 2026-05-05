@@ -24,7 +24,7 @@ class DispatchStatusPanel extends StatelessWidget {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: scheme.outline.withOpacity(0.35)),
+          side: BorderSide(color: scheme.outline.withValues(alpha: 0.35)),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -37,7 +37,7 @@ class DispatchStatusPanel extends StatelessWidget {
                   'DISPATCH STATUS',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         letterSpacing: 1.2,
-                        color: scheme.onSurface.withOpacity(0.88),
+                        color: scheme.onSurface.withValues(alpha: 0.88),
                         fontWeight: FontWeight.w800,
                       ),
                 ),
@@ -83,7 +83,7 @@ class _DispatchRow extends StatelessWidget {
                 Text(
                   row.detail,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface.withOpacity(0.87),
+                        color: scheme.onSurface.withValues(alpha: 0.87),
                         height: 1.35,
                       ),
                 ),

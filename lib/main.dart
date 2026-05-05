@@ -141,15 +141,16 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
   Future<void> _checkPrivacy() async {
     try {
       final accepted = await PrivacyConsentService.hasConsent();
-      if (!mounted) return;
-      setState(() {
-        _privacyConsent = accepted;
-        _privacyReady = true;
-      });
-      // Post-consent hooks depend on services being ready too; if services
-      // finished first, call hooks now; otherwise _onServicesReady() handles it.
-      if (_servicesReady && accepted) {
-        _runPostConsentHooks();
+      if (mounted) {
+        setState(() {
+          _privacyConsent = accepted;
+          _privacyReady = true;
+        });
+        // Post-consent hooks depend on services being ready too; if services
+        // finished first, call hooks now; otherwise _onServicesReady() handles it.
+        if (_servicesReady && accepted) {
+          _runPostConsentHooks();
+        }
       }
     } catch (e, st) {
       appLog.e('[boot] Privacy check failed', error: e, stackTrace: st);
@@ -188,9 +189,10 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
       // Non-fatal: app runs in offline/degraded mode.
       appLog.e('[boot] Service bootstrap error — running in degraded mode', error: e, stackTrace: st);
     } finally {
-      if (!mounted) return;
+      if (mounted) {
       setState(() => _servicesReady = true);
       _onServicesReady();
+      }
     }
   }
 

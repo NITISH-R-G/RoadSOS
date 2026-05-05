@@ -60,7 +60,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                   l10n.consentExtendedRetentionLabel,
                   style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
-                tileColor: Colors.white.withOpacity(0.05),
+                tileColor: Colors.white.withValues(alpha: 0.05),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               const SizedBox(height: 16),

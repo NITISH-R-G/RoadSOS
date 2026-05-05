@@ -51,10 +51,14 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
                   painter: _RadarPainter(_controller),
                 ),
                 // Radar Pulse
-                // ⚡ Bolt Optimization: Use RotationTransition with a static child to prevent
-                // the expensive SweepGradient shader from being rebuilt on every frame.
-                RotationTransition(
-                  turns: _controller,
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Transform.rotate(
+                      angle: _controller.value * math.pi * 2,
+                      child: child,
+                    );
+                  },
                   child: const CustomPaint(
                     size: Size(200, 200),
                     painter: _SweepPainter(),
@@ -108,7 +112,7 @@ class _RadarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue.withOpacity(0.1)
+      ..color = Colors.blue.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -135,9 +139,9 @@ class _SweepPainter extends CustomPainter {
       startAngle: 0,
       endAngle: math.pi * 2,
       colors: [
-        Colors.blue.withOpacity(0),
-        Colors.blue.withOpacity(0.5),
-        Colors.blue.withOpacity(0),
+        Colors.blue.withValues(alpha: 0),
+        Colors.blue.withValues(alpha: 0.5),
+        Colors.blue.withValues(alpha: 0),
       ],
       stops: const [0.0, 0.5, 1.0],
     );

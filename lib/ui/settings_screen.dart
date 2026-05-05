@@ -225,7 +225,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             subtitle: Text(
               l10n.settingsExtendedRetentionSubtitle,
-              style: TextStyle(color: Colors.white.withOpacity(0.38), fontSize: 12),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.38), fontSize: 12),
             ),
           ),
           _tile(
@@ -260,7 +260,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Text(
         title,
         style: TextStyle(
-          color: Colors.blue.withOpacity(0.6),
+          color: Colors.blue.withValues(alpha: 0.6),
           fontWeight: FontWeight.w900,
           fontSize: 10,
           letterSpacing: 1.5,

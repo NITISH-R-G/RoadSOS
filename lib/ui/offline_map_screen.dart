@@ -203,7 +203,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
               if (_lastStatus != null) ...[
                 Text(
                   _lastStatus!,
-                  style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 12),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -224,7 +224,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
               const SizedBox(height: 12),
               Text(
                 'This downloads map tiles for offline use. Size depends on zoom levels and your area.',
-                style: TextStyle(color: Colors.white.withOpacity(0.38), fontSize: 12),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.38), fontSize: 12),
               ),
             ],
           ],
@@ -239,7 +239,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -249,7 +249,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
           Text(
             'DOWNLOAD SETTINGS',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontWeight: FontWeight.w900,
               fontSize: 10,
               letterSpacing: 1.3,
@@ -290,7 +290,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
           ),
           Text(
             'Tip: higher zoom = more tiles (bigger download).',
-            style: TextStyle(color: Colors.white.withOpacity(0.35), fontSize: 12),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 12),
           ),
         ],
       ),
@@ -346,14 +346,14 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.blue.withOpacity(0.85)),
+          Icon(icon, color: Colors.blue.withValues(alpha: 0.85)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -366,7 +366,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
                 const SizedBox(height: 8),
                 Text(
                   body,
-                  style: TextStyle(color: Colors.white.withOpacity(0.75), height: 1.35),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.75), height: 1.35),
                 ),
               ],
             ),

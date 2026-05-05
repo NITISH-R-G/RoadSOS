@@ -46,13 +46,13 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.08),
+              color: Colors.blue.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.blue.withOpacity(0.25)),
+              border: Border.all(color: Colors.blue.withValues(alpha: 0.25)),
             ),
             child: Text(
               'Enter vitals manually. RoadSOS does not measure SpO₂/HR from the camera in this build.',
-              style: TextStyle(color: Colors.white.withOpacity(0.86), height: 1.35),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.86), height: 1.35),
             ),
           ),
           const SizedBox(height: 18),
@@ -86,7 +86,7 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
                   onPressed: () => ref.read(vitalSignsProvider.notifier).clear(),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white70,
-                    side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: const Text('CLEAR'),
@@ -104,7 +104,7 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
           Text(
             AppLocalizations.of(context)!.vitalAlignFinger,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 12),
           ),
         ],
       ),
@@ -122,15 +122,15 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withOpacity(0.25)),
+        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.25)),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
+        fillColor: Colors.white.withValues(alpha: 0.05),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.12)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -169,9 +169,9 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
+        color: Colors.blue.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
