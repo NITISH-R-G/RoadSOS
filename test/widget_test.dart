@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:roadsos/main.dart';
-import 'package:roadsos/ui/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {
   testWidgets('RoadSOS smoke test', (WidgetTester tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
+    dotenv.testLoad(fileInput: 'SUPABASE_URL=foo\nSUPABASE_ANON_KEY=bar');
     SharedPreferences.setMockInitialValues({
       // Consent + onboarding flags so app reaches Dashboard in tests.
       'dpdp_consent_accepted_at_iso8601': DateTime.now().toUtc().toIso8601String(),
