@@ -27,6 +27,9 @@ jobs:
     name: Build APK (${{ github.event.inputs.build_type || 'release' }})
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    env:
+      # workflow_dispatch can request debug; push/PR default to release.
+      BUILD_TYPE: ${{ github.event.inputs.build_type || 'release' }}
 
     steps:
       # ── Checkout ────────────────────────────────────────────────────────────
@@ -80,7 +83,7 @@ jobs:
       #                  and stores symbol maps as a separate CI artifact.
       # R8/minification is enabled in android/app/build.gradle.kts for release.
       - name: Build Release APK (split per ABI)
-        if: ${{ github.event.inputs.build_type != 'debug' }}
+        if: ${{ env.BUILD_TYPE != 'debug' }}
         run: |
           flutter build apk --release \
             --split-per-abi \
@@ -96,7 +99,7 @@ jobs:
       # Debug APKs are large (~180-200 MB) and include the Dart Observatory
       # server.  Only use for local device debugging, never for distribution.
       - name: Build Debug APK
-        if: ${{ github.event.inputs.build_type == 'debug' }}
+        if: ${{ env.BUILD_TYPE == 'debug' }}
         run: |
           flutter build apk --debug \
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
@@ -107,11 +110,12 @@ jobs:
 
       # ── Rename release APKs ─────────────────────────────────────────────────
       - name: Rename release APKs
-        if: ${{ github.event.inputs.build_type != 'debug' }}
+        if: ${{ env.BUILD_TYPE != 'debug' }}
         run: |
           SHORT_SHA="${{ github.sha }}"
           SHORT_SHA="${SHORT_SHA:0:7}"
           APK_DIR="build/app/outputs/flutter-apk"
+          ls -la "$APK_DIR" || true
           for ABI in arm64-v8a armeabi-v7a x86_64; do
             SRC="$APK_DIR/app-${ABI}-release.apk"
             if [ -f "$SRC" ]; then
@@ -119,13 +123,23 @@ jobs:
               echo "  ✅ renamed ${ABI} APK"
             fi
           done
-          echo "APK_ARM64=build/app/outputs/flutter-apk/roadsos-release-arm64-v8a-${SHORT_SHA}.apk" >> "$GITHUB_ENV"
-          echo "APK_DIR=build/app/outputs/flutter-apk" >> "$GITHUB_ENV"
+          # Resolve the arm64 artifact robustly (Flutter output names can change).
+          ARM64="$(ls -1 "$APK_DIR"/roadsos-release-arm64-v8a-"$SHORT_SHA".apk 2>/dev/null || true)"
+          if [ -z "$ARM64" ]; then
+            ARM64="$(ls -1 "$APK_DIR"/*arm64*release*.apk 2>/dev/null | head -n 1 || true)"
+          fi
+          if [ -z "$ARM64" ]; then
+            echo "❌ arm64 release APK not found in $APK_DIR" >&2
+            ls -la "$APK_DIR" || true
+            exit 1
+          fi
+          echo "APK_ARM64=$ARM64" >> "$GITHUB_ENV"
+          echo "APK_DIR=$APK_DIR" >> "$GITHUB_ENV"
           echo "SHORT_SHA=${SHORT_SHA}" >> "$GITHUB_ENV"
 
       # ── Rename debug APK ────────────────────────────────────────────────────
       - name: Rename debug APK
-        if: ${{ github.event.inputs.build_type == 'debug' }}
+        if: ${{ env.BUILD_TYPE == 'debug' }}
         run: |
           SHORT_SHA="${{ github.sha }}"
           SHORT_SHA="${SHORT_SHA:0:7}"
@@ -137,7 +151,7 @@ jobs:
 
       # ── Upload release: arm64 APK (recommended for install) ─────────────────
       - name: Upload arm64-v8a APK (recommended)
-        if: ${{ github.event.inputs.build_type != 'debug' }}
+        if: ${{ env.BUILD_TYPE != 'debug' }}
         uses: actions/upload-artifact@v4
         with:
           name: roadsos-release-arm64-v8a-${{ env.SHORT_SHA }}
@@ -146,7 +160,7 @@ jobs:
 
       # ── Upload release: all split APKs in one zip ────────────────────────────
       - name: Upload all split APKs
-        if: ${{ github.event.inputs.build_type != 'debug' }}
+        if: ${{ env.BUILD_TYPE != 'debug' }}
         uses: actions/upload-artifact@v4
         with:
           name: roadsos-release-all-abis-${{ env.SHORT_SHA }}
@@ -155,7 +169,7 @@ jobs:
 
       # ── Upload debug symbol maps (for crash symbolication) ───────────────────
       - name: Upload debug symbols
-        if: ${{ github.event.inputs.build_type != 'debug' }}
+        if: ${{ env.BUILD_TYPE != 'debug' }}
         uses: actions/upload-artifact@v4
         with:
           name: roadsos-debug-symbols-${{ env.SHORT_SHA }}
@@ -164,7 +178,7 @@ jobs:
 
       # ── Upload debug APK ─────────────────────────────────────────────────────
       - name: Upload debug APK
-        if: ${{ github.event.inputs.build_type == 'debug' }}
+        if: ${{ env.BUILD_TYPE == 'debug' }}
         uses: actions/upload-artifact@v4
         with:
           name: roadsos-debug-${{ env.SHORT_SHA }}
