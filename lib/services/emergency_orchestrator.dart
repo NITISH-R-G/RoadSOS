@@ -141,6 +141,9 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   final Ref _ref;
   Timer? _countdownTimer;
   final _uuid = const Uuid();
+  static const Duration _sosLocationTimeout = Duration(seconds: 12);
+  static const Duration _sosTriageTimeout = Duration(seconds: 10);
+  static const Duration _dispatchChannelTimeout = Duration(seconds: 8);
 
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
     _restoreState();
@@ -241,10 +244,35 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
     final locale = _ref.read(appLocaleProvider);
 
+    Future<void> failOpenToActive(String detail) async {
+      _log(detail, SOSPhase.active, isError: true);
+      state = state.copyWith(
+        phase: SOSPhase.active,
+        dispatchChannels: state.dispatchChannels.isEmpty ? _initialDispatchRows() : state.dispatchChannels,
+      );
+      await _persistState(true);
+      await WakeLockService.acquireForSos();
+    }
+
     _log(l10n.orchestratorAcquiringLocation, SOSPhase.gpsLocking);
     state = state.copyWith(phase: SOSPhase.gpsLocking);
 
-    final location = await _ref.read(locationServiceProvider).getCurrentLocation();
+    LocationFix location;
+    try {
+      location = await _ref
+          .read(locationServiceProvider)
+          .getCurrentLocation()
+          .timeout(_sosLocationTimeout);
+    } catch (e, st) {
+      appLog.w('[Orchestrator] Location acquisition timed out/failed', error: e, stackTrace: st);
+      location = LocationFix(
+        latitude: 0,
+        longitude: 0,
+        accuracy: 99999,
+        source: 'unknown',
+        timestamp: DateTime.now(),
+      );
+    }
     state = state.copyWith(location: location);
     final locLine = location.source == 'unknown'
         ? l10n.orchestratorLocationUnavailable
@@ -308,11 +336,36 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     _log(l10n.orchestratorAiBrief, SOSPhase.triaging);
     state = state.copyWith(phase: SOSPhase.triaging);
 
-    final rawTriage = await _ref.read(aiTriageServiceProvider).performTriage(
-      location: location,
-      isBystander: state.isBystander,
-      languageCode: locale.languageCode,
-    );
+    TriageResult rawTriage;
+    try {
+      rawTriage = await _ref
+          .read(aiTriageServiceProvider)
+          .performTriage(
+            location: location,
+            isBystander: state.isBystander,
+            languageCode: locale.languageCode,
+          )
+          .timeout(_sosTriageTimeout);
+    } catch (e, st) {
+      appLog.w('[Orchestrator] Triage timed out/failed — using safety fallback', error: e, stackTrace: st);
+      rawTriage = TriageResult(
+        functionCall: 'dispatch_emergency',
+        location: '${location.latitude},${location.longitude}',
+        severityLevel: state.isBystander ? 3 : 4,
+        requiredServices: const ['ambulance', 'police'],
+        firstAidQuery: 'bleeding control / airway / spinal precautions',
+        compressedPayload: location.toCompressedString(),
+        thinkingTrace: null,
+        isDegradedMode: true,
+        source: TriageSource.localTier2,
+        visionUsed: false,
+      );
+      _log(
+        'AI triage timed out — using safety fallback severity ${rawTriage.severityLevel}.',
+        SOSPhase.triaging,
+        isError: true,
+      );
+    }
 
     // ── Phase 3: Safety validation gate ──────────────────────────────────
     // Read gyro peak over the 1.5s window around the moment of SOS trigger.
@@ -360,15 +413,40 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     _patchDispatchChannel('local_log', DispatchChannelLifecycle.inProgress, 'Saving incident on device…');
     _patchDispatchChannel('family_link', DispatchChannelLifecycle.inProgress, 'Family tracking link…');
 
-    final meshFuture = mesh
-        .startBroadcasting(
-          triage.compressedPayload,
-          lat: location.latitude,
-          lng: location.longitude,
-          severity: triage.severityLevel,
-          services: triage.requiredServices,
-        )
-        .then((meshOk) {
+    Future<T> guard<T>({
+      required String id,
+      required Future<T> future,
+      required T fallback,
+      required String timeoutDetail,
+      required String failureDetail,
+    }) async {
+      try {
+        return await future.timeout(
+          _dispatchChannelTimeout,
+          onTimeout: () {
+            _patchDispatchChannel(id, DispatchChannelLifecycle.failed, timeoutDetail);
+            return fallback;
+          },
+        );
+      } catch (_) {
+        _patchDispatchChannel(id, DispatchChannelLifecycle.failed, failureDetail);
+        return fallback;
+      }
+    }
+
+    final meshFuture = guard<bool>(
+      id: 'mesh',
+      future: mesh.startBroadcasting(
+        triage.compressedPayload,
+        lat: location.latitude,
+        lng: location.longitude,
+        severity: triage.severityLevel,
+        services: triage.requiredServices,
+      ),
+      fallback: false,
+      timeoutDetail: 'Mesh timed out — continue with SMS and manual action.',
+      failureDetail: 'Mesh failed — Bluetooth off, unsupported, or error.',
+    ).then((meshOk) {
       _patchDispatchChannel(
         'mesh',
         meshOk ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
@@ -379,10 +457,22 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return meshOk;
     });
 
-    final smsFuture = _dispatchSmsWithRetry(
-      triage.compressedPayload,
-      lat: location.latitude,
-      lng: location.longitude,
+    final smsFuture = guard<SmsDispatchOutcome>(
+      id: 'sms',
+      future: _dispatchSmsWithRetry(
+        triage.compressedPayload,
+        lat: location.latitude,
+        lng: location.longitude,
+      ),
+      fallback: const SmsDispatchOutcome(
+        deviceDirectSmsSent: false,
+        backendRelayAccepted: false,
+        primaryAutomatedBarMet: false,
+        proofLevel: SmsDispatchProofLevel.none,
+        detail: 'SMS timed out — use dialer/manual SMS now.',
+      ),
+      timeoutDetail: 'SMS timed out — use dialer/manual SMS now.',
+      failureDetail: 'SMS failed — use dialer/manual SMS now.',
     ).then((smsOutcome) {
       _patchDispatchChannel(
         'sms',
@@ -394,10 +484,16 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return smsOutcome;
     });
 
-    final persistedFuture = _persistIncidentSnapshot(
-      incidentId: state.incidentId ?? '',
-      location: location,
-      triage: triage,
+    final persistedFuture = guard<({bool ok, String detail})>(
+      id: 'local_log',
+      future: _persistIncidentSnapshot(
+        incidentId: state.incidentId ?? '',
+        location: location,
+        triage: triage,
+      ),
+      fallback: (ok: false, detail: 'Local log timed out — incident not saved.'),
+      timeoutDetail: 'Local log timed out — incident not saved.',
+      failureDetail: 'Local log failed — incident not saved.',
     ).then((persisted) {
       _patchDispatchChannel(
         'local_log',
@@ -407,14 +503,17 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return persisted;
     });
 
-    final familyFuture = _ref
-        .read(familyTrackingServiceProvider)
-        .registerAndNotifyContact(
-          incidentId: state.incidentId ?? '',
-          location: location,
-          triage: triage,
-        )
-        .then((family) {
+    final familyFuture = guard<({bool ok, String detail})>(
+      id: 'family_link',
+      future: _ref.read(familyTrackingServiceProvider).registerAndNotifyContact(
+            incidentId: state.incidentId ?? '',
+            location: location,
+            triage: triage,
+          ),
+      fallback: (ok: false, detail: 'Family link timed out — share manually if needed.'),
+      timeoutDetail: 'Family link timed out — share manually if needed.',
+      failureDetail: 'Family link failed — share manually if needed.',
+    ).then((family) {
       _patchDispatchChannel(
         'family_link',
         family.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
@@ -423,12 +522,20 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return family;
     });
 
-    final results = await Future.wait([
-      meshFuture,
-      smsFuture,
-      persistedFuture,
-      familyFuture,
-    ]);
+    List<Object?> results;
+    try {
+      results = await Future.wait([
+        meshFuture,
+        smsFuture,
+        persistedFuture,
+        familyFuture,
+      ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 1));
+    } catch (e, st) {
+      // Absolute guard: never hang in dispatching.
+      appLog.w('[Orchestrator] Dispatch futures did not complete in time', error: e, stackTrace: st);
+      await failOpenToActive('Dispatch timed out — take manual action (dial emergency number).');
+      return;
+    }
 
     final smsOutcome = results[1] as SmsDispatchOutcome;
 
