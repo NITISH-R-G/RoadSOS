@@ -1,5 +1,7 @@
 # RoadSOS Supabase backend
 
+Security / RLS overview: **`docs/RLS_AND_SECURITY.md`** (keep in sync when adding migrations).
+
 ## Migrations
 
 Apply with Supabase CLI (`supabase db push`) or paste into the SQL editor in order:

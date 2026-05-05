@@ -45,6 +45,17 @@ function json(status: number, body: unknown) {
   });
 }
 
+/** Whole JSON body limit (~3 MB text) — abuse / OOM protection */
+const MAX_BODY_CHARS = 3_000_000;
+/** Vision payload limit (base64 JPEG); reject before upstream API */
+const MAX_IMAGE_BASE64_CHARS = 2_600_000;
+
+/** Truncate error text returned to clients — never leak full vendor payloads */
+function safeDetail(err: unknown, max = 280): string {
+  const s = String(err);
+  return s.length <= max ? s : `${s.slice(0, max)}…`;
+}
+
 function buildTextPrompt(input: {
   transcript: string;
   location: string;
@@ -166,7 +177,7 @@ async function callGemmaApi(
 
   const responseText = await res.text();
   if (!res.ok) {
-    throw new Error(`Gemma API HTTP ${res.status}: ${responseText.slice(0, 500)}`);
+    throw new Error(`Gemma API HTTP ${res.status}: ${responseText.slice(0, 240)}`);
   }
   return JSON.parse(responseText) as Record<string, unknown>;
 }
@@ -184,9 +195,17 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  const rawText = await req.text();
+  if (rawText.length > MAX_BODY_CHARS) {
+    return json(413, {
+      error: "payload_too_large",
+      max_chars: MAX_BODY_CHARS,
+    });
+  }
+
   let body: ReqBody;
   try {
-    body = (await req.json()) as ReqBody;
+    body = JSON.parse(rawText) as ReqBody;
   } catch {
     return json(400, { error: "invalid_json" });
   }
@@ -200,9 +219,15 @@ Deno.serve(async (req: Request) => {
 
   // Vision input — only forwarded to Gemma 4 (multimodal).
   // Gemma 3 fallback receives text-only to avoid API errors.
-  const imageBase64 = typeof body.image_base64 === "string" && body.image_base64.length > 0
+  let imageBase64 = typeof body.image_base64 === "string" && body.image_base64.length > 0
     ? body.image_base64
     : undefined;
+  if (imageBase64 && imageBase64.length > MAX_IMAGE_BASE64_CHARS) {
+    return json(413, {
+      error: "image_too_large",
+      max_chars: MAX_IMAGE_BASE64_CHARS,
+    });
+  }
   const imageMimeType = body.image_type || "image/jpeg";
   const hasImage = !!imageBase64;
 
@@ -231,15 +256,15 @@ Deno.serve(async (req: Request) => {
     } catch (e2) {
       return json(502, {
         error: "gemma_fetch_failed",
-        detail: String(e2),
+        detail: safeDetail(e2),
         models_tried: [GEMMA_4_MODEL, GEMMA_3_FALLBACK],
       });
     }
   }
 
   try {
-    const rawText = extractModelText(gemmaJson);
-    const payload = extractFirstJsonObject(rawText);
+    const modelOutputText = extractModelText(gemmaJson);
+    const payload = extractFirstJsonObject(modelOutputText);
     return json(200, {
       ...payload,
       _model: modelUsed,
@@ -248,7 +273,7 @@ Deno.serve(async (req: Request) => {
   } catch (e) {
     return json(502, {
       error: "gemma_parse_failed",
-      detail: String(e),
+      detail: safeDetail(e),
       model_used: modelUsed,
     });
   }

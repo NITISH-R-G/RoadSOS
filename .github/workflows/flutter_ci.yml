@@ -1,0 +1,48 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: flutter-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.41.9'
+
+jobs:
+  analyze_and_test:
+    name: dart analyze + flutter test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: dart analyze
+        run: dart analyze
+
+      - name: flutter test
+        run: flutter test
