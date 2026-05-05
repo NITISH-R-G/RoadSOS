@@ -28,7 +28,7 @@ Future<void> initializeFmtcMapCache() async {
       await cacheDir.create(recursive: true);
     }
 
-    await FMTCObjectBoxBackend().initialise(rootDirectory: cacheDir);
+    await FMTCObjectBoxBackend().initialise(rootDirectory: cacheDir.path);
     
     // Ensure the store is created.
     await FMTCStore(kFmtcRoadsosOsmStore).manage.create();
