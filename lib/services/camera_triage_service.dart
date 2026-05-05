@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../logging/app_log.dart';
 
@@ -45,6 +46,20 @@ class CameraTriageService {
     if (!Platform.isAndroid && !Platform.isIOS) return null;
 
     try {
+      // Ensure permission is granted before invoking the native camera intent.
+      final cam = await Permission.camera.status;
+      if (!cam.isGranted) {
+        final next = await Permission.camera.request();
+        if (!next.isGranted) {
+          if (next.isPermanentlyDenied) {
+            // Best-effort: prompt user to enable camera permission in Settings.
+            openAppSettings();
+          }
+          appLog.w('[CameraTriageService] Camera permission denied');
+          return null;
+        }
+      }
+
       final photo = await _picker.pickImage(
         source: ImageSource.camera,
         maxWidth: 1024,

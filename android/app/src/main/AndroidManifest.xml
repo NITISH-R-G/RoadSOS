@@ -14,9 +14,15 @@
     <!-- ═══════════════════════════════════════════════════════════════
          EMERGENCY ALERTS — SMS dispatch + haptic emergency feedback
     ═══════════════════════════════════════════════════════════════ -->
-    <uses-permission android:name="android.permission.SEND_SMS"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         CAMERA — bystander crash-scene photo capture (Gemma 4 vision tier)
+         Required by image_picker for ImageSource.camera.
+    ═══════════════════════════════════════════════════════════════ -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <!-- ═══════════════════════════════════════════════════════════════
          LOCATION — crash-detection GPS speed channel + SOS dispatch

@@ -12,12 +12,9 @@ import '../logging/app_log.dart';
 Future<void> requestSmsPermissionEarlyIfAndroidImpl() async {
   if (kIsWeb || !Platform.isAndroid) return;
   try {
-    final status = await Permission.sms.request();
-    if (!status.isGranted) {
-      appLog.w(
-        'SEND_SMS not granted at startup — allow SMS in Settings for unattended SOS.',
-      );
-    }
+    // Intentionally no-op: direct SEND_SMS is increasingly restricted by OS/policy.
+    // RoadSOS uses server relay (Twilio / Edge Function) and SMS-app intent fallback.
+    await Permission.sms.status; // keep plugin warmed for health checks if needed
   } catch (e, st) {
     appLog.w(
       'Startup SMS permission request failed',
