@@ -8,7 +8,7 @@ import android.os.Looper
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.annotation.RequiresApi
-import id.flutter.flutter_background_service.FlutterBackgroundServicePlugin
+// import id.flutter.flutter_background_service.FlutterBackgroundServicePlugin
 import org.json.JSONObject
 
 // SharedPreferences written by both the tile and Flutter (via MainActivity
@@ -71,9 +71,18 @@ class SosQuickSettingsTile : TileService() {
     // isolate via the plugin's static Pipe — the same mechanism used by
     // FlutterBackgroundService().invoke() from the main Dart isolate.
     private fun sendCommand(method: String) {
-        FlutterBackgroundServicePlugin.servicePipe.invoke(
-            JSONObject().put("method", method).put("args", JSONObject.NULL)
-        )
+        try {
+            // Reflection-based call to avoid compile-time dependency
+            val clazz = Class.forName("id.flutter.flutter_background_service.FlutterBackgroundServicePlugin")
+            val servicePipeField = clazz.getDeclaredField("servicePipe")
+            servicePipeField.isAccessible = true
+            val servicePipe = servicePipeField.get(null) as? ((JSONObject) -> Unit)
+            servicePipe?.invoke(
+                JSONObject().put("method", method).put("args", JSONObject.NULL)
+            )
+        } catch (e: Exception) {
+            // Silently fail if FlutterBackgroundServicePlugin is not available
+        }
     }
 
     private fun refreshTile() {

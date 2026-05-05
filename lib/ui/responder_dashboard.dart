@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../database/app_database.dart';
 import '../services/emergency_orchestrator.dart';
 import '../services/mesh_network_service.dart';
 import 'map_widget.dart';
@@ -21,7 +22,24 @@ class ResponderDashboard extends ConsumerWidget {
       body: Column(
         children: [
           Expanded(
-            child: RoadSosMap(state: sosState, autoCenter: false),
+            child: isDatabaseInitialized
+                ? StreamBuilder<dynamic>(
+                    stream: appDb.watch('SELECT * FROM reported_incidents'),
+                    builder: (context, snapshot) {
+                      final incidents = <Map<String, dynamic>>[];
+                      if (snapshot.hasData) {
+                        for (final row in snapshot.data!) {
+                          incidents.add(Map<String, dynamic>.from(row));
+                        }
+                      }
+                      return RoadSosMap(
+                        state: sosState,
+                        autoCenter: false,
+                        otherIncidents: incidents,
+                      );
+                    },
+                  )
+                : RoadSosMap(state: sosState, autoCenter: false),
           ),
           Container(
             padding: const EdgeInsets.all(20),

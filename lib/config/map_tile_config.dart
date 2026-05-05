@@ -49,9 +49,10 @@ class MapTileConfig {
         return cartoPositron;
       case 'carto_dark':
       case 'dark_matter':
-      case '':
-      default:
         return cartoDarkMatter;
+      case 'osm':
+      default:
+        return tileOpenstreetmapOrgViolatesPolicyAtScale;
     }
   }
 

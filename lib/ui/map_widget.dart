@@ -19,11 +19,13 @@ import '../models/facility.dart';
 class RoadSosMap extends StatefulWidget {
   final SOSState state;
   final bool autoCenter;
+  final List<Map<String, dynamic>> otherIncidents;
 
   const RoadSosMap({
     super.key,
     required this.state,
     this.autoCenter = true,
+    this.otherIncidents = const [],
   });
 
   @override
@@ -193,17 +195,46 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   }
 
   List<Marker> _buildIncidentMarkers() {
-    if (widget.state.incidentId == null || widget.state.location == null) return [];
-    if (widget.state.location!.source == 'unknown') return [];
+    final markers = <Marker>[];
+
+    // Other users' reported incidents
+    for (final inc in widget.otherIncidents) {
+      final lat = inc['latitude'] as double?;
+      final lng = inc['longitude'] as double?;
+      if (lat != null && lng != null) {
+        markers.add(
+          Marker(
+            point: LatLng(lat, lng),
+            width: 40,
+            height: 40,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.8),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: const Icon(Icons.warning_rounded, color: Colors.white, size: 20),
+            ),
+          ),
+        );
+      }
+    }
+
+    // Own SOS Incident
+    if (widget.state.incidentId != null && 
+        widget.state.location != null && 
+        widget.state.location!.source != 'unknown') {
+      markers.add(
+        Marker(
+          point: LatLng(widget.state.location!.latitude, widget.state.location!.longitude),
+          width: 50,
+          height: 50,
+          child: const Icon(Icons.emergency, color: Colors.red, size: 40),
+        ),
+      );
+    }
     
-    return [
-      Marker(
-        point: LatLng(widget.state.location!.latitude, widget.state.location!.longitude),
-        width: 50,
-        height: 50,
-        child: const Icon(Icons.emergency, color: Colors.red, size: 40),
-      ),
-    ];
+    return markers;
   }
 
   List<Marker> _buildFacilityMarkers() {
