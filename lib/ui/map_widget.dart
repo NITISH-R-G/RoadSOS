@@ -44,12 +44,12 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
 
   String? get _fallbackUrl {
     final t = MapTileConfig.effectiveUrlTemplate;
-    // If a custom provider fails (keys/restrictions), fall back to Carto
-    // so the SOS map never silently becomes grey.
-    if (!t.contains('basemaps.cartocdn.com')) {
-      return MapTileConfig.cartoDarkMatter;
-    }
-    return null;
+    // Fallback chain for reliability (demo safety):
+    // - If custom provider fails (keys/restrictions), fall back to Carto.
+    // - If Carto fails (blocked network / DNS / captive portal), fall back to
+    //   OSM tile CDN for demo resilience (do not ship high-volume traffic there).
+    if (!t.contains('basemaps.cartocdn.com')) return MapTileConfig.cartoDarkMatter;
+    return MapTileConfig.tileOpenstreetmapOrgViolatesPolicyAtScale;
   }
 
   TileProvider _makeTileProvider() {
@@ -233,7 +233,8 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                       child: Text(
                         !_templateLooksValid
                             ? 'Map tiles misconfigured (missing {z}/{x}/{y}).'
-                            : 'Map tiles failed to load. Check internet / tile provider.',
+                            : 'Map tiles failed to load. Check internet / tile provider.\n'
+                              'Template: ${MapTileConfig.effectiveUrlTemplate}',
                         style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.25),
                       ),
                     ),
