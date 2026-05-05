@@ -86,6 +86,11 @@ void main() async {
     appLog.w('[boot] RuntimeConfig.bootstrap() failed — proceeding without config', error: e, stackTrace: st);
   }
 
+  // Phase 0: Initialize map cache backend (ObjectBox).
+  // Must happen before runApp() to avoid race conditions with other native 
+  // libraries (PowerSync/SQLite) on some Android devices.
+  unawaited(initializeFmtcMapCache());
+
   // ← First frame renders here.  The loading spinner in _RoadSOSAppState is
   //   visible within 16 ms.  No user ever sees a black screen again.
   runApp(const ProviderScope(child: RoadSOSApp()));
@@ -171,7 +176,6 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
       await Future.wait<void>([
         requestSmsPermissionEarlyIfAndroid(),
         initializeFirstAidRepository(),
-        initializeFmtcMapCache(),
         EmergencyBackgroundService.initialize()
             .then((_) => EmergencyBackgroundService.ensureNotificationChannel()),
       ]);

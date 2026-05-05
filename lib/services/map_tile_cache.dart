@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart';
 
 import '../logging/app_log.dart';
 
@@ -9,16 +12,33 @@ const String kFmtcRoadsosOsmStore = 'roadsos_osm';
 bool fmtcMapCacheReady = false;
 
 /// Initialise FMTC before [runApp]. Safe to skip on web (unsupported).
+///
+/// On Android, we use an explicit sub-directory in the app's documents folder
+/// to avoid conflicts with other native stores (like SQLite/PowerSync).
 Future<void> initializeFmtcMapCache() async {
   if (kIsWeb) return;
+  if (fmtcMapCacheReady) return;
   try {
-    await FMTCObjectBoxBackend().initialise();
+    // FMTC 10+ requires an explicit backend initialization.
+    // We provide a dedicated directory for the tile cache.
+    final docDir = await getApplicationDocumentsDirectory();
+    final cacheDir = Directory(join(docDir.path, 'fmtc_root'));
+    
+    if (!await cacheDir.exists()) {
+      await cacheDir.create(recursive: true);
+    }
+
+    await FMTCObjectBoxBackend().initialise(rootDirectory: cacheDir);
+    
+    // Ensure the store is created.
     await FMTCStore(kFmtcRoadsosOsmStore).manage.create();
+    
     fmtcMapCacheReady = true;
+    appLog.i('[FMTC] Map cache backend initialized at ${cacheDir.path}');
   } catch (e, st) {
     fmtcMapCacheReady = false;
-    appLog.w(
-      'FMTC map cache init failed — using network tiles only',
+    appLog.e(
+      '[FMTC] Map cache init failed — maps will use network tiles only',
       error: e,
       stackTrace: st,
     );
