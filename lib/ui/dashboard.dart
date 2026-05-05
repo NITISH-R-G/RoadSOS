@@ -153,7 +153,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               color: _kRed,
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Icon(Icons.emergency_share, color: Colors.white, size: 16),
+            child: const Icon(
+              Icons.emergency_share,
+              color: Colors.white,
+              size: 16,
+            ),
           ),
           const SizedBox(width: 10),
           const Text(
@@ -167,10 +171,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ),
         ],
       ),
-      actions: const [
-        StatusIndicatorBar(),
-        SizedBox(width: 12),
-      ],
+      actions: const [StatusIndicatorBar(), SizedBox(width: 12)],
     );
   }
 
@@ -189,9 +190,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           Text(
             l10n.dashboardTitle,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: scheme.onSurface,
-                ),
+              fontWeight: FontWeight.w900,
+              color: scheme.onSurface,
+            ),
           ),
         ],
       ),
@@ -201,7 +202,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           icon: const Icon(Icons.fact_check_outlined),
           onPressed: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const SosActivityLogScreen(),
+            ),
           ),
         ),
         const StatusIndicatorBar(),
@@ -252,97 +255,103 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final l10n = AppLocalizations.of(context)!;
     final isDriving = drivingMode == DrivingMode.driving;
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final totalH = constraints.maxHeight;
-      final bannerH = isDriving ? 36.0 : 0.0;
-      final btnH = (totalH - bannerH) * 0.78;
-      final titleSize = min(96.0, btnH * 0.14);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final totalH = constraints.maxHeight;
+        final bannerH = isDriving ? 36.0 : 0.0;
+        final btnH = (totalH - bannerH) * 0.78;
+        final titleSize = min(96.0, btnH * 0.14);
 
-      return Column(
-        children: [
-          // Driving mode banner
-          if (isDriving)
-            Container(
-              height: 36,
-              color: const Color(0xFFFF9500),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.directions_car, color: Colors.black, size: 16),
-                  SizedBox(width: 6),
-                  Text(
-                    'DRIVING MODE — Crash detection armed',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
+        return Column(
+          children: [
+            // Driving mode banner
+            if (isDriving)
+              Container(
+                height: 36,
+                color: const Color(0xFFFF9500),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.directions_car, color: Colors.black, size: 16),
+                    SizedBox(width: 6),
+                    Text(
+                      'DRIVING MODE — Crash detection armed',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-          // SOS button — takes up most of the screen
-          Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () =>
-                      ref.read(emergencyOrchestratorProvider.notifier).triggerSOS(),
-                  child: AnimatedBuilder(
-                    animation: _pulseAnimation,
-                    builder: (context, child) =>
-                        Transform.scale(scale: _pulseAnimation.value, child: child),
-                    child: SizedBox(
-                      height: btnH,
-                      width: double.infinity,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(52),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Color(0xFFFF453A), Color(0xFFB00020)],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFFF453A).withAlpha(107),
-                                blurRadius: 40,
-                                spreadRadius: 2,
+            // SOS button — takes up most of the screen
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => ref
+                        .read(emergencyOrchestratorProvider.notifier)
+                        .triggerSOS(),
+                    // ⚡ Bolt Optimization: Replaced AnimatedBuilder + Transform.scale
+                    // with ScaleTransition to avoid rebuilding the widget tree on every
+                    // animation frame. Reduces CPU usage during the constant pulsing animation.
+                    child: ScaleTransition(
+                      scale: _pulseAnimation,
+                      child: SizedBox(
+                        height: btnH,
+                        width: double.infinity,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(52),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Color(0xFFFF453A), Color(0xFFB00020)],
                               ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                l10n.sosButton,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: titleSize,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 2,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFF453A).withAlpha(107),
+                                  blurRadius: 40,
+                                  spreadRadius: 2,
                                 ),
-                              ),
-                              const SizedBox(height: 12),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Text(
-                                  l10n.sosButtonSub,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Color(0xF0FFFFFF),
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  l10n.sosButton,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: titleSize,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 2,
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 12),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Text(
+                                    l10n.sosButtonSub,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Color(0xF0FFFFFF),
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -351,23 +360,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 ),
               ),
             ),
-          ),
 
-          // Discovery hint
-          SafeArea(
-            minimum: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              'All safety features are in "Safety Tools" below',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withAlpha(80),
-                fontSize: 13,
+            // Discovery hint
+            SafeArea(
+              minimum: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'All safety features are in "Safety Tools" below',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withAlpha(80),
+                  fontSize: 13,
+                ),
               ),
             ),
-          ),
-        ],
-      );
-    });
+          ],
+        );
+      },
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -379,10 +388,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
         // Radar + status at the top
-        const SizedBox(
-          height: 160,
-          child: MeshRadar(),
-        ),
+        const SizedBox(height: 160, child: MeshRadar()),
         const SizedBox(height: 8),
         const Align(
           alignment: Alignment.centerRight,
@@ -412,7 +418,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           subtitle: 'Document crash with AI-powered photo analysis',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const IncidentReportingScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const IncidentReportingScreen(),
+            ),
           ),
         ),
         _toolCard(
@@ -507,7 +515,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           subtitle: 'GPS, triage, SMS — for police & insurer records',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const SosActivityLogScreen(),
+            ),
           ),
         ),
       ],
@@ -532,7 +542,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           subtitle: 'Name, blood type, emergency contacts',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const ProfileEditorScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const ProfileEditorScreen(),
+            ),
           ),
         ),
         _toolCard(
@@ -569,7 +581,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           subtitle: 'Full SOS history for insurance & police records',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const SosActivityLogScreen(),
+            ),
           ),
         ),
       ],
@@ -714,10 +728,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               headline,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                    height: 1.35,
-                  ),
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface,
+                height: 1.35,
+              ),
             ),
           ],
         ),
@@ -738,9 +752,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             Text(
               l10n.orchestratorDispatching,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: scheme.onSurface,
-                  ),
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurface,
+              ),
             ),
             const SizedBox(height: 16),
             DispatchStatusPanel(channels: state.dispatchChannels),
@@ -775,7 +789,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute<void>(
-                      builder: (_) => const SosActivityLogScreen()),
+                    builder: (_) => const SosActivityLogScreen(),
+                  ),
                 ),
                 icon: const Icon(Icons.history_edu_outlined),
                 label: const Text('Full activity log & insurer note'),
@@ -802,9 +817,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (monitor.isMonitoring) {
       ref.read(proactiveMonitorProvider.notifier).endSafeWalk();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Safe Walk ended.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Safe Walk ended.')));
       }
       return;
     }
@@ -830,10 +845,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             children: [
               Text(
                 'Safe Walk',
-                style: Theme.of(ctx)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w900),
+                style: Theme.of(
+                  ctx,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 12),
               Autocomplete<String>(
@@ -843,13 +857,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   }
                   try {
                     final uri = Uri.parse(
-                        'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5');
-                    final response = await http.get(uri, headers: {
-                      'User-Agent': 'RoadSOS/1.0',
-                    });
+                      'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5',
+                    );
+                    final response = await http.get(
+                      uri,
+                      headers: {'User-Agent': 'RoadSOS/1.0'},
+                    );
                     if (response.statusCode == 200) {
                       final List<dynamic> data = json.decode(response.body);
-                      return data.map((e) => e['display_name'] as String).toList();
+                      return data
+                          .map((e) => e['display_name'] as String)
+                          .toList();
                     }
                   } catch (e) {
                     appLog.w('Error fetching location suggestions: $e');
@@ -859,21 +877,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 onSelected: (String selection) {
                   selectedDestination = selection;
                 },
-                fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
-                  return TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    onEditingComplete: onEditingComplete,
-                    onChanged: (val) {
-                      selectedDestination = val;
+                fieldViewBuilder:
+                    (context, controller, focusNode, onEditingComplete) {
+                      return TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        onEditingComplete: onEditingComplete,
+                        onChanged: (val) {
+                          selectedDestination = val;
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Destination (optional)',
+                          hintText: 'e.g., Home, Hostel, Station',
+                          prefixIcon: Icon(Icons.location_on_outlined),
+                        ),
+                      );
                     },
-                    decoration: const InputDecoration(
-                      labelText: 'Destination (optional)',
-                      hintText: 'e.g., Home, Hostel, Station',
-                      prefixIcon: Icon(Icons.location_on_outlined),
-                    ),
-                  );
-                },
                 optionsViewBuilder: (context, onSelected, options) {
                   return Align(
                     alignment: Alignment.topLeft,
@@ -882,7 +901,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       borderRadius: BorderRadius.circular(8),
                       color: Theme.of(context).colorScheme.surface,
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300),
+                        constraints: const BoxConstraints(
+                          maxHeight: 200,
+                          maxWidth: 300,
+                        ),
                         child: ListView.builder(
                           padding: EdgeInsets.zero,
                           shrinkWrap: true,
@@ -919,7 +941,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 height: 52,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    ref.read(proactiveMonitorProvider.notifier).startSafeWalk(
+                    ref
+                        .read(proactiveMonitorProvider.notifier)
+                        .startSafeWalk(
                           selectedDestination.trim().isEmpty
                               ? 'your destination'
                               : selectedDestination.trim(),
