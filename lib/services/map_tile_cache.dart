@@ -22,19 +22,21 @@ Future<void> initializeFmtcMapCache() async {
     // FMTC 10+ requires an explicit backend initialization.
     // We provide a dedicated directory for the tile cache.
     final docDir = await getApplicationDocumentsDirectory();
-    final cacheDir = Directory(join(docDir.path, 'fmtc_root'));
+    final String cachePath = join(docDir.path, 'fmtc_root');
+    final Directory cacheDir = Directory(cachePath);
     
     if (!await cacheDir.exists()) {
       await cacheDir.create(recursive: true);
     }
 
-    await FMTCObjectBoxBackend().initialise(rootDirectory: cacheDir.path);
+    // Explicitly pass the String path to avoid Directory vs String ambiguity
+    await FMTCObjectBoxBackend().initialise(rootDirectory: cachePath);
     
     // Ensure the store is created.
     await FMTCStore(kFmtcRoadsosOsmStore).manage.create();
     
     fmtcMapCacheReady = true;
-    appLog.i('[FMTC] Map cache backend initialized at ${cacheDir.path}');
+    appLog.i('[FMTC] Map cache backend initialized at $cachePath');
   } catch (e, st) {
     fmtcMapCacheReady = false;
     appLog.e(
