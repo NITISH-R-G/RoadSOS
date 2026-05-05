@@ -1,13 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
 import '../config/map_tile_config.dart';
 import '../logging/app_log.dart';
 import '../services/emergency_orchestrator.dart';
-import '../services/map_tile_cache.dart';
 import '../models/facility.dart';
 
 /// A robust, offline-capable Map widget for RoadSOS.
@@ -33,9 +30,14 @@ class RoadSosMap extends StatefulWidget {
 
 class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   late final AnimatedMapController _mapController;
-  late final TileProvider _tileProvider = _makeTileProvider();
+  // NOTE (SOS reliability): keep the SOS map on network tiles only.
+  // Offline caching is handled by `OfflineMapScreen` + FMTC. In the SOS
+  // surface, using the cache provider can hide network/tile failures behind
+  // silent cache logic and has produced “blank grey map” reports.
+  late final TileProvider _tileProvider = NetworkTileProvider();
   int _tileErrorCount = 0;
   int _tileLayerNonce = 0;
+  DateTime _mountedAt = DateTime.now();
 
   bool get _templateLooksValid {
     final t = MapTileConfig.effectiveUrlTemplate;
@@ -52,20 +54,13 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
     return MapTileConfig.tileOpenstreetmapOrgViolatesPolicyAtScale;
   }
 
-  TileProvider _makeTileProvider() {
-    if (kIsWeb || !fmtcMapCacheReady) {
-      return NetworkTileProvider();
-    }
-    return FMTCTileProvider(
-      stores: {kFmtcRoadsosOsmStore: BrowseStoreStrategy.readUpdateCreate},
-      loadingStrategy: BrowseLoadingStrategy.cacheFirst,
-    );
-  }
+  // Cache tile provider intentionally not used in SOS map.
 
   @override
   void initState() {
     super.initState();
     _mapController = AnimatedMapController(vsync: this);
+    _mountedAt = DateTime.now();
   }
 
   @override
@@ -112,6 +107,8 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
             options: MapOptions(
               initialCenter: userLoc ?? const LatLng(20.5937, 78.9629),
               initialZoom: userLoc != null ? 15 : 4.5,
+              minZoom: 2.5,
+              maxZoom: 18,
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               ),
@@ -250,6 +247,32 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
+              ),
+            ),
+
+          // If no tile errors are reported but the map still appears blank,
+          // show a timed hint so users aren't left with a silent grey box.
+          if (_templateLooksValid && _tileErrorCount == 0)
+            Positioned(
+              left: 12,
+              bottom: 46,
+              child: Builder(
+                builder: (context) {
+                  final seconds = DateTime.now().difference(_mountedAt).inSeconds;
+                  if (seconds < 6) return const SizedBox.shrink();
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: const Text(
+                      'Map still loading… If this stays blank, check internet or switch networks.',
+                      style: TextStyle(color: Colors.white70, fontSize: 11),
+                    ),
+                  );
+                },
               ),
             ),
         ],
