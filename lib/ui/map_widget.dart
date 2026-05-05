@@ -5,6 +5,7 @@ import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
 import '../config/map_tile_config.dart';
+import '../logging/app_log.dart';
 import '../services/emergency_orchestrator.dart';
 import '../services/map_tile_cache.dart';
 import '../models/facility.dart';
@@ -33,6 +34,23 @@ class RoadSosMap extends StatefulWidget {
 class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   late final AnimatedMapController _mapController;
   late final TileProvider _tileProvider = _makeTileProvider();
+  int _tileErrorCount = 0;
+  int _tileLayerNonce = 0;
+
+  bool get _templateLooksValid {
+    final t = MapTileConfig.effectiveUrlTemplate;
+    return t.contains('{z}') && t.contains('{x}') && t.contains('{y}');
+  }
+
+  String? get _fallbackUrl {
+    final t = MapTileConfig.effectiveUrlTemplate;
+    // If a custom provider fails (keys/restrictions), fall back to Carto
+    // so the SOS map never silently becomes grey.
+    if (!t.contains('basemaps.cartocdn.com')) {
+      return MapTileConfig.cartoDarkMatter;
+    }
+    return null;
+  }
 
   TileProvider _makeTileProvider() {
     if (kIsWeb || !fmtcMapCacheReady) {
@@ -88,6 +106,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
+          Container(color: Colors.black),
           FlutterMap(
             mapController: _mapController.mapController,
             options: MapOptions(
@@ -99,10 +118,24 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
             ),
             children: [
               TileLayer(
+                key: ValueKey('tiles_${_tileLayerNonce}_${MapTileConfig.effectiveUrlTemplate}'),
                 urlTemplate: MapTileConfig.effectiveUrlTemplate,
                 subdomains: MapTileConfig.effectiveSubdomains,
                 userAgentPackageName: 'com.roadsos.app',
                 tileProvider: _tileProvider,
+                fallbackUrl: _fallbackUrl,
+                errorTileCallback: (tile, error, stackTrace) {
+                  // Avoid log spam; still record enough to debug.
+                  _tileErrorCount += 1;
+                  if (_tileErrorCount <= 3 || _tileErrorCount % 20 == 0) {
+                    appLog.w(
+                      '[Map] Tile load error (#$_tileErrorCount) z=${tile.coordinates.z} x=${tile.coordinates.x} y=${tile.coordinates.y}',
+                      error: error,
+                      stackTrace: stackTrace,
+                    );
+                  }
+                  if (mounted && _tileErrorCount == 1) setState(() {});
+                },
               ),
               MarkerLayer(
                 markers: [
@@ -174,6 +207,50 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
               ],
             ),
           ),
+
+          // Fail-safe overlay: never allow a silent grey map.
+          if (!_templateLooksValid || _tileErrorCount > 0)
+            Positioned(
+              left: 12,
+              top: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.78),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: _templateLooksValid ? Colors.amber : Colors.redAccent,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        !_templateLooksValid
+                            ? 'Map tiles misconfigured (missing {z}/{x}/{y}).'
+                            : 'Map tiles failed to load. Check internet / tile provider.',
+                        style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.25),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _tileErrorCount = 0;
+                          _tileLayerNonce += 1; // forces TileLayer rebuild
+                        });
+                      },
+                      child: const Text('RETRY'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
