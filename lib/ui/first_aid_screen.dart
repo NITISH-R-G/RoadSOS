@@ -104,9 +104,7 @@ class _FirstAidScreenState extends State<FirstAidScreen> {
 
             // Loading
             if (_isLoading)
-              const Center(
-                child: CircularProgressIndicator(color: Colors.red),
-              ),
+              const Center(child: CircularProgressIndicator(color: Colors.red)),
 
             if (_error != null && !_isLoading)
               Padding(
@@ -126,12 +124,17 @@ class _FirstAidScreenState extends State<FirstAidScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A1A2E),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
+                    border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.25),
+                    ),
                   ),
                   child: SingleChildScrollView(
                     child: SelectableText(
                       _result,
-                      style: const TextStyle(color: Colors.white70, height: 1.35),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.35,
+                      ),
                     ),
                   ),
                 ),
@@ -144,8 +147,11 @@ class _FirstAidScreenState extends State<FirstAidScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.health_and_safety,
-                          size: 80, color: Colors.red),
+                      const Icon(
+                        Icons.health_and_safety,
+                        size: 80,
+                        color: Colors.red,
+                      ),
                       const SizedBox(height: 16),
                       const Text(
                         'Describe the emergency situation\nto get instant first aid guidance',

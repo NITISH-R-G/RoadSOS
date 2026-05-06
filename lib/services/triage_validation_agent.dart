@@ -58,7 +58,9 @@ class TriageValidationAgent {
     // A person triggering SOS while driving is almost certainly in a crash.
     // Minimum severity 3 (moderate) regardless of transcript context.
     if (drivingMode == DrivingMode.driving && severity < 3) {
-      overrides.add('Severity raised $severity→3 (driving mode active at SOS trigger).');
+      overrides.add(
+        'Severity raised $severity→3 (driving mode active at SOS trigger).',
+      );
       severity = 3;
       flags.add('severity_floor_driving_mode');
     }
@@ -90,9 +92,7 @@ class TriageValidationAgent {
     }
 
     // ── Rule F: Police recommended for severity 5 ─────────────────────────
-    final hasAuthority = services.any(
-      (s) => s == 'police' || s == 'rescue',
-    );
+    final hasAuthority = services.any((s) => s == 'police' || s == 'rescue');
     if (severity == 5 && !hasAuthority) {
       flags.add('consider_police_severity5');
     }
@@ -113,9 +113,7 @@ class TriageValidationAgent {
     // ── Build result ──────────────────────────────────────────────────────
     final wasOverridden = overrides.isNotEmpty;
     if (wasOverridden) {
-      appLog.w(
-        '[ValidationAgent] Overrode triage: ${overrides.join(" | ")}',
-      );
+      appLog.w('[ValidationAgent] Overrode triage: ${overrides.join(" | ")}');
     } else {
       appLog.d(
         '[ValidationAgent] Triage validated — no overrides needed '
@@ -161,17 +159,17 @@ class TriageValidationAgent {
     required double gyroPeak,
   }) {
     var base = switch (source) {
-      TriageSource.gemma4Cloud       => 0.92,
+      TriageSource.gemma4Cloud => 0.92,
       TriageSource.gemma4CloudVision => 0.94,
-      TriageSource.gemma4OnDevice    => 0.74,
-      TriageSource.localTier2        => 0.58,
+      TriageSource.gemma4OnDevice => 0.74,
+      TriageSource.localTier2 => 0.58,
       TriageSource.offlineClassifier => 0.42,
-      TriageSource.webDemo           => 0.30,
+      TriageSource.webDemo => 0.30,
     };
 
     if (hasThinkingTrace) base += 0.03;
-    if (visionUsed)       base += 0.04;
-    if (gyroPeak >= 3.5)  base += 0.03; // sensor corroboration
+    if (visionUsed) base += 0.04;
+    if (gyroPeak >= 3.5) base += 0.03; // sensor corroboration
     if (gyroPeak >= 1.5 && gyroPeak < 3.5) base += 0.01;
 
     // Each override slightly reduces confidence — the AI needed correction.

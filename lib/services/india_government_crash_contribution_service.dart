@@ -35,7 +35,10 @@ class IndiaGovernmentCrashContributionService {
     if (cells.isEmpty) return;
 
     final uri = Uri.parse(base);
-    final token = dotenv.maybeGet('GOVERNMENT_CRASH_CONTRIBUTION_TOKEN')?.trim();
+    if (uri.scheme != 'https') return;
+    final token = dotenv
+        .maybeGet('GOVERNMENT_CRASH_CONTRIBUTION_TOKEN')
+        ?.trim();
 
     final headers = <String, String>{
       'Content-Type': 'application/json',
@@ -81,14 +84,14 @@ class CrashDensityCell {
   final int maxSeverityBucket;
 
   Map<String, dynamic> toJson() => {
-        'grid_id': gridId,
-        'latitude': latitude,
-        'longitude': longitude,
-        'report_count': reportCount,
-        'window_start_utc': windowStartUtc,
-        'window_end_utc': windowEndUtc,
-        'max_severity_bucket': maxSeverityBucket,
-      };
+    'grid_id': gridId,
+    'latitude': latitude,
+    'longitude': longitude,
+    'report_count': reportCount,
+    'window_start_utc': windowStartUtc,
+    'window_end_utc': windowEndUtc,
+    'max_severity_bucket': maxSeverityBucket,
+  };
 }
 
 class HttpContributionException implements Exception {
