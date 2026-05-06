@@ -292,10 +292,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   behavior: HitTestBehavior.opaque,
                   onTap: () =>
                       ref.read(emergencyOrchestratorProvider.notifier).triggerSOS(),
-                  child: AnimatedBuilder(
-                    animation: _pulseAnimation,
-                    builder: (context, child) =>
-                        Transform.scale(scale: _pulseAnimation.value, child: child),
+                  // ⚡ Bolt Optimization: Replace AnimatedBuilder + Transform.scale
+                  // with ScaleTransition. This prevents rebuilding the complex
+                  // button widget tree on every frame of the pulse animation,
+                  // reducing CPU overhead and potential jank.
+                  child: ScaleTransition(
+                    scale: _pulseAnimation,
                     child: SizedBox(
                       height: btnH,
                       width: double.infinity,
