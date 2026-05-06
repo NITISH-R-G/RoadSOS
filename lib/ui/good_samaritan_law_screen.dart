@@ -35,7 +35,11 @@ class GoodSamaritanLawScreen extends StatelessWidget {
               child: SingleChildScrollView(
                 child: Text(
                   l10n.goodSamaritanBody,
-                  style: const TextStyle(color: Colors.white70, height: 1.5, fontSize: 16),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    height: 1.5,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),
