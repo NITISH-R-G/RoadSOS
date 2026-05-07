@@ -408,7 +408,7 @@
   {
     "id": "needle-decompression-awareness",
     "title": "Needle decompression — awareness only",
-    "body": "Needle decompression treats tension pneumothorax. This is a trained medical procedure — do NOT attempt without specific training.\nSite: 2nd intercostal space, mid-clavicular line, above the rib (to avoid neurovascular bundle). A large-bore needle is inserted until air escapes; replaced with a chest seal.\nFor bystanders without training: recognize the signs (see tension-pneumothorax entry), seal any open chest wound with a non-occlusive (vented) dressing, call EMS immediately, and support ventilation.\nKnowing this procedure exists helps bystanders relay correct information to EMS dispatchers.",
+    "body": "Needle decompression treats tension pneumothorax. This is a trained medical procedure — do NOT attempt without specific training.\nSite: 2nd intercostal space, mid-clavicular line, above the rib (to avoid neurovascular bundle). A large-bore needle is inserted until air escapes; replaced with a chest seal.\nFor bystanders without training: recognize the signs (see tension-pneumothorax entry), seal any open chest wound with a vented chest seal or improvised vent if trained.",
     "tags": "needle decompression tension pneumothorax chest procedure awareness",
     "source": "TCCC / PHTLS clinical reference — for awareness only"
   },
@@ -450,7 +450,7 @@
   {
     "id": "crush-syndrome-prolonged",
     "title": "Crush syndrome (prolonged entrapment >1 hour)",
-    "body": "1) Crush syndrome occurs when muscle tissue is compressed for >1 hour; on release, massive amounts of myoglobin and potassium flood the bloodstream.\n2) This causes lethal cardiac arrhythmia and acute kidney failure.\n3) KEY RULE: Do NOT release a crush >1 hour without IV fluid resuscitation already running — this requires ALS paramedics or physician on scene.\n4) While waiting: keep the victim as still as possible; do NOT elevate the crushed limb; give oral fluids only if conscious.\n5) Inform EMS of entrapment duration immediately — it changes their response team composition.",
+    "body": "1) Crush syndrome occurs when muscle tissue is compressed for >1 hour; on release, massive amounts of myoglobin and potassium flood the bloodstream.\n2) This causes lethal cardiac arrhythmia and acute kidney failure.\n3) KEY RULE: Do NOT release a crush >1 hour without IV fluid resuscitation already running — this requires ALS paramedics or physician on scene.\n4) While waiting: keep the victim as still as possible; do NOT provide any food or drink; do NOT elevate the crushed limb; give oral fluids only if conscious and not vomiting.\n5) Inform EMS of entrapment duration immediately — it changes their response team composition.",
     "tags": "crush syndrome entrapment prolonged rhabdomyolysis kidney",
     "source": "Disaster medicine crush syndrome protocols"
   },
@@ -516,5 +516,33 @@
     "body": "1) Pull fully off the travel lane; hazard lights on; reflective vest if available.\n2) Use wheel wedges; work on flat, stable ground — not in live traffic.\n3) Call police/road assistance on high-speed corridors if unsafe to change a wheel yourself.\n4) For medical needs (injury after crash), revert to EMS and trauma first-aid topics.\n5) Never work under a vehicle supported only by a jack.",
     "tags": "puncture flat tire mechanic roadside safety towing",
     "source": "General road-safety guidance; align with NH / state highway rules"
+  },
+  {
+    "id": "muscle-tear-strain",
+    "title": "Muscle tear / strain",
+    "body": "1) Rest: stop the activity that caused the injury.\n2) Ice: apply cold packs for 15-20 minutes every few hours (not directly on skin).\n3) Compression: use an elastic bandage to reduce swelling.\n4) Elevation: keep the injured limb raised above heart level.\n5) Seek medical advice if pain is severe, you cannot move the limb, or there is significant deformity.",
+    "tags": "muscle tear strain pull cramp sports injury",
+    "source": "General orthopedic first aid"
+  },
+  {
+    "id": "bruises-contusions",
+    "title": "Bruises (Contusions)",
+    "body": "1) Apply a cold compress or ice pack (wrapped in a towel) for 15 minutes to reduce swelling and pain.\n2) Elevate the bruised area if possible.\n3) Rest the affected part.\n4) If the bruise is very large, extremely painful, or follows a severe impact, seek medical evaluation for underlying fracture or internal injury.\n5) Do not 'massage' the bruise, as this can worsen tissue damage.",
+    "tags": "bruise contusion swelling impact black and blue",
+    "source": "Standard first aid guidance"
+  },
+  {
+    "id": "sprains-joint",
+    "title": "Sprains (Ankle, Wrist, etc.)",
+    "body": "1) Follow R.I.C.E: Rest, Ice, Compression, Elevation.\n2) Use a brace or bandage to stabilize the joint — do not wrap so tight that it cuts off circulation.\n3) Avoid putting weight on the injured joint.\n4) Seek medical care if you hear a 'pop' at the time of injury, cannot bear weight at all, or if the joint feels unstable.\n5) X-rays may be needed to rule out fractures.",
+    "tags": "sprain joint ankle wrist twist ligament",
+    "source": "Orthopedic first aid consensus"
+  },
+  {
+    "id": "dislocation-joint",
+    "title": "Joint Dislocation",
+    "body": "1) Do NOT attempt to 'pop' the joint back in — this can cause nerve or vessel damage.\n2) Immobilize the joint in the position it was found using a sling or splint.\n3) Apply ice packs to the area to reduce swelling and pain.\n4) Seek emergency medical care immediately for professional reduction.\n5) Check for pulse and sensation beyond the joint — if absent, this is a critical emergency.",
+    "tags": "dislocation joint shoulder elbow finger deformity",
+    "source": "Emergency medicine protocols"
   }
 ]
