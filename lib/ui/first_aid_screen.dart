@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../services/ai_triage_service.dart';
-import '../services/camera_triage_service.dart';
 import '../services/first_aid_store.dart';
 
 class FirstAidScreen extends ConsumerStatefulWidget {
@@ -78,109 +76,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
     }
   }
 
-  Future<void> _lookupWithImage(bool fromCamera) async {
-    setState(() {
-      _isLoading = true;
-      _result = '';
-      _error = null;
-      _suggestions = [];
-    });
 
-    try {
-      final photo = fromCamera
-          ? await CameraTriageService.captureBystanderPhoto()
-          : await CameraTriageService.pickPhotoFromGallery();
-
-      if (photo == null) {
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      final aiTriage = ref.read(aiTriageServiceProvider);
-      final contextText = _textController.text.trim().isNotEmpty
-          ? _textController.text
-          : 'Identify injury and provide first aid';
-
-      final triageRes = await aiTriage.triageWithScenePhoto(
-        audioTranscript: contextText,
-        locationString: '0,0',
-        accelerometerSeverityHint: 3,
-        scenePhoto: photo,
-      );
-
-      final guidance = await FirstAidStore.getVerifiedAdvice(triageRes.firstAidQuery);
-
-      final sections = guidance.split('\n---\n');
-      final medicalSections = sections.where((s) {
-        final lower = s.toLowerCase();
-        return !lower.contains('motor vehicle') && 
-               !lower.contains('road traffic') && 
-               !lower.contains('calling 108') &&
-               !lower.contains('india-108-erss');
-      }).toList();
-
-      setState(() {
-        _result = medicalSections.isNotEmpty ? medicalSections.join('\n---\n') : guidance;
-        if (_textController.text.isEmpty) {
-          _textController.text = triageRes.firstAidQuery;
-        }
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'AI injury identification failed. Please try a text description.';
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  void _showImageSourceSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF1A1A2E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined, color: Colors.white),
-              title: const Text('Take a Photo', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _lookupWithImage(true);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: Colors.white),
-              title: const Text('Upload from Gallery', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _lookupWithImage(false);
-              },
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -219,19 +115,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                     onSubmitted: (val) => _lookupFirstAid(val),
                   ),
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _showImageSourceSheet,
-                  icon: const Icon(Icons.add_a_photo_outlined, color: Colors.white),
-                  style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xFF1A1A2E),
-                    padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
-                    ),
-                  ),
-                ),
+
                 const SizedBox(width: 8),
                 IconButton(
                   onPressed: () {
@@ -390,7 +274,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'Type an injury or upload a photo to get\nexact, verified first aid solutions.',
+                        'Type an injury to get\nexact, verified first aid solutions.',
                         style: TextStyle(color: Colors.white54, fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
