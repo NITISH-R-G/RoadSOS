@@ -26,7 +26,7 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.withValues(alpha: 0.1),
             child: const Row(
               children: [
                 Icon(Icons.wifi_off, color: Colors.blue, size: 16),
@@ -53,7 +53,7 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: isMe ? Colors.blue : Colors.white.withOpacity(0.1),
+                      color: isMe ? Colors.blue : Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -78,7 +78,7 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
   Widget _buildInput() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.05)),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05)),
       child: Row(
         children: [
           Expanded(

@@ -323,15 +323,8 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A1A2E),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.red.withOpacity(0.25)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.red.withOpacity(0.05),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                      ),
-                    ],
                   ),
                   child: SingleChildScrollView(
                     child: Column(

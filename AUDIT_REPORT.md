@@ -50,6 +50,11 @@ This document tracks identified issues and their resolution status.
 
 ---
 
+## Automation
+
+- **CI:** `.github/workflows/flutter_ci.yml` runs `dart analyze` + `flutter test` on every push/PR to `main`.
+- **Docs:** `docs/BLUEPRINT_GAP_ANALYSIS.md` is reconciled with the Gemma 4 stack — do not revert outdated “Gemini-only” rows without verifying code.
+
 ## Remaining Known Gaps (not blocking hackathon submission)
 
 ### 🔶 Background crash detection reliability

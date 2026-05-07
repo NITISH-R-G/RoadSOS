@@ -36,7 +36,6 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
   int _total = GemmaModelManager.approximateFullBytes;
   CancelToken? _cancelToken;
   String? _errorMessage;
-  bool _modelReady = false;
 
   @override
   void initState() {
@@ -57,7 +56,6 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
     final soFar = await GemmaModelManager.downloadedSoFar();
     if (!mounted) return;
     setState(() {
-      _modelReady = ready;
       if (ready) {
         _phase = _Phase.done;
       } else if (soFar > 0) {
@@ -100,7 +98,6 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
       } else {
         setState(() {
           _phase = _Phase.done;
-          _modelReady = true;
         });
       }
     } on GemmaDownloadException catch (e) {
@@ -158,9 +155,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
           Container(
             width: 40, height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFF4a90d9).withOpacity(0.15),
+              color: const Color(0xFF4a90d9).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFF4a90d9).withOpacity(0.4)),
+              border: Border.all(color: const Color(0xFF4a90d9).withValues(alpha: 0.4)),
             ),
             child: const Icon(Icons.memory_rounded, color: Color(0xFF7bc8f8), size: 20),
           ),
@@ -400,9 +397,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
         Container(
           width: 72, height: 72,
           decoration: BoxDecoration(
-            color: const Color(0xFF27c96b).withOpacity(0.12),
+            color: const Color(0xFF27c96b).withValues(alpha: 0.12),
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFF27c96b).withOpacity(0.4), width: 2),
+            border: Border.all(color: const Color(0xFF27c96b).withValues(alpha: 0.4), width: 2),
           ),
           child: const Icon(Icons.check_rounded, color: Color(0xFF27c96b), size: 36),
         ),
@@ -440,9 +437,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFe8354a).withOpacity(0.08),
+        color: const Color(0xFFe8354a).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFe8354a).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFe8354a).withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,9 +462,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF4a90d9).withOpacity(0.08),
+        color: const Color(0xFF4a90d9).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF4a90d9).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFF4a90d9).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -546,9 +543,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
           Container(
             width: 22, height: 22,
             decoration: BoxDecoration(
-              color: const Color(0xFF4a90d9).withOpacity(0.15),
+              color: const Color(0xFF4a90d9).withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF4a90d9).withOpacity(0.4)),
+              border: Border.all(color: const Color(0xFF4a90d9).withValues(alpha: 0.4)),
             ),
             child: Center(
               child: Text(num,

@@ -8,8 +8,35 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 Write-Host "Verifying RoadSOS..." -ForegroundColor Cyan
 
+# Resolve Flutter when not on PATH (ZIP installs, CI clones, Android Studio SDK).
 if (!(Get-Command flutter -ErrorAction SilentlyContinue)) {
-    Write-Error "Flutter is not installed. Please install Flutter before continuing."
+    if ($env:FLUTTER_ROOT) {
+        $flutterBin = Join-Path $env:FLUTTER_ROOT "bin"
+        if (Test-Path (Join-Path $flutterBin "flutter.bat")) {
+            $env:Path = "$flutterBin;$env:Path"
+        }
+    }
+}
+if (!(Get-Command flutter -ErrorAction SilentlyContinue)) {
+    foreach ($dir in @(
+            "C:\Users\Aravindh\Downloads\flutter_windows_3.41.8-stable\flutter\bin",
+            "$env:LOCALAPPDATA\Android\flutter\bin",
+            "$env:USERPROFILE\flutter\bin"
+        )) {
+        if (Test-Path "$dir\flutter.bat") {
+            $env:Path = "$dir;$env:Path"
+            Write-Host "Using Flutter SDK bin: $dir" -ForegroundColor DarkGray
+            break
+        }
+    }
+}
+
+if (!(Get-Command flutter -ErrorAction SilentlyContinue)) {
+    Write-Error @"
+Flutter is not on PATH. Install: https://docs.flutter.dev/get-started/install/windows
+Then reopen the terminal and run this script again from the repo root:
+  .\scripts\verify.ps1
+"@
     exit 1
 }
 

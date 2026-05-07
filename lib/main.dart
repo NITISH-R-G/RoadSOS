@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roadsos/l10n/app_localizations.dart';
 
 import 'database/app_database.dart';
-import 'services/sms_permission_bootstrap.dart';
 import 'services/first_aid_repository.dart';
 import 'services/hardware_trigger_service.dart';
 import 'services/ios_lifecycle_service.dart';
@@ -169,7 +168,6 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
 
       // Phase 3: Parallel independent init (saves ~400–700 ms vs serial).
       await Future.wait<void>([
-        requestSmsPermissionEarlyIfAndroid(),
         initializeFirstAidRepository(),
         initializeFmtcMapCache(),
         EmergencyBackgroundService.initialize()
@@ -188,9 +186,10 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
       // Non-fatal: app runs in offline/degraded mode.
       appLog.e('[boot] Service bootstrap error — running in degraded mode', error: e, stackTrace: st);
     } finally {
-      if (!mounted) return;
-      setState(() => _servicesReady = true);
-      _onServicesReady();
+      if (mounted) {
+        setState(() => _servicesReady = true);
+        _onServicesReady();
+      }
     }
   }
 

@@ -73,7 +73,7 @@ class _IncidentReportingScreenState
         fontSize: 10,
         fontWeight: FontWeight.w900,
         letterSpacing: 1.5,
-        color: Colors.blue.withOpacity(0.6),
+        color: Colors.blue.withValues(alpha: 0.6),
       ),
     );
   }
@@ -83,7 +83,7 @@ class _IncidentReportingScreenState
       width: double.infinity,
       height: 180,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -92,7 +92,7 @@ class _IncidentReportingScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             if (_sceneImageBytes == null)
-              Icon(Icons.camera_enhance, size: 40, color: Colors.white.withOpacity(0.3))
+              Icon(Icons.camera_enhance, size: 40, color: Colors.white.withValues(alpha: 0.3))
             else
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -197,9 +197,9 @@ class _IncidentReportingScreenState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
+        color: Colors.blue.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -210,9 +210,9 @@ class _IncidentReportingScreenState
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withOpacity(0.4)),
+                  border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
                 ),
                 child: Text(
                   'Scene: ${_getSceneLabel(assistant.sceneContext, lang)}',
@@ -234,7 +234,7 @@ class _IncidentReportingScreenState
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.2),
+                      color: Colors.blue.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -265,7 +265,7 @@ class _IncidentReportingScreenState
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: lang == 'hi' ? 'बोलें या टाइप करें…' : 'Speak or type…',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                     filled: true,
                     fillColor: Colors.black,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -303,9 +303,9 @@ class _IncidentReportingScreenState
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   lang == 'hi'
@@ -350,7 +350,7 @@ class _IncidentReportingScreenState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -367,9 +367,9 @@ class _IncidentReportingScreenState
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.08),
+        color: Colors.green.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.withOpacity(0.2)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,7 +378,7 @@ class _IncidentReportingScreenState
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
+              color: Colors.green.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -401,7 +401,7 @@ class _IncidentReportingScreenState
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.2),
+                        color: Colors.green.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -422,9 +422,9 @@ class _IncidentReportingScreenState
                   child: LinearProgressIndicator(
                     value: steps.isEmpty ? 0 : completedCount / steps.length,
                     minHeight: 6,
-                    backgroundColor: Colors.green.withOpacity(0.1),
+                    backgroundColor: Colors.green.withValues(alpha: 0.1),
                     valueColor: AlwaysStoppedAnimation(
-                      Colors.green.withOpacity(0.8),
+                      Colors.green.withValues(alpha: 0.8),
                     ),
                   ),
                 ),
@@ -450,13 +450,13 @@ class _IncidentReportingScreenState
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: step.completed
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.white.withOpacity(0.02),
+                              ? Colors.green.withValues(alpha: 0.1)
+                              : Colors.white.withValues(alpha: 0.02),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: step.completed
-                                ? Colors.green.withOpacity(0.3)
-                                : Colors.white.withOpacity(0.1),
+                                ? Colors.green.withValues(alpha: 0.3)
+                                : Colors.white.withValues(alpha: 0.1),
                           ),
                         ),
                         child: Row(
@@ -467,8 +467,8 @@ class _IncidentReportingScreenState
                               height: 40,
                               decoration: BoxDecoration(
                                 color: step.completed
-                                    ? Colors.green.withOpacity(0.3)
-                                    : Colors.blue.withOpacity(0.2),
+                                    ? Colors.green.withValues(alpha: 0.3)
+                                    : Colors.blue.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
@@ -504,7 +504,7 @@ class _IncidentReportingScreenState
                                     step.description,
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Colors.white.withOpacity(step.completed ? 0.5 : 0.7),
+                                      color: Colors.white.withValues(alpha: step.completed ? 0.5 : 0.7),
                                       height: 1.3,
                                     ),
                                   ),
@@ -527,7 +527,7 @@ class _IncidentReportingScreenState
                         padding: const EdgeInsets.only(left: 20),
                         child: Container(
                           height: 1,
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -541,7 +541,7 @@ class _IncidentReportingScreenState
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.05),
+              color: Colors.green.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(16),
                 bottomRight: Radius.circular(16),
@@ -560,7 +560,7 @@ class _IncidentReportingScreenState
                   style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.withOpacity(0.3),
+                  backgroundColor: Colors.green.withValues(alpha: 0.3),
                   foregroundColor: Colors.green,
                 ),
               ),

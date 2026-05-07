@@ -52,10 +52,12 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     _PermPage(
       title: 'SMS',
       body:
-          'SMS can carry your compressed alert to 112 when data networks are down. '
-          'Without SMS permission on Android, automatic SMS dispatch may fail silently.',
-      actionLabel: 'Allow SMS',
-      request: _PermRequest.sms,
+          'RoadSOS can send an emergency alert via a secure server relay (recommended) and can also '
+          'open your phone\\\'s SMS app with the message pre-filled as a fallback when the relay is unavailable. '
+          'On modern Android versions, direct background SMS sending permissions are often restricted. '
+          'For reliability, enable the cloud relay (Twilio / Edge Function) and keep emergency dial available.',
+      actionLabel: null,
+      request: null,
     ),
     _PermPage(
       title: 'Camera',
@@ -120,7 +122,8 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
         }
         break;
       case _PermRequest.sms:
-        if (Platform.isAndroid) await Permission.sms.request();
+        // Direct SEND_SMS is intentionally not requested here: modern Android/Play
+        // policies often restrict it, and RoadSOS prefers server relay + SMS intent fallback.
         break;
       case _PermRequest.camera:
         await Permission.camera.request();

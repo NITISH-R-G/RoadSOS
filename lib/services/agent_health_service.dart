@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -164,10 +165,14 @@ class AgentHealthService {
 
   Future<AgentReadiness> _checkSms() async {
     try {
-      final status = await Permission.sms.status;
-      if (status.isGranted) return AgentReadiness.ready;
-      if (status.isDenied)  return AgentReadiness.degraded;
-      return AgentReadiness.unavailable;
+      // Primary: server relay (Twilio / Edge) — no Android SEND_SMS required.
+      final relayUrl = dotenv.env['SMS_DISPATCH_URL']?.trim() ?? '';
+      final relayKey = dotenv.env['SMS_DISPATCH_ANON_KEY']?.trim() ?? '';
+      if (relayUrl.isNotEmpty && relayKey.isNotEmpty) return AgentReadiness.ready;
+
+      // Fallback: open SMS app intent (no permission). If relay isn't configured,
+      // we mark this as degraded (still usable, but requires user interaction).
+      return AgentReadiness.degraded;
     } catch (_) {
       return AgentReadiness.degraded;
     }

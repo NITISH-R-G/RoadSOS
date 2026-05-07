@@ -39,12 +39,12 @@ class CrisisCompanionOverlay extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.9),
+            color: Colors.black.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+            border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withOpacity(0.2),
+                color: Colors.blue.withValues(alpha: 0.2),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -110,7 +110,7 @@ class CrisisCompanionOverlay extends ConsumerWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: const SweepGradient(colors: [Colors.blue, Colors.cyan, Colors.blue]),
-        boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.5), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.blue.withValues(alpha: 0.5), blurRadius: 10)],
       ),
       child: const Center(child: Icon(Icons.psychology, color: Colors.white, size: 28)),
     );
@@ -124,7 +124,7 @@ class CrisisCompanionOverlay extends ConsumerWidget {
         Text(
           _honestStatusLine(sosState),
           style: TextStyle(
-            color: Colors.green.withOpacity(0.7),
+            color: Colors.green.withValues(alpha: 0.7),
             fontWeight: FontWeight.bold,
             fontSize: 10,
           ),

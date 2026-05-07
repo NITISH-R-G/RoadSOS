@@ -20,7 +20,7 @@
 ///   The engine NEVER labels the incident as "accident" or guesses cause.
 ///   All logs and downstream consumers receive the factual label
 ///   "Detected incident — possible emergency" only.
-library crash_confidence_engine;
+library;
 
 /// Raw input signals for one evaluation cycle.
 class CrashSignals {
