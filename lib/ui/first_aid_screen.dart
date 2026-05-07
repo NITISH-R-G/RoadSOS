@@ -228,7 +228,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                     padding: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.red.withOpacity(0.3)),
+                      side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
                     ),
                   ),
                 ),
@@ -296,9 +296,9 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -324,7 +324,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A1A2E),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.withOpacity(0.25)),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
                   ),
                   child: SingleChildScrollView(
                     child: Column(
@@ -337,7 +337,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                             Text(
                               'Verified Medical Solutions',
                               style: TextStyle(
-                                color: Colors.redAccent.withOpacity(0.8),
+                                color: Colors.redAccent.withValues(alpha: 0.8),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                                 letterSpacing: 0.5,
@@ -372,7 +372,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.05),
+                          color: Colors.red.withValues(alpha: 0.05),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.health_and_safety,
@@ -422,7 +422,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
       onPressed: () => _lookupFirstAid(label),
       backgroundColor: const Color(0xFF1A1A2E),
       labelStyle: const TextStyle(color: Colors.white70, fontSize: 12),
-      side: BorderSide(color: Colors.white.withOpacity(0.1)),
+      side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
   }
