@@ -30,10 +30,7 @@ class PredictiveSosPreloader {
   /// Fire-and-forget — do not await.
   static Future<void> onDrivingModeActivated() async {
     appLog.d('[Preloader] Driving mode activated — pre-warming connections');
-    await Future.wait<void>([
-      _prewarmSupabaseEdge(),
-      _prewarmGps(),
-    ]);
+    await Future.wait<void>([_prewarmSupabaseEdge(), _prewarmGps()]);
     appLog.d('[Preloader] Pre-warm complete');
   }
 
@@ -47,9 +44,12 @@ class PredictiveSosPreloader {
       // HEAD request: establishes TCP + TLS session, receives headers only.
       // No auth needed — unauthenticated HEAD returns 401/405 which is fine;
       // the goal is TLS session establishment, not a valid response.
-      await http
-          .head(Uri.parse('$url/functions/v1/triage-gemini'))
-          .timeout(const Duration(seconds: 4));
+      final uri = Uri.parse('$url/functions/v1/triage-gemini');
+      if (uri.scheme == 'https') {
+        await http
+            .head(uri)
+            .timeout(const Duration(seconds: 4));
+      }
       appLog.d('[Preloader] Supabase edge TLS session pre-warmed ✓');
     } catch (_) {
       // Expected on first cold-start or offline — not an error.

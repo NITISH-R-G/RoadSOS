@@ -85,7 +85,9 @@ class RuntimeConfig {
       case 'SMS_DISPATCH_ANON_KEY':
         return const String.fromEnvironment('SMS_DISPATCH_ANON_KEY');
       case 'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH':
-        return const String.fromEnvironment('SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH');
+        return const String.fromEnvironment(
+          'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH',
+        );
       case 'INDIA_SOS_DISPATCH_URL':
         return const String.fromEnvironment('INDIA_SOS_DISPATCH_URL');
       case 'INDIA_ERSS_API_URL':

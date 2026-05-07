@@ -33,7 +33,8 @@ class GemmaModelManager {
       'https://huggingface.co/google/gemma-4-e4b-it-GGUF/resolve/main/$_modelFileName';
 
   /// HuggingFace terms acceptance page (user must visit before downloading).
-  static const String hfTermsUrl = 'https://huggingface.co/google/gemma-4-e4b-it-GGUF';
+  static const String hfTermsUrl =
+      'https://huggingface.co/google/gemma-4-e4b-it-GGUF';
 
   /// HuggingFace token creation page.
   static const String hfTokenUrl = 'https://huggingface.co/settings/tokens';
@@ -105,7 +106,9 @@ class GemmaModelManager {
     int alreadyHave = 0;
     if (tmpFile.existsSync()) {
       alreadyHave = tmpFile.lengthSync();
-      appLog.i('[GemmaModel] Resuming download from ${(alreadyHave / 1e6).round()} MB');
+      appLog.i(
+        '[GemmaModel] Resuming download from ${(alreadyHave / 1e6).round()} MB',
+      );
     }
 
     final headers = <String, String>{
@@ -117,7 +120,12 @@ class GemmaModelManager {
     final client = http.Client();
 
     try {
-      final request = http.Request('GET', Uri.parse(modelDownloadUrl));
+      final uri = Uri.parse(modelDownloadUrl);
+      if (uri.scheme != 'https') {
+        appLog.e('Insecure URL scheme for model download. Must use HTTPS.');
+        throw Exception('Insecure URL scheme');
+      }
+      final request = http.Request('GET', uri);
       request.headers.addAll(headers);
       final response = await client.send(request);
 
@@ -153,7 +161,9 @@ class GemmaModelManager {
       try {
         await for (final chunk in response.stream) {
           if (cancelToken?.isCancelled ?? false) {
-            appLog.i('[GemmaModel] Download cancelled — partial file kept for resume');
+            appLog.i(
+              '[GemmaModel] Download cancelled — partial file kept for resume',
+            );
             await sink.flush();
             await sink.close();
             return;
@@ -180,7 +190,9 @@ class GemmaModelManager {
 
       // Atomic rename: .download → final path.
       await tmpFile.rename(path);
-      appLog.i('[GemmaModel] ✓ Download complete — ${(finalSize / 1e6).round()} MB at $path');
+      appLog.i(
+        '[GemmaModel] ✓ Download complete — ${(finalSize / 1e6).round()} MB at $path',
+      );
     } finally {
       client.close();
     }

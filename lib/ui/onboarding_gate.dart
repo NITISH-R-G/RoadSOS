@@ -81,7 +81,9 @@ class _OnboardingGateState extends State<OnboardingGate> {
       case _GatePhase.loading:
         return const Scaffold(
           backgroundColor: Color(0xFF080b12),
-          body: Center(child: CircularProgressIndicator(color: Color(0xFF4a90d9))),
+          body: Center(
+            child: CircularProgressIndicator(color: Color(0xFF4a90d9)),
+          ),
         );
       case _GatePhase.permissions:
         return PermissionOnboardingScreen(onComplete: _onPermsDone);

@@ -88,7 +88,11 @@ class CameraTriageService {
         capturedAt: DateTime.now().toUtc(),
       );
     } catch (e, st) {
-      appLog.w('[CameraTriageService] Bystander photo capture failed', error: e, stackTrace: st);
+      appLog.w(
+        '[CameraTriageService] Bystander photo capture failed',
+        error: e,
+        stackTrace: st,
+      );
       return null;
     }
   }
@@ -128,7 +132,9 @@ class CameraTriageService {
         capturedAt: DateTime.now().toUtc(),
       );
     } catch (e) {
-      appLog.d('[CameraTriageService] Silent capture failed (expected in auto-SOS): $e');
+      appLog.d(
+        '[CameraTriageService] Silent capture failed (expected in auto-SOS): $e',
+      );
       return null;
     }
   }

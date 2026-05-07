@@ -10,10 +10,12 @@ class PermissionOnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
 
   @override
-  State<PermissionOnboardingScreen> createState() => _PermissionOnboardingScreenState();
+  State<PermissionOnboardingScreen> createState() =>
+      _PermissionOnboardingScreenState();
 }
 
-class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen> {
+class _PermissionOnboardingScreenState
+    extends State<PermissionOnboardingScreen> {
   final _pages = const <_PermPage>[
     _PermPage(
       title: 'Why RoadSOS asks for access',
@@ -153,7 +155,10 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: widget.onComplete,
-                child: const Text('SKIP FOR NOW', style: TextStyle(color: Colors.white38)),
+                child: const Text(
+                  'SKIP FOR NOW',
+                  style: TextStyle(color: Colors.white38),
+                ),
               ),
             ),
             Expanded(
@@ -182,7 +187,11 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                           child: SingleChildScrollView(
                             child: Text(
                               page.body,
-                              style: const TextStyle(color: Colors.white70, height: 1.45, fontSize: 15),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                height: 1.45,
+                                fontSize: 15,
+                              ),
                             ),
                           ),
                         ),
@@ -210,9 +219,14 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
-                          child: Text(page.actionLabel!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          child: Text(
+                            page.actionLabel!,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                       );
                     },
@@ -224,15 +238,18 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                         onPressed: _index == 0
                             ? null
                             : () => _controller.previousPage(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOut,
-                                ),
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                              ),
                         child: const Text('BACK'),
                       ),
                       const Spacer(),
                       Text(
                         '${_index + 1} / ${_pages.length}',
-                        style: const TextStyle(color: Colors.white38, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 12,
+                        ),
                       ),
                       const Spacer(),
                       TextButton(
@@ -246,7 +263,9 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                             );
                           }
                         },
-                        child: Text(_index >= _pages.length - 1 ? 'DONE' : 'NEXT'),
+                        child: Text(
+                          _index >= _pages.length - 1 ? 'DONE' : 'NEXT',
+                        ),
                       ),
                     ],
                   ),
