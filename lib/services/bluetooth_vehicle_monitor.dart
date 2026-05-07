@@ -30,9 +30,9 @@ import '../logging/app_log.dart';
 /// The service only records the *fact* of a disconnection event.
 class BluetoothVehicleMonitor {
   static const double _vehicleSpeedThresholdKmh = 20.0;
-  static const Duration _connectStabilityMin    = Duration(seconds: 8);
-  static const Duration _signalTtl              = Duration(seconds: 30);
-  static const Duration _pollInterval           = Duration(seconds: 5);
+  static const Duration _connectStabilityMin = Duration(seconds: 8);
+  static const Duration _signalTtl = Duration(seconds: 30);
+  static const Duration _pollInterval = Duration(seconds: 5);
 
   Timer? _pollTimer;
   StreamSubscription<Position>? _positionSub;
@@ -69,19 +69,17 @@ class BluetoothVehicleMonitor {
 
   void _startGpsSpeedTracking() {
     try {
-      _positionSub = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-          distanceFilter: 10,
-        ),
-      ).listen(
-        (p) {
-          if (!p.speed.isNaN && p.speed >= 0) {
-            _lastSpeedKmh = (p.speed * 3.6).clamp(0.0, 320.0);
-          }
-        },
-        onError: (Object _) {},
-      );
+      _positionSub =
+          Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.medium,
+              distanceFilter: 10,
+            ),
+          ).listen((p) {
+            if (!p.speed.isNaN && p.speed >= 0) {
+              _lastSpeedKmh = (p.speed * 3.6).clamp(0.0, 320.0);
+            }
+          }, onError: (Object _) {});
     } catch (_) {}
   }
 
@@ -104,7 +102,8 @@ class BluetoothVehicleMonitor {
     // Detect disconnections.
     for (final id in _prevConnected.difference(currentIds)) {
       final connectedAt = _connectedSince[id];
-      final stable = connectedAt != null &&
+      final stable =
+          connectedAt != null &&
           now.difference(connectedAt) >= _connectStabilityMin;
 
       if (stable && _lastSpeedKmh >= _vehicleSpeedThresholdKmh) {
@@ -125,7 +124,9 @@ class BluetoothVehicleMonitor {
 }
 
 /// Non-autoDispose: must track BT connections for the full driving session.
-final bluetoothVehicleMonitorProvider = Provider<BluetoothVehicleMonitor>((ref) {
+final bluetoothVehicleMonitorProvider = Provider<BluetoothVehicleMonitor>((
+  ref,
+) {
   final svc = BluetoothVehicleMonitor();
   svc.startMonitoring();
   ref.onDispose(svc.dispose);

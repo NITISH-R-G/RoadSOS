@@ -60,7 +60,11 @@ class MapTileConfig {
   static List<String> get effectiveSubdomains {
     final raw = dotenv.maybeGet('MAP_TILE_SUBDOMAINS')?.trim();
     if (raw != null && raw.isNotEmpty) {
-      return raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+      return raw
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
     }
     final template = effectiveUrlTemplate;
     if (template.contains('{s}') &&

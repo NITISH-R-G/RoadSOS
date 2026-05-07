@@ -43,10 +43,13 @@ class MeshPacket {
 ///   rendering — including mid-emergency when the dispatch panel covered the
 ///   radar. The service must live for the entire app session.
 class MeshNetworkService {
-  final ble_adv.FlutterBlePeripheral _peripheral = ble_adv.FlutterBlePeripheral();
+  final ble_adv.FlutterBlePeripheral _peripheral =
+      ble_adv.FlutterBlePeripheral();
 
-  final _discoveredBeaconsController = StreamController<List<String>>.broadcast();
-  Stream<List<String>> get discoveredBeacons => _discoveredBeaconsController.stream;
+  final _discoveredBeaconsController =
+      StreamController<List<String>>.broadcast();
+  Stream<List<String>> get discoveredBeacons =>
+      _discoveredBeaconsController.stream;
 
   final _packetsController = StreamController<MeshPacket>.broadcast();
   Stream<MeshPacket> get packets => _packetsController.stream;
@@ -108,7 +111,8 @@ class MeshNetworkService {
 
         // Try binary decode first (v2 BlePayloadCodec), fall back to UTF-8 text.
         final decoded = BlePayloadCodec.decode(md);
-        final displayPayload = decoded?.toDisplayString() ?? _tryDecodeUtf8(md) ?? '';
+        final displayPayload =
+            decoded?.toDisplayString() ?? _tryDecodeUtf8(md) ?? '';
 
         if (displayPayload.isNotEmpty && !_packetsController.isClosed) {
           _emitPacketDedup(id, displayPayload, r.rssi, decoded);
@@ -146,7 +150,12 @@ class MeshNetworkService {
     }
   }
 
-  void _emitPacketDedup(String senderId, String payload, int? rssi, BleDecodedPayload? decoded) {
+  void _emitPacketDedup(
+    String senderId,
+    String payload,
+    int? rssi,
+    BleDecodedPayload? decoded,
+  ) {
     final now = DateTime.now();
     final key = '$senderId|$payload';
     final last = _recentPacketDedup[key];
@@ -248,7 +257,8 @@ class MeshNetworkService {
     if (kIsWeb) return smsOutcome;
     if (lat == null || lng == null) return smsOutcome;
 
-    final inIndia = CountryCodes.getDeviceLocale()?.countryCode == 'IN' ||
+    final inIndia =
+        CountryCodes.getDeviceLocale()?.countryCode == 'IN' ||
         coordinatesRoughlyInIndia(lat, lng);
     if (!inIndia) return smsOutcome;
 

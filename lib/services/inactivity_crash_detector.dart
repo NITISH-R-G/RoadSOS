@@ -39,12 +39,13 @@ class InactivityCrashDetector {
   final Ref _ref;
 
   static const double _stillnessRmsThresholdMs2 = 1.8;
+
   /// RMS rolling window duration (~50 Hz accelerometer samples).
   static const int _stillnessWindowSec = 5;
   static const int _accelApproxHz = 50;
-  static const int    _incapacitationThresholdSec = 50; // sustained stillness
-  static const int    _cooldownMs                = 5 * 60 * 1000;
-  static const int    _minDrivingSecondsBeforeArming = 60;
+  static const int _incapacitationThresholdSec = 50; // sustained stillness
+  static const int _cooldownMs = 5 * 60 * 1000;
+  static const int _minDrivingSecondsBeforeArming = 60;
 
   StreamSubscription<UserAccelerometerEvent>? _accelSub;
   Timer? _evaluationTimer;
@@ -60,9 +61,9 @@ class InactivityCrashDetector {
     stopMonitoring();
 
     // Subscribe to accelerometer for RMS tracking.
-    _accelSub = SensorsPlatform.instance
-        .userAccelerometerEventStream()
-        .listen(_onAccel);
+    _accelSub = SensorsPlatform.instance.userAccelerometerEventStream().listen(
+      _onAccel,
+    );
 
     // Evaluate incapacitation window every 10 seconds.
     _evaluationTimer = Timer.periodic(
@@ -87,18 +88,17 @@ class InactivityCrashDetector {
 
   void _evaluate() {
     final mode = _ref.read(drivingModeProvider);
-    final now  = DateTime.now();
+    final now = DateTime.now();
 
     if (mode != DrivingMode.driving) {
       _drivingActiveSince = null;
-      _stilnessStartedAt  = null;
+      _stilnessStartedAt = null;
       return;
     }
 
     // Track how long we've been driving.
     _drivingActiveSince ??= now;
-    final drivingSeconds =
-        now.difference(_drivingActiveSince!).inSeconds;
+    final drivingSeconds = now.difference(_drivingActiveSince!).inSeconds;
 
     // Arm only after minimum driving duration.
     if (drivingSeconds < _minDrivingSecondsBeforeArming) return;
@@ -109,8 +109,7 @@ class InactivityCrashDetector {
 
     if (isStill) {
       _stilnessStartedAt ??= now;
-      final stillSeconds =
-          now.difference(_stilnessStartedAt!).inSeconds;
+      final stillSeconds = now.difference(_stilnessStartedAt!).inSeconds;
 
       appLog.d(
         '[Inactivity] Device still for ${stillSeconds}s '
@@ -135,7 +134,7 @@ class InactivityCrashDetector {
         ts.difference(_lastTrigger!).inMilliseconds < _cooldownMs) {
       return; // Cooldown — user already cancelled once.
     }
-    _lastTrigger    = ts;
+    _lastTrigger = ts;
     _stilnessStartedAt = null; // Reset so we don't re-fire immediately.
 
     appLog.w(
@@ -152,7 +151,7 @@ class InactivityCrashDetector {
     _evaluationTimer?.cancel();
     _evaluationTimer = null;
     _rmsWindow.clear();
-    _stilnessStartedAt  = null;
+    _stilnessStartedAt = null;
     _drivingActiveSince = null;
   }
 
@@ -160,7 +159,9 @@ class InactivityCrashDetector {
 }
 
 /// Non-autoDispose: must run for the full app session to detect incapacitation.
-final inactivityCrashDetectorProvider = Provider<InactivityCrashDetector>((ref) {
+final inactivityCrashDetectorProvider = Provider<InactivityCrashDetector>((
+  ref,
+) {
   final svc = InactivityCrashDetector(ref);
   svc.startMonitoring();
   ref.onDispose(svc.dispose);

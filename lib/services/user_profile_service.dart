@@ -74,6 +74,7 @@ class UserProfileService extends StateNotifier<UserProfile> {
   }
 }
 
-final userProfileProvider = StateNotifierProvider<UserProfileService, UserProfile>((ref) {
-  return UserProfileService();
-});
+final userProfileProvider =
+    StateNotifierProvider<UserProfileService, UserProfile>((ref) {
+      return UserProfileService();
+    });
