@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+
+
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -42,9 +42,15 @@ class CameraTriageService {
   ///
   /// Called from the bystander flow UI — NOT from auto-SOS trigger.
   static Future<CapturedScenePhoto?> captureBystanderPhoto() async {
-    if (kIsWeb) return null;
-    if (!Platform.isAndroid && !Platform.isIOS) return null;
+    return _pickImage(ImageSource.camera);
+  }
 
+  /// Explicit bystander-initiated scene photo selection from gallery.
+  static Future<CapturedScenePhoto?> pickPhotoFromGallery() async {
+    return _pickImage(ImageSource.gallery);
+  }
+
+  static Future<CapturedScenePhoto?> _pickImage(ImageSource source) async {
     try {
       // Ensure permission is granted before invoking the native camera intent.
       final cam = await Permission.camera.status;
@@ -61,7 +67,7 @@ class CameraTriageService {
       }
 
       final photo = await _picker.pickImage(
-        source: ImageSource.camera,
+        source: source,
         maxWidth: 1024,
         maxHeight: 768,
         imageQuality: 75,
@@ -69,16 +75,16 @@ class CameraTriageService {
       );
 
       if (photo == null) {
-        appLog.d('[CameraTriageService] User cancelled photo capture');
+        appLog.d('[CameraTriageService] User cancelled image selection');
         return null;
       }
 
-      final bytes = await File(photo.path).readAsBytes();
+      final bytes = await photo.readAsBytes();
       if (bytes.isEmpty) return null;
 
       final base64Str = base64Encode(bytes);
       appLog.i(
-        '[CameraTriageService] Bystander scene photo captured: '
+        '[CameraTriageService] Image selected (${source.name}): '
         '${(bytes.length / 1024).round()} KB',
       );
 
@@ -88,7 +94,7 @@ class CameraTriageService {
         capturedAt: DateTime.now().toUtc(),
       );
     } catch (e, st) {
-      appLog.w('[CameraTriageService] Bystander photo capture failed', error: e, stackTrace: st);
+      appLog.w('[CameraTriageService] Image selection failed', error: e, stackTrace: st);
       return null;
     }
   }
@@ -102,9 +108,6 @@ class CameraTriageService {
   static Future<CapturedScenePhoto?> captureScenePhoto({
     Duration timeout = const Duration(seconds: 3),
   }) async {
-    if (kIsWeb) return null;
-    if (!Platform.isAndroid && !Platform.isIOS) return null;
-
     try {
       final photo = await _picker
           .pickImage(
@@ -118,7 +121,7 @@ class CameraTriageService {
 
       if (photo == null) return null;
 
-      final bytes = await File(photo.path).readAsBytes();
+      final bytes = await photo.readAsBytes();
       if (bytes.isEmpty) return null;
 
       final base64Str = base64Encode(bytes);
@@ -128,7 +131,7 @@ class CameraTriageService {
         capturedAt: DateTime.now().toUtc(),
       );
     } catch (e) {
-      appLog.d('[CameraTriageService] Silent capture failed (expected in auto-SOS): $e');
+      appLog.d('[CameraTriageService] Silent capture failed: $e');
       return null;
     }
   }
