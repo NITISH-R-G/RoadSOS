@@ -8,12 +8,9 @@ const schema = Schema([
     Column.real('longitude'),
     Column.text('contact_number'),
     Column.text('capabilities'),
-<<<<<<< HEAD
-=======
     Column.text('data_source'),
     Column.text('state_code'),
     Column.text('district'),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
   ]),
   Table('reported_incidents', [
     Column.real('latitude'),
@@ -22,11 +19,7 @@ const schema = Schema([
     Column.text('services_needed'),
     Column.text('status'),
     Column.text('reported_at'),
-<<<<<<< HEAD
-  ])
-=======
     Column.text('created_at'),
     Column.integer('extended_retention'),
   ]),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 ]);

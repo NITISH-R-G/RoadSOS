@@ -10,12 +10,8 @@ class MeshRadar extends ConsumerStatefulWidget {
   ConsumerState<MeshRadar> createState() => _MeshRadarState();
 }
 
-<<<<<<< HEAD
-class _MeshRadarState extends ConsumerState<MeshRadar> with SingleTickerProviderStateMixin {
-=======
 class _MeshRadarState extends ConsumerState<MeshRadar>
     with SingleTickerProviderStateMixin {
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
   late AnimationController _rotationController;
 
   @override
@@ -25,11 +21,6 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat();
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     // Start scanning
     ref.read(meshNetworkServiceProvider).listenForSosBeacons();
   }
@@ -54,11 +45,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
           height: 200,
           width: double.infinity,
           decoration: BoxDecoration(
-<<<<<<< HEAD
-            color: Colors.black.withOpacity(0.4),
-=======
             color: Colors.black.withValues(alpha: 0.4),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white10),
           ),
@@ -66,32 +53,6 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
             alignment: Alignment.center,
             children: [
               // Radar circles
-<<<<<<< HEAD
-              ...List.generate(3, (i) => _buildCircle(i)),
-              
-              // Scanning sweep
-              AnimatedBuilder(
-                animation: _rotationController,
-                builder: (context, child) {
-                  return Transform.rotate(
-                    angle: _rotationController.value * 2 * pi,
-                    child: Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        gradient: SweepGradient(
-                          colors: [
-                            Colors.blue.withOpacity(0.0),
-                            Colors.blue.withOpacity(0.3),
-                            Colors.blue.withOpacity(0.0),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-=======
               ...List.generate(5, (i) => _buildCircle(i)),
 
               // Orbiting dot with pulsing glow
@@ -151,18 +112,13 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
                     },
                   ),
                 ],
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
               ),
 
               // Discovered Nodes
               ...nodes.asMap().entries.map((entry) {
                 final idx = entry.key;
-<<<<<<< HEAD
-                final angle = (idx * 137.5) * pi / 180; // Golden angle for distribution
-=======
                 final angle =
                     (idx * 137.5) * pi / 180; // Golden angle for distribution
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
                 final dist = 40.0 + (idx * 15);
                 return _buildNode(angle, dist);
               }),
@@ -177,11 +133,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.5,
-<<<<<<< HEAD
-                      color: Colors.blue.withOpacity(0.6),
-=======
                       color: Colors.blue.withValues(alpha: 0.6),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
                     ),
                   ),
                   Text(
@@ -192,8 +144,6 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
                       color: Colors.white,
                     ),
                   ),
-<<<<<<< HEAD
-=======
                   const SizedBox(height: 4),
                   Text(
                     'Foreground only',
@@ -203,7 +153,6 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
                       color: Colors.white.withValues(alpha: 0.35),
                     ),
                   ),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
                 ],
               ),
             ],
@@ -220,11 +169,7 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
       height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-<<<<<<< HEAD
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-=======
         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
       ),
     );
   }
@@ -238,20 +183,12 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
         decoration: const BoxDecoration(
           color: Colors.red,
           shape: BoxShape.circle,
-<<<<<<< HEAD
-          boxShadow: [
-            BoxShadow(color: Colors.red, blurRadius: 8),
-          ],
-=======
           boxShadow: [BoxShadow(color: Colors.red, blurRadius: 8)],
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
         ),
       ),
     );
   }
 }
-<<<<<<< HEAD
-=======
 
 class _StaticRadarBeamPainter extends CustomPainter {
   final double orbitRadius;
@@ -307,4 +244,3 @@ class _StaticRadarBeamPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41

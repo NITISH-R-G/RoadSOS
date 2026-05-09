@@ -1,17 +1,3 @@
-<<<<<<< HEAD
-import 'package:flutter/material.dart';
-import 'offline_map_screen.dart';
-
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('GLOBAL SETTINGS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
-=======
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -123,48 +109,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(l10n.settingsTitle, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
         backgroundColor: Colors.transparent,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-<<<<<<< HEAD
-          _buildSectionHeader('CONNECTIVITY'),
-          _buildSettingItem(
-            context,
-            Icons.map,
-            'Offline Maps',
-            'Download and manage regional tiles',
-            () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OfflineMapScreen())),
-          ),
-          _buildSettingItem(
-            context,
-            Icons.bluetooth,
-            'Mesh Configuration',
-            'Broadcast sensitivity and node visibility',
-            () {},
-          ),
-          const SizedBox(height: 32),
-          _buildSectionHeader('LEGAL & DATA'),
-          _buildSettingItem(
-            context,
-            Icons.description,
-            'Black Box Report',
-            'Export signed telemetry and triage logs',
-            () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Generating Signed Black Box PDF...')),
-              );
-            },
-          ),
-          _buildSettingItem(
-            context,
-            Icons.privacy_tip,
-            'Data Privacy',
-            'Manage local encryption and cloud sync',
-            () {},
-=======
           _sectionHeader(context, l10n.sectionConnectivity),
           _tile(
             context,
@@ -299,39 +248,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               context,
               MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
             ),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
           ),
         ],
       ),
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildSectionHeader(String title) {
-=======
   Widget _sectionHeader(BuildContext context, String title) {
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     return Padding(
       padding: const EdgeInsets.only(bottom: 16, left: 4),
       child: Text(
         title,
-<<<<<<< HEAD
-        style: TextStyle(color: Colors.blue.withOpacity(0.6), fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5),
-=======
         style: TextStyle(
           color: Colors.blue.withValues(alpha: 0.6),
           fontWeight: FontWeight.w900,
           fontSize: 10,
           letterSpacing: 1.5,
         ),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
       ),
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildSettingItem(BuildContext context, IconData icon, String title, String subtitle, VoidCallback onTap) {
-=======
   Widget _tile(
     BuildContext context,
     IconData icon,
@@ -340,17 +277,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     VoidCallback? onTap,
     Widget? trailing,
   }) {
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     return ListTile(
       onTap: onTap,
       leading: Icon(icon, color: Colors.white70),
       title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
       subtitle: Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 12)),
-<<<<<<< HEAD
-      trailing: const Icon(Icons.chevron_right, color: Colors.white24),
-=======
       trailing: trailing ?? const Icon(Icons.chevron_right, color: Colors.white24),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
       contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
     );
   }

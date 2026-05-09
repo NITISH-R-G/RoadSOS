@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-<<<<<<< HEAD
-import '../services/ai_triage_service.dart';
-
-=======
 import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -21,7 +17,6 @@ import '../services/ai_triage_service.dart';
 /// The user always has manual control: the "Call 112" button is visible
 /// regardless of whether automated dispatch succeeded, satisfying the
 /// Phase 10 requirement that a manual override is always available.
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 class AiExplainabilityView extends ConsumerWidget {
   final TriageResult triage;
 
@@ -29,16 +24,6 @@ class AiExplainabilityView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-<<<<<<< HEAD
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-        ),
-=======
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
 
@@ -48,24 +33,10 @@ class AiExplainabilityView extends ConsumerWidget {
         color: scheme.surfaceContainerHighest.withAlpha(77),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: scheme.primary.withAlpha(51)),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-<<<<<<< HEAD
-          Row(
-            children: [
-              Icon(Icons.psychology, 
-                color: Theme.of(context).colorScheme.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'GEMMA 4 THINKING MODE',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-=======
 
           // ── Header ────────────────────────────────────────────────────────
           Row(
@@ -212,36 +183,10 @@ class AiExplainabilityView extends ConsumerWidget {
                   label: 'Call 112',
                   color: Colors.red.shade700,
                   onTap: _call112,
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
                 ),
               ),
             ],
           ),
-<<<<<<< HEAD
-          const Divider(height: 24),
-          Text(
-            triage.thinkingTrace ?? 'Analyzing situational context...',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              height: 1.5,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: const Text(
-              '✓ VERIFIED AGAINST FIRST-AID-STORE v2.0',
-              style: TextStyle(
-                color: Colors.green,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-=======
         ],
       ),
     );
@@ -315,7 +260,6 @@ class _ConfidenceBadge extends StatelessWidget {
               fontSize: 10,
               fontWeight: FontWeight.w700,
               color: color,
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
             ),
           ),
         ],
@@ -323,8 +267,6 @@ class _ConfidenceBadge extends StatelessWidget {
     );
   }
 }
-<<<<<<< HEAD
-=======
 
 class _InfoRow extends StatelessWidget {
   final IconData icon;
@@ -416,4 +358,3 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41

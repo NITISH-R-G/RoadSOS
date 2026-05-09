@@ -2,23 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
-<<<<<<< HEAD
-=======
 import '../config/map_tile_config.dart';
 import '../logging/app_log.dart';
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 import '../services/emergency_orchestrator.dart';
 import '../models/facility.dart';
 
 /// A robust, offline-capable Map widget for RoadSOS.
 ///
 /// Features:
-<<<<<<< HEAD
-/// - Renders OSM tiles (supports local tile path for hybrid-offline)
-=======
 /// - Raster tiles from [MapTileConfig] (defaults to Carto CDN — not OSM.org;
 ///   supports Mappls/CARTO/self-hosted URLs via env)
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 /// - Displays user location, reported incidents, and nearby facilities
 /// - Supports auto-centering on user location
 class RoadSosMap extends StatefulWidget {
@@ -37,8 +30,6 @@ class RoadSosMap extends StatefulWidget {
 
 class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   late final AnimatedMapController _mapController;
-<<<<<<< HEAD
-=======
   // NOTE (SOS reliability): keep the SOS map on network tiles only.
   // Offline caching is handled by `OfflineMapScreen` + FMTC. In the SOS
   // surface, using the cache provider can hide network/tile failures behind
@@ -64,16 +55,12 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   }
 
   // Cache tile provider intentionally not used in SOS map.
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
   @override
   void initState() {
     super.initState();
     _mapController = AnimatedMapController(vsync: this);
-<<<<<<< HEAD
-=======
     _mountedAt = DateTime.now();
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
   }
 
   @override
@@ -96,11 +83,6 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
-    final userLoc = widget.state.location != null
-        ? LatLng(widget.state.location!.latitude, widget.state.location!.longitude)
-        : const LatLng(0, 0);
-=======
     final hasFix = widget.state.location != null &&
         widget.state.location!.source != 'unknown' &&
         !(widget.state.location!.latitude == 0.0 &&
@@ -108,7 +90,6 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
     final userLoc = hasFix
         ? LatLng(widget.state.location!.latitude, widget.state.location!.longitude)
         : null;
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
     return Container(
       height: 300,
@@ -120,13 +101,6 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-<<<<<<< HEAD
-          FlutterMap(
-            mapController: _mapController.mapController,
-            options: MapOptions(
-              initialCenter: userLoc,
-              initialZoom: 15,
-=======
           Container(color: Colors.black),
           FlutterMap(
             mapController: _mapController.mapController,
@@ -135,20 +109,12 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
               initialZoom: userLoc != null ? 15 : 4.5,
               minZoom: 2.5,
               maxZoom: 18,
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               ),
             ),
             children: [
               TileLayer(
-<<<<<<< HEAD
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.roadsos.app',
-                // Hybrid-Offline: If a local tile path exists, use it.
-                // Otherwise, the online OSM tiles will be used as a fallback.
-                tileProvider: _getTileProvider(),
-=======
                 key: ValueKey('tiles_${_tileLayerNonce}_${MapTileConfig.effectiveUrlTemplate}'),
                 urlTemplate: MapTileConfig.effectiveUrlTemplate,
                 subdomains: MapTileConfig.effectiveSubdomains,
@@ -167,16 +133,11 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                   }
                   if (mounted && _tileErrorCount == 1) setState(() {});
                 },
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
               ),
               MarkerLayer(
                 markers: [
                   // User Location Marker
-<<<<<<< HEAD
-                  if (widget.state.location != null)
-=======
                   if (userLoc != null)
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
                     Marker(
                       point: userLoc,
                       width: 40,
@@ -187,19 +148,12 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                   // Incident Markers
                   ..._buildIncidentMarkers(),
                   
-<<<<<<< HEAD
-                  // Facility Markers (Placeholder for now)
-=======
                   // Facility Markers (seeded + cloud-synced via PowerSync when configured)
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
                   ..._buildFacilityMarkers(),
                 ],
               ),
             ],
           ),
-<<<<<<< HEAD
-          
-=======
           Positioned(
             left: 8,
             bottom: 8,
@@ -220,7 +174,6 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
             ),
           ),
 
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
           // Map Overlay Controls
           Positioned(
             right: 12,
@@ -251,8 +204,6 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
               ],
             ),
           ),
-<<<<<<< HEAD
-=======
 
           // Fail-safe overlay: never allow a silent grey map.
           if (!_templateLooksValid || _tileErrorCount > 0)
@@ -324,27 +275,15 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                 },
               ),
             ),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
         ],
       ),
     );
   }
 
-<<<<<<< HEAD
-  TileProvider _getTileProvider() {
-    return NetworkTileProvider();
-  }
-
-  Widget _buildUserMarker() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.2),
-=======
   Widget _buildUserMarker() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.blue.withValues(alpha: 0.2),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
         shape: BoxShape.circle,
         border: Border.all(color: Colors.blue, width: 2),
       ),
@@ -356,10 +295,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
 
   List<Marker> _buildIncidentMarkers() {
     if (widget.state.incidentId == null || widget.state.location == null) return [];
-<<<<<<< HEAD
-=======
     if (widget.state.location!.source == 'unknown') return [];
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     
     return [
       Marker(
@@ -396,10 +332,7 @@ class _FacilityMarker extends StatelessWidget {
     switch (facility.type.toLowerCase()) {
       case 'hospital':
       case 'ambulance':
-<<<<<<< HEAD
-=======
       case 'primary_health_centre':
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
         icon = Icons.local_hospital;
         color = Colors.green;
         break;
@@ -434,26 +367,17 @@ class _FacilityMarker extends StatelessWidget {
       onTap: () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-<<<<<<< HEAD
-            content: Text('${facility.name} (${facility.type})'),
-            duration: const Duration(seconds: 2),
-=======
             content: Text(
               '${facility.name} (${facility.type})'
               '${facility.dataSource != null ? ' · ${facility.dataSource}' : ''}',
             ),
             duration: const Duration(seconds: 3),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
           ),
         );
       },
       child: Container(
         decoration: BoxDecoration(
-<<<<<<< HEAD
-          color: color.withOpacity(0.8),
-=======
           color: color.withValues(alpha: 0.8),
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 1),
         ),

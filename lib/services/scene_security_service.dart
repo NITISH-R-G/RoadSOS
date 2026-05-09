@@ -1,10 +1,6 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-<<<<<<< HEAD
-import 'package:encrypt/encrypt.dart' as encrypt;
-=======
 import 'package:cryptography/cryptography.dart';
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
 class SceneSecurityService {
   /// Generates a 128-bit key based on rounded coordinates and hourly timestamp.
@@ -20,26 +16,6 @@ class SceneSecurityService {
     return digest.toString().substring(0, 32); // Use first 32 chars for AES-256
   }
 
-<<<<<<< HEAD
-  static String encryptPayload(String data, String keyString) {
-    final key = encrypt.Key.fromUtf8(keyString.substring(0, 32));
-    final iv = encrypt.IV.fromLength(16);
-    final encrypter = encrypt.Encrypter(encrypt.AES(key));
-
-    final encrypted = encrypter.encrypt(data, iv: iv);
-    return encrypted.base64;
-  }
-
-  static String decryptPayload(String base64Data, String keyString) {
-    try {
-      final key = encrypt.Key.fromUtf8(keyString.substring(0, 32));
-      final iv = encrypt.IV.fromLength(16);
-      final encrypter = encrypt.Encrypter(encrypt.AES(key));
-
-      return encrypter.decrypt64(base64Data, iv: iv);
-    } catch (e) {
-      return "ENCRYPTED_DATA"; // Fallback if key mismatch
-=======
   static final _aead = AesGcm.with256bits();
 
   /// Encrypts [data] with AES-GCM using a random nonce.
@@ -87,7 +63,6 @@ class SceneSecurityService {
       return utf8.decode(clear);
     } catch (_) {
       return null;
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     }
   }
 }

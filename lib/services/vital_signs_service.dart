@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-import 'dart:async';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-=======
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Manually-entered vital signs for bystander triage assistance.
@@ -10,26 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// SOURCE IS ALWAYS 'manual' — these are numbers a bystander reads/estimates
 /// and enters. This is NOT camera-based rPPG or wearable data.
 /// It exists to help bystanders communicate vitals to phone dispatchers.
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 class VitalSigns {
   final int bpm;
   final int respiratoryRate;
   final double bloodOxygen;
-<<<<<<< HEAD
-  final String gemmaInterpretation;
-=======
   final String interpretation;
   final DateTime recordedAtUtc;
 
-  /// Always 'manual' — values entered by a bystander, not from a sensor.
-  final String source;
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
   VitalSigns({
     required this.bpm,
     required this.respiratoryRate,
     required this.bloodOxygen,
-<<<<<<< HEAD
     required this.gemmaInterpretation,
   });
 }
@@ -155,5 +142,4 @@ typedef VitalSignsService = VitalSignsLogger;
 final vitalSignsProvider =
     StateNotifierProvider.autoDispose<VitalSignsLogger, VitalSigns?>((ref) {
   return VitalSignsLogger();
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 });
