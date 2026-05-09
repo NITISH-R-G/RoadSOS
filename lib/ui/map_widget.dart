@@ -46,8 +46,9 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
     // - If custom provider fails (keys/restrictions), fall back to Carto.
     // - If Carto fails (blocked network / DNS / captive portal), fall back to
     //   OSM tile CDN for demo resilience (do not ship high-volume traffic there).
-    if (!t.contains('basemaps.cartocdn.com'))
+    if (!t.contains('basemaps.cartocdn.com')) {
       return MapTileConfig.cartoDarkMatter;
+    }
     return MapTileConfig.tileOpenstreetmapOrgViolatesPolicyAtScale;
   }
 
@@ -326,8 +327,9 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   }
 
   List<Marker> _buildIncidentMarkers() {
-    if (widget.state.incidentId == null || widget.state.location == null)
+    if (widget.state.incidentId == null || widget.state.location == null) {
       return [];
+    }
     if (widget.state.location!.source == 'unknown') return [];
 
     return [

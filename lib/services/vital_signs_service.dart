@@ -89,8 +89,9 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
     if (respiratoryRate >= 24) flags.add('tachypnoea (rapid breathing)');
     if (respiratoryRate <= 8) flags.add('bradypnoea (slow breathing)');
     if (bloodOxygen < 90) flags.add('hypoxia (SpO2 <90% — CRITICAL)');
-    if (bloodOxygen >= 90 && bloodOxygen < 94)
+    if (bloodOxygen >= 90 && bloodOxygen < 94) {
       flags.add('borderline oxygen (SpO2 90-93%)');
+    }
 
     if (flags.isEmpty) {
       return 'No immediately critical vital signs from bystander observation.';
