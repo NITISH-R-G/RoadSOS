@@ -31,20 +31,16 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
 
   @override
   Widget build(BuildContext context) {
-    final beacons = ref.watch(meshPeersProvider);
+    final List<String> beacons = ref.watch(meshPeersProvider);
     return Column(
       children: [
         Stack(
           alignment: Alignment.center,
           children: [
-            // Radar Background Rings
             CustomPaint(
               size: const Size(200, 200),
               painter: _RadarPainter(_controller),
             ),
-            // Radar Pulse
-            // ⚡ Bolt Optimization: Use RotationTransition with a static child to prevent
-            // the expensive SweepGradient shader from being rebuilt on every frame.
             RotationTransition(
               turns: _controller,
               child: const CustomPaint(
@@ -73,18 +69,19 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
   }
 
   List<Widget> _buildBeaconDots(List<String> ids) {
-    final out = <Widget>[];
-    const center = 100.0;
-    const maxR = 78.0;
-    for (final id in ids) {
-      final h = id.hashCode;
-      final angle = ((h % 360) * math.pi) / 180.0;
-      final r = (math.sqrt(((h >> 8).abs() % 1000) / 1000.0) * maxR).clamp(
+    final List<Widget> out = <Widget>[];
+    const double center = 100.0;
+    const double maxR = 78.0;
+    for (final String id in ids) {
+      final int h = id.hashCode;
+      final double angle = ((h % 360) * math.pi) / 180.0;
+      final double r =
+          (math.sqrt(((h >> 8).abs() % 1000) / 1000.0) * maxR).clamp(
         18.0,
         maxR,
       );
-      final x = center + math.cos(angle) * r;
-      final y = center + math.sin(angle) * r;
+      final double x = center + math.cos(angle) * r;
+      final double y = center + math.sin(angle) * r;
       out.add(Positioned(left: x, top: y, child: const _IncidentDot()));
     }
     return out;
@@ -97,12 +94,12 @@ class _RadarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    final Paint paint = Paint()
       ..color = Colors.blue.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
-    final center = Offset(size.width / 2, size.height / 2);
+    final Offset center = Offset(size.width / 2, size.height / 2);
     canvas.drawCircle(center, size.width * 0.2, paint);
     canvas.drawCircle(center, size.width * 0.35, paint);
     canvas.drawCircle(center, size.width * 0.5, paint);
@@ -117,11 +114,11 @@ class _SweepPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
+    final Offset center = Offset(size.width / 2, size.height / 2);
+    final double radius = size.width / 2;
 
-    final rect = Rect.fromCircle(center: center, radius: radius);
-    final gradient = SweepGradient(
+    final Rect rect = Rect.fromCircle(center: center, radius: radius);
+    final SweepGradient gradient = SweepGradient(
       startAngle: 0,
       endAngle: math.pi * 2,
       colors: [
@@ -129,10 +126,10 @@ class _SweepPainter extends CustomPainter {
         Colors.blue.withValues(alpha: 0.5),
         Colors.blue.withValues(alpha: 0),
       ],
-      stops: const [0.0, 0.5, 1.0],
+      stops: const <double>[0.0, 0.5, 1.0],
     );
 
-    final paint = Paint()
+    final Paint paint = Paint()
       ..shader = gradient.createShader(rect)
       ..style = PaintingStyle.fill;
 

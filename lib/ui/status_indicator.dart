@@ -9,12 +9,12 @@ class StatusIndicatorBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final aiService = ref.read(aiTriageServiceProvider);
+    final AiTriageService aiService = ref.read(aiTriageServiceProvider);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _StatusChip(
+        const _StatusChip(
           icon: Icons.satellite_alt,
           label: 'GPS',
           color: Colors.green,
@@ -28,7 +28,7 @@ class StatusIndicatorBar extends ConsumerWidget {
           isActive: aiService.state == ModelState.ready,
         ),
         const SizedBox(width: 6),
-        _StatusChip(
+        const _StatusChip(
           icon: Icons.cloud_sync,
           label: 'Sync',
           color: Colors.blue,
@@ -38,7 +38,7 @@ class StatusIndicatorBar extends ConsumerWidget {
     );
   }
 
-  Color _modelStateColor(ModelState state) {
+  static Color _modelStateColor(ModelState state) {
     switch (state) {
       case ModelState.ready:
         return Colors.green;
@@ -74,7 +74,7 @@ class _StatusChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: isActive ? 0.15 : 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

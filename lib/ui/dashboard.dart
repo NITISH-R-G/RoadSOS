@@ -49,9 +49,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
-  static const _kRed = Color(0xFFE8281A);
-  static const _kSurface = Color(0xFF111418);
-  static const _kNavBg = Color(0xFF0D1014);
+  static const Color _kRed = Color(0xFFE8281A);
+  static const Color _kSurface = Color(0xFF111418);
+  static const Color _kNavBg = Color(0xFF0D1014);
 
   @override
   void initState() {
@@ -89,7 +89,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final idle = sosState.phase == SOSPhase.idle;
     final drivingMode = ref.watch(drivingModeProvider);
 
-    // Emergency active → full-screen (no nav bar, no distractions).
     if (!idle) {
       return Scaffold(
         backgroundColor: scheme.surface,
@@ -111,7 +110,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       );
     }
 
-    // Idle → 3-tab layout.
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: _idleAppBar(context),
@@ -180,7 +178,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final l10n = AppLocalizations.of(context)!;
 
     return AppBar(
-      backgroundColor: scheme.surface.withAlpha(240),
+      backgroundColor: scheme.surface.withValues(alpha: 0.94),
       elevation: 0,
       scrolledUnderElevation: 2,
       title: Row(
@@ -225,7 +223,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       surfaceTintColor: Colors.transparent,
       shadowColor: Colors.black,
       elevation: 8,
-      indicatorColor: _kRed.withAlpha(38),
+      indicatorColor: _kRed.withValues(alpha: 0.15),
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
         NavigationDestination(
@@ -248,7 +246,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Tab 0 — SOS (panic button)
+  // Tab 0 — SOS
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _sosTab(BuildContext context, DrivingMode drivingMode) {
@@ -264,7 +262,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
         return Column(
           children: [
-            // Driving mode banner
             if (isDriving)
               Container(
                 height: 36,
@@ -287,7 +284,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 ),
               ),
 
-            // SOS button — takes up most of the screen
             Expanded(
               child: Center(
                 child: Padding(
@@ -297,8 +293,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     onTap: () => ref
                         .read(emergencyOrchestratorProvider.notifier)
                         .triggerSOS(),
-                    // ⚡ Bolt Optimization: Use ScaleTransition instead of AnimatedBuilder + Transform.scale.
-                    // This delegates the transformation to the rendering engine and prevents costly widget rebuilds on every frame.
                     child: ScaleTransition(
                       scale: _pulseAnimation,
                       child: SizedBox(
@@ -315,7 +309,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFF453A).withAlpha(107),
+                                  color: const Color(0xFFFF453A).withValues(alpha: 0.42),
                                   blurRadius: 40,
                                   spreadRadius: 2,
                                 ),
@@ -336,9 +330,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 ),
                                 const SizedBox(height: 12),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
                                   child: Text(
                                     l10n.sosButtonSub,
                                     textAlign: TextAlign.center,
@@ -360,14 +352,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               ),
             ),
 
-            // Discovery hint
             SafeArea(
               minimum: const EdgeInsets.only(bottom: 8),
               child: Text(
                 'All safety features are in "Safety Tools" below',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withAlpha(80),
+                  color: Colors.white.withValues(alpha: 0.31),
                   fontSize: 13,
                 ),
               ),
@@ -379,14 +370,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Tab 1 — Safety Tools (all features, always visible)
+  // Tab 1 — Safety Tools
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _toolsTab(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
-        // Radar + status at the top
         const SizedBox(height: 160, child: MeshRadar()),
         const SizedBox(height: 8),
         const Align(
@@ -398,7 +388,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ),
         const SizedBox(height: 16),
 
-        // ── Emergency Response ──────────────────────────────────────────
         _sectionLabel('EMERGENCY RESPONSE'),
         const SizedBox(height: 8),
         _toolCard(
@@ -435,8 +424,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ),
 
         const SizedBox(height: 20),
-
-        // ── Health & Safety ─────────────────────────────────────────────
         _sectionLabel('HEALTH & SAFETY'),
         const SizedBox(height: 8),
         _toolCard(
@@ -474,8 +461,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ),
 
         const SizedBox(height: 20),
-
-        // ── Connectivity ────────────────────────────────────────────────
         _sectionLabel('CONNECTIVITY'),
         const SizedBox(height: 8),
         _toolCard(
@@ -502,8 +487,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ),
 
         const SizedBox(height: 20),
-
-        // ── Records ─────────────────────────────────────────────────────
         _sectionLabel('RECORDS'),
         const SizedBox(height: 8),
         _toolCard(
@@ -597,7 +580,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     return Text(
       label,
       style: TextStyle(
-        color: Colors.white.withAlpha(100),
+        color: Colors.white.withValues(alpha: 0.39),
         fontSize: 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 1.4,
@@ -621,8 +604,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
-          splashColor: color.withAlpha(20),
-          highlightColor: color.withAlpha(10),
+          splashColor: color.withValues(alpha: 0.08),
+          highlightColor: color.withValues(alpha: 0.04),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
@@ -631,7 +614,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: color.withAlpha(28),
+                    color: color.withValues(alpha: 0.11),
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: Icon(icon, color: color, size: 22),
@@ -653,7 +636,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       Text(
                         subtitle,
                         style: TextStyle(
-                          color: Colors.white.withAlpha(120),
+                          color: Colors.white.withValues(alpha: 0.47),
                           fontSize: 12,
                           height: 1.3,
                         ),
@@ -664,7 +647,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 const SizedBox(width: 8),
                 Icon(
                   Icons.chevron_right,
-                  color: Colors.white.withAlpha(60),
+                  color: Colors.white.withValues(alpha: 0.24),
                   size: 20,
                 ),
               ],
@@ -676,7 +659,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Emergency phase views (shown when !idle)
+  // Emergency phase views
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _emergencyBody(BuildContext context, SOSState sosState) {
@@ -816,9 +799,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (monitor.isMonitoring) {
       ref.read(proactiveMonitorProvider.notifier).endSafeWalk();
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Safe Walk ended.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Safe Walk ended.')),
+        );
       }
       return;
     }
@@ -844,9 +827,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             children: [
               Text(
                 'Safe Walk',
-                style: Theme.of(
-                  ctx,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                style: Theme.of(ctx)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 12),
               Autocomplete<String>(
@@ -863,9 +847,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       headers: {'User-Agent': 'RoadSOS/1.0'},
                     );
                     if (response.statusCode == 200) {
-                      final List<dynamic> data = json.decode(response.body);
+                      final List<dynamic> data = json.decode(response.body)
+                          as List<dynamic>;
                       return data
-                          .map((e) => e['display_name'] as String)
+                          .map((dynamic e) => e['display_name'] as String)
                           .toList();
                     }
                   } catch (e) {
@@ -876,23 +861,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 onSelected: (String selection) {
                   selectedDestination = selection;
                 },
-                fieldViewBuilder:
-                    (context, controller, focusNode, onEditingComplete) {
-                      return TextField(
-                        controller: controller,
-                        focusNode: focusNode,
-                        onEditingComplete: onEditingComplete,
-                        onChanged: (val) {
-                          selectedDestination = val;
-                        },
-                        decoration: const InputDecoration(
-                          labelText: 'Destination (optional)',
-                          hintText: 'e.g., Home, Hostel, Station',
-                          prefixIcon: Icon(Icons.location_on_outlined),
-                        ),
-                      );
+                fieldViewBuilder: (
+                  BuildContext context,
+                  TextEditingController controller,
+                  FocusNode focusNode,
+                  VoidCallback onEditingComplete,
+                ) {
+                  return TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    onEditingComplete: onEditingComplete,
+                    onChanged: (String val) {
+                      selectedDestination = val;
                     },
-                optionsViewBuilder: (context, onSelected, options) {
+                    decoration: const InputDecoration(
+                      labelText: 'Destination (optional)',
+                      hintText: 'e.g., Home, Hostel, Station',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                    ),
+                  );
+                },
+                optionsViewBuilder: (
+                  BuildContext context,
+                  AutocompleteOnSelected<String> onSelected,
+                  Iterable<String> options,
+                ) {
                   return Align(
                     alignment: Alignment.topLeft,
                     child: Material(
@@ -909,11 +902,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           shrinkWrap: true,
                           itemCount: options.length,
                           itemBuilder: (BuildContext context, int index) {
-                            final option = options.elementAt(index);
+                            final String option = options.elementAt(index);
                             return InkWell(
-                              onTap: () {
-                                onSelected(option);
-                              },
+                              onTap: () => onSelected(option),
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
                                 child: Text(
@@ -933,7 +924,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               const SizedBox(height: 16),
               Text(
                 'A 30-minute safety check timer will start now.\nIf you miss the check-in, RoadSOS will escalate to SOS after a 60s grace window.',
-                style: Theme.of(ctx).textTheme.bodySmall?.copyWith(height: 1.4),
+                style:
+                    Theme.of(ctx).textTheme.bodySmall?.copyWith(height: 1.4),
               ),
               const SizedBox(height: 16),
               SizedBox(

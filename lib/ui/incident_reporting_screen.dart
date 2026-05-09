@@ -19,9 +19,15 @@ class IncidentReportingScreen extends ConsumerStatefulWidget {
 class _IncidentReportingScreenState
     extends ConsumerState<IncidentReportingScreen> {
   final TextEditingController _voiceInputController = TextEditingController();
-  final _picker = ImagePicker();
+  final ImagePicker _picker = ImagePicker();
   Uint8List? _sceneImageBytes;
   bool _sceneCaptureBusy = false;
+
+  @override
+  void dispose() {
+    _voiceInputController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +37,10 @@ class _IncidentReportingScreenState
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(l10n.sceneIntelligenceTitle,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+        title: Text(
+          l10n.sceneIntelligenceTitle,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -49,8 +57,8 @@ class _IncidentReportingScreenState
             const SizedBox(height: 12),
             _buildVoiceInterviewCard(assistantState, l10n),
             const SizedBox(height: 32),
-            // Show guidance steps after interview is complete
-            if (assistantState.showingGuidance && assistantState.guidanceSteps.isNotEmpty) ...[
+            if (assistantState.showingGuidance &&
+                assistantState.guidanceSteps.isNotEmpty) ...[
               _buildSectionHeader('ACTION GUIDANCE: NEXT STEPS'),
               const SizedBox(height: 12),
               _buildGuidanceCard(assistantState, l10n),
@@ -93,7 +101,11 @@ class _IncidentReportingScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             if (_sceneImageBytes == null)
-              Icon(Icons.camera_enhance, size: 40, color: Colors.white.withValues(alpha: 0.3))
+              Icon(
+                Icons.camera_enhance,
+                size: 40,
+                color: Colors.white.withValues(alpha: 0.3),
+              )
             else
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -113,19 +125,31 @@ class _IncidentReportingScreenState
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Icon(_sceneImageBytes != null ? Icons.check : Icons.add_a_photo),
-              label: Text(_sceneImageBytes != null ? 'SCENE ATTACHED' : 'CAPTURE / ATTACH PHOTO'),
+                  : Icon(
+                      _sceneImageBytes != null
+                          ? Icons.check
+                          : Icons.add_a_photo,
+                    ),
+              label: Text(
+                _sceneImageBytes != null
+                    ? 'SCENE ATTACHED'
+                    : 'CAPTURE / ATTACH PHOTO',
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _sceneImageBytes != null ? Colors.green : Colors.blue,
+                backgroundColor:
+                    _sceneImageBytes != null ? Colors.green : Colors.blue,
               ),
             ),
             if (_sceneImageBytes != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
+              const Padding(
+                padding: EdgeInsets.only(top: 12),
                 child: Text(
                   'Photo attached to this report (not auto-analyzed in this build).',
-                  style: const TextStyle(
-                      color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -138,7 +162,7 @@ class _IncidentReportingScreenState
   Future<void> _captureScene() async {
     setState(() => _sceneCaptureBusy = true);
     try {
-      final file = await _picker.pickImage(
+      final XFile? file = await _picker.pickImage(
         source: ImageSource.camera,
         imageQuality: 72,
         maxWidth: 1600,
@@ -149,16 +173,15 @@ class _IncidentReportingScreenState
         return;
       }
 
-      final bytes = await file.readAsBytes();
+      final Uint8List bytes = await file.readAsBytes();
       if (!mounted) return;
       setState(() {
         _sceneImageBytes = bytes;
         _sceneCaptureBusy = false;
       });
     } catch (_) {
-      // On emulators/devices without camera, fall back to gallery.
       try {
-        final file = await _picker.pickImage(
+        final XFile? file = await _picker.pickImage(
           source: ImageSource.gallery,
           imageQuality: 72,
           maxWidth: 1600,
@@ -168,7 +191,7 @@ class _IncidentReportingScreenState
           setState(() => _sceneCaptureBusy = false);
           return;
         }
-        final bytes = await file.readAsBytes();
+        final Uint8List bytes = await file.readAsBytes();
         if (!mounted) return;
         setState(() {
           _sceneImageBytes = bytes;
@@ -178,7 +201,9 @@ class _IncidentReportingScreenState
         if (!mounted) return;
         setState(() => _sceneCaptureBusy = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not capture a scene photo on this device.')),
+          const SnackBar(
+            content: Text('Could not capture a scene photo on this device.'),
+          ),
         );
       }
     }
@@ -190,10 +215,14 @@ class _IncidentReportingScreenState
     }
   }
 
-  Widget _buildVoiceInterviewCard(AssistantState assistant, AppLocalizations l10n) {
-    final lang = ref.read(appLocaleProvider).languageCode;
-    final totalQuestions = _getTotalQuestionsForScene(assistant.sceneContext, lang);
-    final progress = '${assistant.questionIndex} / $totalQuestions';
+  Widget _buildVoiceInterviewCard(
+    AssistantState assistant,
+    AppLocalizations l10n,
+  ) {
+    final String lang = ref.read(appLocaleProvider).languageCode;
+    final int totalQuestions =
+        _getTotalQuestionsForScene(assistant.sceneContext, lang);
+    final String progress = '${assistant.questionIndex} / $totalQuestions';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -204,24 +233,28 @@ class _IncidentReportingScreenState
       ),
       child: Column(
         children: [
-          // Scene context badge
           if (assistant.sceneContext != 'unknown')
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+                  border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.4)),
                 ),
                 child: Text(
                   'Scene: ${_getSceneLabel(assistant.sceneContext, lang)}',
-                  style: const TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
-          // Interview progress
           if (assistant.questionIndex > 0 && !assistant.interviewComplete)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -230,34 +263,42 @@ class _IncidentReportingScreenState
                 children: [
                   Text(
                     lang == 'hi' ? 'प्रश्न प्रगति:' : 'Question Progress:',
-                    style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.blue.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       progress,
-                      style: const TextStyle(fontSize: 9, color: Colors.blue, fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          // Main question text
           Text(
             assistant.lastResponse.isEmpty
-                ? (lang == 'hi' 
+                ? (lang == 'hi'
                     ? 'कृपया घटना का वर्णन करें'
                     : 'Please describe the incident')
                 : assistant.lastResponse,
-            style: const TextStyle(fontSize: 15, color: Colors.white, height: 1.5),
+            style: const TextStyle(
+                fontSize: 15, color: Colors.white, height: 1.5),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
-          // Input field and send button
           Row(
             children: [
               Expanded(
@@ -265,11 +306,14 @@ class _IncidentReportingScreenState
                   controller: _voiceInputController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: lang == 'hi' ? 'बोलें या टाइप करें…' : 'Speak or type…',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                    hintText:
+                        lang == 'hi' ? 'बोलें या टाइप करें…' : 'Speak or type…',
+                    hintStyle: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.3)),
                     filled: true,
                     fillColor: Colors.black,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   enabled: !assistant.interviewComplete,
                 ),
@@ -280,7 +324,9 @@ class _IncidentReportingScreenState
                     ? null
                     : () {
                         if (_voiceInputController.text.isNotEmpty) {
-                          ref.read(roadsosAssistantProvider.notifier).getNextWitnessQuestion(
+                          ref
+                              .read(roadsosAssistantProvider.notifier)
+                              .getNextWitnessQuestion(
                                 _voiceInputController.text,
                                 languageCode: lang,
                               );
@@ -293,11 +339,14 @@ class _IncidentReportingScreenState
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Icon(assistant.interviewComplete ? Icons.done_all : Icons.send),
+                    : Icon(
+                        assistant.interviewComplete
+                            ? Icons.done_all
+                            : Icons.send,
+                      ),
               ),
             ],
           ),
-          // Interview completion message
           if (assistant.interviewComplete)
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -306,13 +355,18 @@ class _IncidentReportingScreenState
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                  border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   lang == 'hi'
                       ? '✓ साक्षात्कार पूर्ण। सभी महत्वपूर्ण जानकारी एकत्र की गई।'
                       : '✓ Interview complete. All critical information collected.',
-                  style: const TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -324,7 +378,7 @@ class _IncidentReportingScreenState
 
   String _getSceneLabel(String sceneContext, String lang) {
     if (lang == 'hi') {
-      const labels = {
+      const Map<String, String> labels = {
         'vehicle_collision': 'वाहन टक्कर',
         'pedestrian_hit': 'पैदल यात्री मारे गए',
         'rollover': 'वाहन पलटना',
@@ -332,7 +386,7 @@ class _IncidentReportingScreenState
       };
       return labels[sceneContext] ?? 'अज्ञात';
     } else {
-      const labels = {
+      const Map<String, String> labels = {
         'vehicle_collision': 'Vehicle Collision',
         'pedestrian_hit': 'Pedestrian Hit',
         'rollover': 'Rollover',
@@ -342,10 +396,7 @@ class _IncidentReportingScreenState
     }
   }
 
-  int _getTotalQuestionsForScene(String sceneContext, String lang) {
-    // Return total questions for the scene (5 for all main scenes, 5 for unknown)
-    return 5;
-  }
+  int _getTotalQuestionsForScene(String sceneContext, String lang) => 5;
 
   Widget _buildLiveBriefCard(AssistantState assistant) {
     return Container(
@@ -362,9 +413,9 @@ class _IncidentReportingScreenState
   }
 
   Widget _buildGuidanceCard(AssistantState assistant, AppLocalizations l10n) {
-    final lang = ref.read(appLocaleProvider).languageCode;
-    final steps = assistant.guidanceSteps;
-    final completedCount = steps.where((s) => s.completed).length;
+    final String lang = ref.read(appLocaleProvider).languageCode;
+    final List<dynamic> steps = assistant.guidanceSteps;
+    final int completedCount = steps.where((dynamic s) => s.completed as bool).length;
 
     return Container(
       decoration: BoxDecoration(
@@ -375,7 +426,6 @@ class _IncidentReportingScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with progress
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -400,7 +450,8 @@ class _IncidentReportingScreenState
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.green.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
@@ -417,14 +468,15 @@ class _IncidentReportingScreenState
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Progress bar
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: steps.isEmpty ? 0 : completedCount / steps.length,
+                    value: steps.isEmpty
+                        ? 0
+                        : completedCount / steps.length,
                     minHeight: 6,
                     backgroundColor: Colors.green.withValues(alpha: 0.1),
-                    valueColor: AlwaysStoppedAnimation(
+                    valueColor: AlwaysStoppedAnimation<Color>(
                       Colors.green.withValues(alpha: 0.8),
                     ),
                   ),
@@ -432,51 +484,53 @@ class _IncidentReportingScreenState
               ],
             ),
           ),
-          // Steps list
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
-              children: steps.asMap().entries.map((entry) {
-                final index = entry.key;
-                final step = entry.value;
-                final isLast = index == steps.length - 1;
+              children: steps.asMap().entries.map((MapEntry<int, dynamic> entry) {
+                final int index = entry.key;
+                final dynamic step = entry.value;
+                final bool isLast = index == steps.length - 1;
+                final bool completed = step.completed as bool;
 
                 return Column(
                   children: [
                     InkWell(
                       onTap: () {
-                        ref.read(roadsosAssistantProvider.notifier).completeGuidanceStep(step.stepNumber);
+                        ref
+                            .read(roadsosAssistantProvider.notifier)
+                            .completeGuidanceStep(step.stepNumber as int);
                       },
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: step.completed
+                          color: completed
                               ? Colors.green.withValues(alpha: 0.1)
                               : Colors.white.withValues(alpha: 0.02),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: step.completed
+                            color: completed
                                 ? Colors.green.withValues(alpha: 0.3)
                                 : Colors.white.withValues(alpha: 0.1),
                           ),
                         ),
                         child: Row(
                           children: [
-                            // Step number / checkbox
                             Container(
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: step.completed
+                                color: completed
                                     ? Colors.green.withValues(alpha: 0.3)
                                     : Colors.blue.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
-                                child: step.completed
-                                    ? const Icon(Icons.check, color: Colors.green, size: 20)
+                                child: completed
+                                    ? const Icon(Icons.check,
+                                        color: Colors.green, size: 20)
                                     : Text(
-                                        step.stepNumber.toString(),
+                                        (step.stepNumber as int).toString(),
                                         style: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w900,
@@ -486,26 +540,30 @@ class _IncidentReportingScreenState
                               ),
                             ),
                             const SizedBox(width: 12),
-                            // Step details
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    step.title,
+                                    step.title as String,
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w900,
-                                      color: step.completed ? Colors.green : Colors.white,
-                                      decoration: step.completed ? TextDecoration.lineThrough : null,
+                                      color: completed
+                                          ? Colors.green
+                                          : Colors.white,
+                                      decoration: completed
+                                          ? TextDecoration.lineThrough
+                                          : null,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    step.description,
+                                    step.description as String,
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Colors.white.withValues(alpha: step.completed ? 0.5 : 0.7),
+                                      color: Colors.white.withValues(
+                                          alpha: completed ? 0.5 : 0.7),
                                       height: 1.3,
                                     ),
                                   ),
@@ -513,9 +571,8 @@ class _IncidentReportingScreenState
                               ),
                             ),
                             const SizedBox(width: 8),
-                            // Icon
                             Text(
-                              step.icon,
+                              step.icon as String,
                               style: const TextStyle(fontSize: 20),
                             ),
                           ],
@@ -538,7 +595,6 @@ class _IncidentReportingScreenState
               }).toList(),
             ),
           ),
-          // Bottom action button
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -552,12 +608,16 @@ class _IncidentReportingScreenState
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  ref.read(roadsosAssistantProvider.notifier).resetInterview();
+                  ref
+                      .read(roadsosAssistantProvider.notifier)
+                      .resetInterview();
                   _voiceInputController.clear();
                 },
                 icon: const Icon(Icons.add_circle),
                 label: Text(
-                  lang == 'hi' ? 'नई घटना रिपोर्ट करें' : 'Report New Incident',
+                  lang == 'hi'
+                      ? 'नई घटना रिपोर्ट करें'
+                      : 'Report New Incident',
                   style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
                 style: ElevatedButton.styleFrom(
