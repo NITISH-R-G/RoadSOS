@@ -28,6 +28,7 @@ import 'wake_lock_service.dart';
 import 'gyroscope_fusion_service.dart';
 import 'triage_validation_agent.dart';
 import 'triage_feedback_service.dart';
+import 'emergency_beacon_service.dart';
 
 final facilityQueryServiceProvider = Provider<FacilityQueryService>((ref) {
   return FacilityQueryService();
@@ -71,6 +72,7 @@ class SOSState {
   final List<Facility> nearbyFacilities;
   final bool isBystander;
   final List<DispatchChannelRow> dispatchChannels;
+  final bool isBeaconActive;
 
   /// Whether the SOS was triggered while driving mode was active.
   final bool wasInDrivingMode;
@@ -85,6 +87,7 @@ class SOSState {
     this.nearbyFacilities = const [],
     this.isBystander = false,
     this.dispatchChannels = const [],
+    this.isBeaconActive = false,
     this.wasInDrivingMode = false,
   });
 
@@ -98,6 +101,7 @@ class SOSState {
     List<Facility>? nearbyFacilities,
     bool? isBystander,
     List<DispatchChannelRow>? dispatchChannels,
+    bool? isBeaconActive,
     bool? wasInDrivingMode,
   }) {
     return SOSState(
@@ -110,6 +114,7 @@ class SOSState {
       nearbyFacilities: nearbyFacilities ?? this.nearbyFacilities,
       isBystander: isBystander ?? this.isBystander,
       dispatchChannels: dispatchChannels ?? this.dispatchChannels,
+      isBeaconActive: isBeaconActive ?? this.isBeaconActive,
       wasInDrivingMode: wasInDrivingMode ?? this.wasInDrivingMode,
     );
   }
@@ -236,6 +241,11 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     unawaited(WakeLockService.release());
     // Stop any in-progress TTS so the countdown announcement does not keep playing.
     unawaited(_ref.read(voiceAssistantServiceProvider).stopSpeaking());
+    
+    // Phase 9: Stop hardware beacon signals.
+    unawaited(EmergencyBeaconService.instance.stop());
+    state = state.copyWith(isBeaconActive: false);
+
     final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
     _log(l10n.orchestratorCancelled, SOSPhase.idle);
   }
@@ -251,6 +261,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         dispatchChannels: state.dispatchChannels.isEmpty ? _initialDispatchRows() : state.dispatchChannels,
       );
       await _persistState(true);
+      unawaited(EmergencyBeaconService.instance.start());
+      state = state.copyWith(isBeaconActive: true);
       await WakeLockService.acquireForSos();
     }
 
@@ -560,6 +572,10 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     state = state.copyWith(phase: SOSPhase.active);
     await _persistState(true);
+
+    // Phase 9: Activate hardware SOS beacon (flashlight strobe + locator siren).
+    unawaited(EmergencyBeaconService.instance.start());
+    state = state.copyWith(isBeaconActive: true);
 
     // Acquire screen wake lock so the dispatch panel stays visible on a car seat.
     await WakeLockService.acquireForSos();
