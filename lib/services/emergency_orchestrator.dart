@@ -230,7 +230,18 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     state = state.copyWith(phase: SOSPhase.gpsLocking);
     _log('📍 Acquiring GPS fix...', SOSPhase.gpsLocking);
 
+<<<<<<< Updated upstream
     final locationService = _ref.read(locationServiceProvider);
+=======
+    // Phase 7: Agentic Takeover announcement.
+    if (state.wasInDrivingMode) {
+      final voice = _ref.read(voiceAssistantServiceProvider);
+      unawaited(voice.speakAgenticTakeover(
+        'Accident detected. Gemma 4 is taking control of this device to secure help.',
+      ));
+    }
+
+>>>>>>> Stashed changes
     LocationFix location;
     try {
       location = await locationService.getCurrentLocation();
@@ -297,11 +308,117 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             state.incidentId,
             location.latitude,
             location.longitude,
+<<<<<<< Updated upstream
             triageResult.severityLevel,
             triageResult.requiredServices.join(','),
             'active',
             DateTime.now().toIso8601String(),
           ],
+=======
+          ),
+    );
+
+    _log(l10n.orchestratorAiBrief, SOSPhase.triaging);
+    state = state.copyWith(phase: SOSPhase.triaging);
+
+    TriageResult rawTriage;
+    try {
+      rawTriage = await _ref
+          .read(aiTriageServiceProvider)
+          .performTriage(
+            location: location,
+            isBystander: state.isBystander,
+            languageCode: locale.languageCode,
+          )
+          .timeout(_sosTriageTimeout);
+    } catch (e, st) {
+      appLog.w('[Orchestrator] Triage timed out/failed — using safety fallback', error: e, stackTrace: st);
+      rawTriage = TriageResult(
+        functionCall: 'dispatch_emergency',
+        location: '${location.latitude},${location.longitude}',
+        severityLevel: state.isBystander ? 3 : 4,
+        requiredServices: const ['ambulance', 'police'],
+        firstAidQuery: 'bleeding control / airway / spinal precautions',
+        compressedPayload: location.toCompressedString(),
+        thinkingTrace: null,
+        isDegradedMode: true,
+        source: TriageSource.localTier2,
+        visionUsed: false,
+      );
+      _log(
+        'AI triage timed out — using safety fallback severity ${rawTriage.severityLevel}.',
+        SOSPhase.triaging,
+        isError: true,
+      );
+    }
+
+    // ── Phase 3: Safety validation gate ──────────────────────────────────
+    // Read gyro peak over the 1.5s window around the moment of SOS trigger.
+    // The gyro service has a 3s rolling buffer so the crash peak is still in
+    // memory even though a few seconds elapsed during GPS lock + triage.
+    final gyroService = _ref.read(gyroscopeFusionServiceProvider);
+    final gyroPeak = gyroService.peakRadPerSecAt(DateTime.now(), windowMs: 3000);
+
+    final validation = triageValidationAgent.validate(
+      raw: rawTriage,
+      drivingMode: _ref.read(drivingModeProvider),
+      gyroPeakRadPerSec: gyroPeak,
+      accelSeverityHint: state.isBystander ? 2 : 3,
+    );
+
+    final triage = validation.triage;
+    state = state.copyWith(triageResult: triage);
+
+    _log(l10n.orchestratorTriageDone(triage.severityLevel), SOSPhase.triaging);
+
+    if (validation.wasOverridden) {
+      _log(
+        'Safety agent: ${validation.overrideNotes.length} override(s) applied. '
+        'Confidence: ${triage.confidenceLabel}.',
+        SOSPhase.triaging,
+      );
+    } else {
+      _log(
+        'Safety agent: triage validated — no overrides. '
+        'Confidence: ${triage.confidenceLabel}.',
+        SOSPhase.triaging,
+      );
+    }
+
+    _log(l10n.orchestratorDispatching, SOSPhase.dispatching);
+    state = state.copyWith(
+      phase: SOSPhase.dispatching,
+      dispatchChannels: _initialDispatchRows(),
+    );
+
+    // Phase 7: Agentic Dispatch Narration.
+    if (state.wasInDrivingMode) {
+      final voice = _ref.read(voiceAssistantServiceProvider);
+      unawaited(voice.speak('Triage complete. Initiating emergency protocols. Broadcasting mesh beacon and alerting your emergency contacts now.'));
+    }
+
+    final mesh = _ref.read(meshNetworkServiceProvider);
+
+    _patchDispatchChannel('mesh', DispatchChannelLifecycle.inProgress, 'Broadcasting BLE beacon…');
+    _patchDispatchChannel('sms', DispatchChannelLifecycle.inProgress, 'Sending emergency SMS…');
+    _patchDispatchChannel('local_log', DispatchChannelLifecycle.inProgress, 'Saving incident on device…');
+    _patchDispatchChannel('family_link', DispatchChannelLifecycle.inProgress, 'Family tracking link…');
+
+    Future<T> guard<T>({
+      required String id,
+      required Future<T> future,
+      required T fallback,
+      required String timeoutDetail,
+      required String failureDetail,
+    }) async {
+      try {
+        return await future.timeout(
+          _dispatchChannelTimeout,
+          onTimeout: () {
+            _patchDispatchChannel(id, DispatchChannelLifecycle.failed, timeoutDetail);
+            return fallback;
+          },
+>>>>>>> Stashed changes
         );
         _log('💾 Incident written to local DB', SOSPhase.dispatching);
       } catch (e) {

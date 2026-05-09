@@ -5,12 +5,19 @@ class UserProfile {
   final String fullName;
   final String bloodGroup;
   final String allergies;
+<<<<<<< Updated upstream
   final String emergencyContact;
+=======
+  final String medications;
+  final String conditions;
+  final List<String> emergencyContacts;
+>>>>>>> Stashed changes
 
   UserProfile({
     this.fullName = 'Unknown',
     this.bloodGroup = 'UNK',
     this.allergies = 'None',
+<<<<<<< Updated upstream
     this.emergencyContact = '',
   });
 
@@ -27,6 +34,35 @@ class UserProfile {
     allergies: json['allergies'] ?? 'None',
     emergencyContact: json['ice'] ?? '',
   );
+=======
+    this.medications = 'None',
+    this.conditions = 'None',
+    this.emergencyContacts = const [],
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'fullName': fullName,
+      'bloodType': bloodType,
+      'allergies': allergies,
+      'medications': medications,
+      'conditions': conditions,
+      'emergencyContacts': emergencyContacts,
+    };
+  }
+
+  factory UserProfile.fromMap(Map<String, dynamic> map) {
+    return UserProfile(
+      fullName: map['fullName'] ?? '',
+      bloodType: map['bloodType'] ?? 'Unknown',
+      allergies: map['allergies'] ?? 'None',
+      medications: map['medications'] ?? 'None',
+      conditions: map['conditions'] ?? 'None',
+      emergencyContacts: (map['emergencyContacts'] as List<dynamic>?)?.cast<String>() ?? 
+          (map['emergencyContact'] != null ? [map['emergencyContact']] : []),
+    );
+  }
+>>>>>>> Stashed changes
 
   /// Compact string for SOS payload (≤ 20 bytes)
   String toCompactString() {
