@@ -60,7 +60,7 @@ dependencies:
   # Connectivity-aware triage tier selection.
   # Enables instant skip of Tier 1 cloud call (saves the 5s timeout)
   # when device has no network — critical for Indian highway scenarios.
-  connectivity_plus: ^6.1.4
+  connectivity_plus: ^7.1.1
 
   # Gemma 4 on-device inference via MediaPipe / LiteRT.
   # Tier 2: Gemma 4 E4B (Edge 4B, ~2.4 GB Q4_K_M) runs offline on device.
