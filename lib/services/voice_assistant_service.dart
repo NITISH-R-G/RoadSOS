@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:speech_to_text/speech_to_text.dart';
-
-=======
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -25,30 +20,16 @@ String ttsLanguageForLocale(Locale locale) {
   }
 }
 
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 class VoiceAssistantService {
   final FlutterTts _tts = FlutterTts();
   final SpeechToText _stt = SpeechToText();
   bool _isListening = false;
-<<<<<<< HEAD
-=======
   Locale _locale = const Locale('en');
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
   VoiceAssistantService() {
     _initTts();
   }
 
-<<<<<<< HEAD
-  Future<void> _initTts() async {
-    await _tts.setLanguage('en-US');
-    await _tts.setPitch(1.0);
-    await _tts.setSpeechRate(0.5);
-  }
-
-  Future<void> speak(String text) async {
-    print('[VoiceAssistant] Speaking: $text');
-=======
   Locale get locale => _locale;
 
   Future<void> _initTts() async {
@@ -64,7 +45,6 @@ class VoiceAssistantService {
   }
 
   Future<void> speak(String text) async {
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     await _tts.speak(text);
   }
 
@@ -72,21 +52,6 @@ class VoiceAssistantService {
     await _tts.stop();
   }
 
-<<<<<<< HEAD
-  Future<bool> listenForConfirmation() async {
-    if (_isListening) return false;
-    
-    bool available = await _stt.initialize();
-    if (available) {
-      _isListening = true;
-      bool confirmed = false;
-      
-      print('[VoiceAssistant] Listening for confirmation...');
-      await _stt.listen(
-        onResult: (result) {
-          final words = result.recognizedWords.toLowerCase();
-          if (words.contains('confirm') || words.contains('yes') || words.contains('help')) {
-=======
   // ── Phase 7: Hands-free SOS countdown (driving mode) ─────────────────────
 
   /// Speaks the SOS countdown message once at the start of the countdown.
@@ -230,26 +195,18 @@ class VoiceAssistantService {
         onResult: (result) {
           final words = result.recognizedWords.toLowerCase();
           if (_matchesConfirm(words)) {
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
             confirmed = true;
           }
         },
         listenFor: const Duration(seconds: 5),
       );
-<<<<<<< HEAD
-      
-      await Future.delayed(const Duration(seconds: 5));
-=======
 
       await Future<void>.delayed(const Duration(seconds: 5));
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
       _isListening = false;
       return confirmed;
     }
     return false;
   }
-<<<<<<< HEAD
-=======
 
   bool _matchesConfirm(String words) {
     if (words.contains('confirm') ||
@@ -276,5 +233,4 @@ class VoiceAssistantService {
         return false;
     }
   }
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 }
