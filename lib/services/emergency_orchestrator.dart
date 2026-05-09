@@ -148,13 +148,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   static const Duration _dispatchChannelTimeout = Duration(seconds: 8);
 
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
-     print("🚨 Orchestrator CREATED");
-      Future.delayed(Duration(seconds: 3), () {
-    testSOS();
-  });
-      void testSOS() {
-    print("🚨 TEST SOS TRIGGERED");
-  }
+     
+    
     _restoreState();
     _ref.read(crashDetectionServiceProvider).startMonitoring();
     // Phase 8: ensure RL bias is loaded before any SOS fires.
