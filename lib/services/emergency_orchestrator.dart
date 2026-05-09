@@ -149,6 +149,9 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
      print("🚨 Orchestrator CREATED");
+      void testSOS() {
+    print("🚨 TEST SOS TRIGGERED");
+  }
     _restoreState();
     _ref.read(crashDetectionServiceProvider).startMonitoring();
     // Phase 8: ensure RL bias is loaded before any SOS fires.
