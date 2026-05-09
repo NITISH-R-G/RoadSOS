@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'vehicle_rescue_data.dart';
 
 /// VehicleRescueScreen
@@ -189,7 +190,6 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                 contentPadding: EdgeInsets.all(16),
               ),
               onChanged: (value) {
-                // Format plate number as user types
                 final formatted = value.toUpperCase();
                 if (formatted != value) {
                   _plateController.value = TextEditingValue(
@@ -553,14 +553,20 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () {
-          // url_launcher call to 108
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Calling 108 — Ambulance'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        onPressed: () async {
+          final uri = Uri(scheme: 'tel', path: '108');
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri);
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Could not launch dialer. Please call 108 manually.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
         },
         icon: const Icon(Icons.call, size: 20),
         label: const Text(
