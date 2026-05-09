@@ -1,33 +1,53 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart';
 import '../database/app_database.dart';
+import '../models/dispatch_channel_status.dart';
+import '../models/sos_activity_record.dart';
 import 'ai_triage_service.dart';
 import 'location_service.dart';
 import 'mesh_network_service.dart';
+import 'sms_dispatch_outcome.dart';
 import 'crash_detection_service.dart';
 import 'voice_assistant_service.dart';
 import 'user_profile_service.dart';
-import 'gemma_assistant_service.dart';
 import '../models/facility.dart';
+import '../logging/app_log.dart';
+import 'app_locale_controller.dart';
+import 'facility_query_service.dart';
+import 'facility_sync_service.dart';
+import 'sos_activity_log_service.dart';
+import 'family_tracking_service.dart';
+import 'privacy_consent_service.dart';
+import 'driving_mode_service.dart';
+import 'wake_lock_service.dart';
+import 'gyroscope_fusion_service.dart';
+import 'triage_validation_agent.dart';
+import 'triage_feedback_service.dart';
 
-/// The lifecycle of an SOS event.
+final facilityQueryServiceProvider = Provider<FacilityQueryService>((ref) {
+  return FacilityQueryService();
+});
+
+final facilitySyncServiceProvider = Provider<FacilitySyncService>((ref) {
+  return FacilitySyncService();
+});
+
 enum SOSPhase {
-  idle,         // Normal operation
-  bystanderMode, // Witness reporting an incident
-  countdown,    // 10s cancellation window (false-positive guard)
-  gpsLocking,   // Acquiring GPS fix
-  triaging,     // Gemma 4 is analyzing the situation
-  dispatching,  // Writing to DB + connectivity cascade
-  active,       // SOS is live and broadcasting
-  resolved,     // SOS cancelled or resolved
+  idle,
+  bystanderMode,
+  countdown,
+  gpsLocking,
+  triaging,
+  dispatching,
+  active,
+  resolved,
 }
 
-/// A single status message in the SOS event log.
 class SOSStatusMessage {
   final String message;
   final DateTime timestamp;
@@ -41,7 +61,6 @@ class SOSStatusMessage {
   }) : timestamp = DateTime.now();
 }
 
-/// Complete state of an SOS event.
 class SOSState {
   final SOSPhase phase;
   final int countdownSeconds;
@@ -51,6 +70,8 @@ class SOSState {
   final String? incidentId;
   final List<Facility> nearbyFacilities;
   final bool isBystander;
+  final List<DispatchChannelRow> dispatchChannels;
+  final bool wasInDrivingMode;
 
   const SOSState({
     this.phase = SOSPhase.idle,
@@ -61,6 +82,8 @@ class SOSState {
     this.incidentId,
     this.nearbyFacilities = const [],
     this.isBystander = false,
+    this.dispatchChannels = const [],
+    this.wasInDrivingMode = false,
   });
 
   SOSState copyWith({
@@ -72,6 +95,8 @@ class SOSState {
     String? incidentId,
     List<Facility>? nearbyFacilities,
     bool? isBystander,
+    List<DispatchChannelRow>? dispatchChannels,
+    bool? wasInDrivingMode,
   }) {
     return SOSState(
       phase: phase ?? this.phase,
@@ -82,42 +107,35 @@ class SOSState {
       incidentId: incidentId ?? this.incidentId,
       nearbyFacilities: nearbyFacilities ?? this.nearbyFacilities,
       isBystander: isBystander ?? this.isBystander,
+      dispatchChannels: dispatchChannels ?? this.dispatchChannels,
+      wasInDrivingMode: wasInDrivingMode ?? this.wasInDrivingMode,
     );
   }
 }
 
-/// Emergency Orchestrator — the central brain of RoadSOS.
-///
-/// When SOS is triggered (hardware button or UI), it executes this pipeline:
-///
-/// ```
-/// SOS Trigger
-///   → 10s Countdown (cancellation window)
-final voiceAssistantServiceProvider = Provider<VoiceAssistantService>((ref) {
-  return VoiceAssistantService();
-});
-
-final userProfileServiceProvider = Provider<UserProfileService>((ref) {
-  return UserProfileService();
-});
-
-/// Orchestrates the end-to-end SOS workflow.
 class EmergencyOrchestrator extends StateNotifier<SOSState> {
   final Ref _ref;
   Timer? _countdownTimer;
   final _uuid = const Uuid();
+  static const Duration _sosLocationTimeout = Duration(seconds: 12);
+  static const Duration _sosTriageTimeout = Duration(seconds: 10);
+  static const Duration _dispatchChannelTimeout = Duration(seconds: 8);
 
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
-    // Start real-time hardware monitoring
-    _ref.read(crashDetectionServiceProvider).startMonitoring();
     _restoreState();
+    _ref.read(crashDetectionServiceProvider).startMonitoring();
+    unawaited(TriageFeedbackService.instance.initialize());
   }
 
   Future<void> _restoreState() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool('sos_active') ?? false) {
       _log('🚨 Recovering active SOS state after restart...', SOSPhase.active);
-      state = state.copyWith(phase: SOSPhase.active, incidentId: prefs.getString('sos_id'));
+      state = state.copyWith(
+        phase: SOSPhase.active,
+        incidentId: prefs.getString('sos_id'),
+      );
+      await WakeLockService.acquireForSos();
     }
   }
 
@@ -127,112 +145,87 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     await prefs.setString('sos_id', state.incidentId ?? '');
   }
 
-  /// Trigger the full SOS pipeline.
-  /// Called when hardware button sequence detected or SOS button tapped.
-  Future<void> triggerSOS() async {
-    if (state.phase != SOSPhase.idle && state.phase != SOSPhase.resolved) {
-      _log('SOS already in progress — ignoring duplicate trigger', SOSPhase.active);
-      return;
-    }
+  void _log(String message, SOSPhase phase, {bool isError = false}) {
+    final msg = SOSStatusMessage(message: message, phase: phase, isError: isError);
+    state = state.copyWith(statusLog: [msg, ...state.statusLog]);
+    appLog.d('🚒 [ORCHESTRATOR] $message');
+  }
 
-    final incidentId = _uuid.v4().substring(0, 8).toUpperCase();
+  Future<void> startSos({bool isBystander = false}) async {
+    if (state.phase != SOSPhase.idle) return;
+
+    final isDriving = _ref.read(drivingModeProvider) == DrivingMode.driving;
+
     state = state.copyWith(
       phase: SOSPhase.countdown,
       countdownSeconds: 10,
+      isBystander: isBystander,
       incidentId: _uuid.v4(),
-      statusLog: [],
-      isBystander: false,
+      dispatchChannels: const [],
+      wasInDrivingMode: isDriving,
     );
 
-    _ref.read(voiceAssistantServiceProvider).speak('Emergency detected. Starting SOS countdown. Tap to cancel if this is a mistake.');
-    _log('🚨 SOS TRIGGERED — 10s window open', SOSPhase.countdown);
-    _log('Cancel within 10 seconds if accidental', SOSPhase.countdown);
-
-    // Haptic feedback
-    HapticFeedback.heavyImpact();
-
-    // Start countdown
-    await _runCountdown();
-  }
-
-  /// Trigger SOS on behalf of someone else (bypass personal triage)
-  void triggerBystanderSOS() {
-    if (state.phase != SOSPhase.idle) return;
-
-    state = state.copyWith(
-      phase: SOSPhase.bystanderMode,
-      incidentId: _uuid.v4(),
-      statusLog: [],
-      isBystander: true,
+    final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
+    _log(
+      isBystander
+          ? l10n.orchestratorBystanderStarted
+          : l10n.orchestratorSelfSosStarted,
+      SOSPhase.countdown,
     );
 
-    _ref.read(voiceAssistantServiceProvider).speak('Witness reporting mode activated. Please describe the incident.');
-    _log('🚨 BYSTANDER SOS TRIGGERED', SOSPhase.bystanderMode);
-    
-    // Skip countdown and go straight to GPS
-    _executeSOSPipeline();
-  }
+    if (isDriving) {
+      final voice = _ref.read(voiceAssistantServiceProvider);
+      unawaited(voice.speakHandsFreeCountdown(10, 'Location being acquired'));
 
-  /// 10-second cancellation countdown (Blueprint §3.5 false-positive guard).
-  Future<void> _runCountdown() async {
-    final completer = Completer<bool>();
+      unawaited(
+        voice
+            .listenForCancel(listenFor: const Duration(seconds: 9))
+            .then((cancelled) {
+          if (cancelled && state.phase == SOSPhase.countdown) {
+            appLog.i('[Orchestrator] Voice cancel detected — aborting SOS');
+            cancelSos();
+          }
+        }),
+      );
+    }
 
-    int remaining = 10;
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      remaining--;
-      state = state.copyWith(countdownSeconds: remaining);
-
-      // Haptic tick every second
-      HapticFeedback.lightImpact();
-
-      if (remaining <= 0) {
+      if (state.countdownSeconds > 1) {
+        state = state.copyWith(countdownSeconds: state.countdownSeconds - 1);
+      } else {
         timer.cancel();
-        completer.complete(true); // Proceed with SOS
+        _executeEmergencyPipeline();
       }
     });
-
-    final shouldProceed = await completer.future;
-
-    if (shouldProceed && state.phase == SOSPhase.countdown) {
-      // Activate SOS flag globally
-      _ref.read(isSOSActiveProvider.notifier).state = true;
-      await _executeSOSPipeline();
-    }
   }
 
-  /// Cancel SOS during countdown or while active.
-  void cancelSOS() {
+  void cancelSos() {
     _countdownTimer?.cancel();
-    _countdownTimer = null;
-    _ref.read(isSOSActiveProvider.notifier).state = false;
-
-    _log('✅ SOS CANCELLED by user', SOSPhase.resolved);
-    state = state.copyWith(phase: SOSPhase.resolved);
-  }
-
-  /// Resolve an active SOS (after help arrives).
-  void resolveSOS() {
-    _countdownTimer?.cancel();
-    _ref.read(isSOSActiveProvider.notifier).state = false;
-
-    _log('✅ SOS RESOLVED — help acknowledged', SOSPhase.resolved);
-    state = state.copyWith(phase: SOSPhase.resolved);
-  }
-
-  /// Reset to idle after resolution.
-  void reset() {
     state = const SOSState();
+    _persistState(false);
+    unawaited(WakeLockService.release());
+    unawaited(_ref.read(voiceAssistantServiceProvider).stopSpeaking());
+    final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
+    _log(l10n.orchestratorCancelled, SOSPhase.idle);
   }
 
-  /// Execute the full SOS pipeline after countdown completes.
-  Future<void> _executeSOSPipeline() async {
-    // ── Step 1: GPS Lock ──────────────────────────────────
-    state = state.copyWith(phase: SOSPhase.gpsLocking);
-    _log('📍 Acquiring GPS fix...', SOSPhase.gpsLocking);
+  Future<void> _executeEmergencyPipeline() async {
+    final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
+    final locale = _ref.read(appLocaleProvider);
 
-<<<<<<< Updated upstream
-    final locationService = _ref.read(locationServiceProvider);
-=======
+    Future<void> failOpenToActive(String detail) async {
+      _log(detail, SOSPhase.active, isError: true);
+      state = state.copyWith(
+        phase: SOSPhase.active,
+        dispatchChannels: state.dispatchChannels.isEmpty ? _initialDispatchRows() : state.dispatchChannels,
+      );
+      await _persistState(true);
+      await WakeLockService.acquireForSos();
+    }
+
+    _log(l10n.orchestratorAcquiringLocation, SOSPhase.gpsLocking);
+    state = state.copyWith(phase: SOSPhase.gpsLocking);
+
     // Phase 7: Agentic Takeover announcement.
     if (state.wasInDrivingMode) {
       final voice = _ref.read(voiceAssistantServiceProvider);
@@ -241,80 +234,72 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ));
     }
 
->>>>>>> Stashed changes
     LocationFix location;
     try {
-      location = await locationService.getCurrentLocation();
-      _log('📍 GPS: ${location.toString()}', SOSPhase.gpsLocking);
-      state = state.copyWith(location: location);
-    } catch (e) {
-      _log('⚠️ GPS failed: $e — using last known', SOSPhase.gpsLocking, isError: true);
+      location = await _ref
+          .read(locationServiceProvider)
+          .getCurrentLocation()
+          .timeout(_sosLocationTimeout);
+    } catch (e, st) {
+      appLog.w('[Orchestrator] Location acquisition timed out/failed', error: e, stackTrace: st);
       location = LocationFix(
-        latitude: 0.0,
-        longitude: 0.0,
+        latitude: 0,
+        longitude: 0,
         accuracy: 99999,
         source: 'unknown',
         timestamp: DateTime.now(),
       );
-      state = state.copyWith(location: location);
+    }
+    state = state.copyWith(location: location);
+    final locLine = location.source == 'unknown'
+        ? l10n.orchestratorLocationUnavailable
+        : l10n.orchestratorLocationSecured(
+            location.latitude.toStringAsFixed(3),
+            location.longitude.toStringAsFixed(3),
+          );
+    _log(locLine, SOSPhase.gpsLocking, isError: location.source == 'unknown');
+
+    if (location.source == 'unknown') {
+      _log(
+        l10n.orchestratorManualActionRequired,
+        SOSPhase.dispatching,
+        isError: true,
+      );
+      state = state.copyWith(
+        phase: SOSPhase.dispatching,
+        dispatchChannels: _initialDispatchRows(),
+      );
+      _patchDispatchChannel('mesh', DispatchChannelLifecycle.skipped, 'Skipped — no usable GPS fix.');
+      _patchDispatchChannel('family_link', DispatchChannelLifecycle.skipped, 'Skipped — no usable GPS fix.');
+      _patchDispatchChannel('local_log', DispatchChannelLifecycle.failed, 'Not saved — no usable GPS fix.');
+      _patchDispatchChannel('sms', DispatchChannelLifecycle.inProgress, 'Sending emergency SMS (no GPS)…');
+      final smsOutcome = await _dispatchSmsWithRetry(
+        l10n.orchestratorSmsNoGpsPayload,
+        lat: null,
+        lng: null,
+      );
+      _patchDispatchChannel(
+        'sms',
+        smsOutcome.primaryAutomatedBarMet
+            ? DispatchChannelLifecycle.success
+            : DispatchChannelLifecycle.failed,
+        smsOutcome.detail,
+      );
+      state = state.copyWith(phase: SOSPhase.active);
+      await _persistState(true);
+      await WakeLockService.acquireForSos();
+      return;
     }
 
-    // ── Step 2: Edge AI Triage ──────────────────────────
-    state = state.copyWith(phase: SOSPhase.triaging);
-    _log('🧠 Gemma 4 is analyzing audio + telemetry...', SOSPhase.triaging);
-    _ref.read(voiceAssistantServiceProvider).speak('Analyzing crash telemetry and audio. Please stay calm.');
-
-    final profile = await _ref.read(userProfileServiceProvider).getProfile();
-    final triageResult = await _ref.read(aiTriageServiceProvider).triageEmergency(
-      audioTranscript: "Multiple casualties. Heavy bleeding. Help!", // Real world: From STT/Microphone
-      locationString: '${location.latitude},${location.longitude}',
-      accelerometerSeverityHint: 5,
-    );
-    
-    // Add medical profile to payload
-    final enrichedPayload = '${triageResult.compressedPayload}|${profile.toCompactString()}';
-
-    state = state.copyWith(triageResult: triageResult);
-
-    if (triageResult.isDegradedMode) {
-      _log('⚠️ AI in degraded mode — using keyword fallback', SOSPhase.triaging, isError: true);
-    } else {
-      _log('🧠 Triage complete — Severity: ${triageResult.severityLevel}/5', SOSPhase.triaging);
-    }
-    _log('Services: ${triageResult.requiredServices.join(", ")}', SOSPhase.triaging);
-    
-    // ── Step 2.5: Fetch Nearby Facilities ─────────────────
-    _log('🔍 Searching local DB for nearby facilities...', SOSPhase.triaging);
-    await _fetchNearbyFacilities(location);
-
-    // ── Step 3: Write to Local DB ─────────────────────────
-    // V4.0 Intelligence: Gemma Telemetry Synthesis
-    final aiAssistant = _ref.read(gemmaAssistantProvider.notifier);
-    final situationBrief = await aiAssistant.synthesizeTelemetry(
-      maxG: 25.0, // Should come from sensor service
-      speedDelta: 40.0,
-      impactVector: 'Frontal',
-    );
-    print('[Orchestrator] 🧠 Gemma SITREP: $situationBrief');
-
-    state = state.copyWith(phase: SOSPhase.dispatching);
-    _log('💾 Writing incident to local database...', SOSPhase.dispatching);
-
-    if (isDatabaseInitialized) {
-      try {
-        await appDb.execute(
-          'INSERT INTO reported_incidents (id, latitude, longitude, severity, services_needed, status, reported_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [
-            state.incidentId,
+    final facilities = await _ref.read(facilityQueryServiceProvider).queryNearby(
+          location.latitude,
+          location.longitude,
+        );
+    state = state.copyWith(nearbyFacilities: facilities);
+    unawaited(
+      _ref.read(facilitySyncServiceProvider).syncLocalRegion(
             location.latitude,
             location.longitude,
-<<<<<<< Updated upstream
-            triageResult.severityLevel,
-            triageResult.requiredServices.join(','),
-            'active',
-            DateTime.now().toIso8601String(),
-          ],
-=======
           ),
     );
 
@@ -345,17 +330,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         source: TriageSource.localTier2,
         visionUsed: false,
       );
-      _log(
-        'AI triage timed out — using safety fallback severity ${rawTriage.severityLevel}.',
-        SOSPhase.triaging,
-        isError: true,
-      );
     }
 
-    // ── Phase 3: Safety validation gate ──────────────────────────────────
-    // Read gyro peak over the 1.5s window around the moment of SOS trigger.
-    // The gyro service has a 3s rolling buffer so the crash peak is still in
-    // memory even though a few seconds elapsed during GPS lock + triage.
     final gyroService = _ref.read(gyroscopeFusionServiceProvider);
     final gyroPeak = gyroService.peakRadPerSecAt(DateTime.now(), windowMs: 3000);
 
@@ -371,27 +347,12 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     _log(l10n.orchestratorTriageDone(triage.severityLevel), SOSPhase.triaging);
 
-    if (validation.wasOverridden) {
-      _log(
-        'Safety agent: ${validation.overrideNotes.length} override(s) applied. '
-        'Confidence: ${triage.confidenceLabel}.',
-        SOSPhase.triaging,
-      );
-    } else {
-      _log(
-        'Safety agent: triage validated — no overrides. '
-        'Confidence: ${triage.confidenceLabel}.',
-        SOSPhase.triaging,
-      );
-    }
-
     _log(l10n.orchestratorDispatching, SOSPhase.dispatching);
     state = state.copyWith(
       phase: SOSPhase.dispatching,
       dispatchChannels: _initialDispatchRows(),
     );
 
-    // Phase 7: Agentic Dispatch Narration.
     if (state.wasInDrivingMode) {
       final voice = _ref.read(voiceAssistantServiceProvider);
       unawaited(voice.speak('Triage complete. Initiating emergency protocols. Broadcasting mesh beacon and alerting your emergency contacts now.'));
@@ -418,89 +379,169 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             _patchDispatchChannel(id, DispatchChannelLifecycle.failed, timeoutDetail);
             return fallback;
           },
->>>>>>> Stashed changes
         );
-        _log('💾 Incident written to local DB', SOSPhase.dispatching);
-      } catch (e) {
-        _log('⚠️ DB write failed: $e', SOSPhase.dispatching, isError: true);
+      } catch (_) {
+        _patchDispatchChannel(id, DispatchChannelLifecycle.failed, failureDetail);
+        return fallback;
       }
-    } else {
-      _log('ℹ️ Local DB bypassed (Web/Dev mode)', SOSPhase.dispatching);
     }
 
-    // ── Step 4: Connectivity Cascade ──────────────────────
-    _log('📡 Starting connectivity cascade...', SOSPhase.dispatching);
+    final meshFuture = guard<bool>(
+      id: 'mesh',
+      future: mesh.startBroadcasting(
+        triage.compressedPayload,
+        lat: location.latitude,
+        lng: location.longitude,
+        severity: triage.severityLevel,
+        services: triage.requiredServices,
+      ),
+      fallback: false,
+      timeoutDetail: 'Mesh timed out.',
+      failureDetail: 'Mesh failed.',
+    ).then((meshOk) {
+      _patchDispatchChannel(
+        'mesh',
+        meshOk ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        meshOk ? 'Mesh active ✓' : 'Mesh failed.',
+      );
+      return meshOk;
+    });
 
-    // 4a. Try cloud sync (PowerSync will auto-sync to Supabase if online)
-    _log('📡 Cloud sync queued via PowerSync', SOSPhase.dispatching);
+    final smsFuture = guard<SmsDispatchOutcome>(
+      id: 'sms',
+      future: _dispatchSmsWithRetry(
+        triage.compressedPayload,
+        lat: location.latitude,
+        lng: location.longitude,
+      ),
+      fallback: const SmsDispatchOutcome(
+        deviceDirectSmsSent: false,
+        backendRelayAccepted: false,
+        primaryAutomatedBarMet: false,
+        proofLevel: SmsDispatchProofLevel.none,
+        detail: 'SMS timed out.',
+      ),
+      timeoutDetail: 'SMS timed out.',
+      failureDetail: 'SMS failed.',
+    ).then((smsOutcome) {
+      _patchDispatchChannel(
+        'sms',
+        smsOutcome.primaryAutomatedBarMet ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        smsOutcome.detail,
+      );
+      return smsOutcome;
+    });
 
-    // 4b. SMS fallback
-    final meshService = MeshNetworkService();
-    try {
-      _log('📱 Triggering SMS fallback...', SOSPhase.dispatching);
-      await meshService.triggerSmsFallback(enrichedPayload);
-      _log('📱 SMS dispatched', SOSPhase.dispatching);
-    } catch (e) {
-      _log('⚠️ SMS failed: $e', SOSPhase.dispatching, isError: true);
-    }
+    final persistedFuture = guard<({bool ok, String detail})>(
+      id: 'local_log',
+      future: _persistIncidentSnapshot(
+        incidentId: state.incidentId ?? '',
+        location: location,
+        triage: triage,
+      ),
+      fallback: (ok: false, detail: 'Log timed out.'),
+      timeoutDetail: 'Log timed out.',
+      failureDetail: 'Log failed.',
+    ).then((persisted) {
+      _patchDispatchChannel(
+        'local_log',
+        persisted.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        persisted.detail,
+      );
+      return persisted;
+    });
 
-    // 4c. BLE Mesh broadcast
-    try {
-      _log('📶 Broadcasting ENCRYPTED BLE mesh beacon...', SOSPhase.dispatching);
-      await meshService.broadcastSosPayload(enrichedPayload);
-      _log('📶 BLE beacon active', SOSPhase.dispatching);
-    } catch (e) {
-      _log('⚠️ BLE broadcast failed: $e', SOSPhase.dispatching, isError: true);
-    }
+    final familyFuture = guard<({bool ok, String detail})>(
+      id: 'family_link',
+      future: _ref.read(familyTrackingServiceProvider).registerAndNotifyContact(
+            incidentId: state.incidentId ?? '',
+            location: location,
+            triage: triage,
+          ),
+      fallback: (ok: false, detail: 'Link timed out.'),
+      timeoutDetail: 'Link timed out.',
+      failureDetail: 'Link failed.',
+    ).then((family) {
+      _patchDispatchChannel(
+        'family_link',
+        family.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        family.detail,
+      );
+      return family;
+    });
 
-    // ── Pipeline Complete ─────────────────────────────────
+    await Future.wait([meshFuture, smsFuture, persistedFuture, familyFuture]);
+
     state = state.copyWith(phase: SOSPhase.active);
     await _persistState(true);
-    _log('🚨 SOS IS LIVE — all channels active', SOSPhase.active);
-    _ref.read(voiceAssistantServiceProvider).speak('SOS is live. Help is on the way. Your location and medical profile are being broadcasted.');
+    await WakeLockService.acquireForSos();
 
-    HapticFeedback.heavyImpact();
-  }
-
-  /// Append a status message to the event log.
-  void _log(String message, SOSPhase phase, {bool isError = false}) {
-    final entry = SOSStatusMessage(
-      message: message,
-      phase: phase,
-      isError: isError,
-    );
-    state = state.copyWith(statusLog: [...state.statusLog, entry]);
-    print('[EmergencyOrchestrator] $message');
-  }
-
-  /// Fetch nearby facilities from the PowerSync database.
-  Future<void> _fetchNearbyFacilities(LocationFix location) async {
-    if (!isDatabaseInitialized) return;
-
-    try {
-      // Simple bounding box search (approx 10km)
-      const double delta = 0.1; 
-      final results = await appDb.getAll(
-        'SELECT * FROM emergency_facilities WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ?',
-        [
-          location.latitude - delta,
-          location.latitude + delta,
-          location.longitude - delta,
-          location.longitude + delta,
-        ],
-      );
-
-      final facilities = results.map((r) => Facility.fromMap(r)).toList();
-      state = state.copyWith(nearbyFacilities: facilities);
-      _log('🔍 Found ${facilities.length} nearby facilities', SOSPhase.triaging);
-    } catch (e) {
-      _log('⚠️ Facility search failed: $e', SOSPhase.triaging, isError: true);
+    if (state.wasInDrivingMode) {
+      final voice = _ref.read(voiceAssistantServiceProvider);
+      unawaited(voice.speakTriageSummary(
+        severity: triage.severityLevel,
+        services: triage.requiredServices,
+        locationCoords: '${location.latitude.toStringAsFixed(2)}, ${location.longitude.toStringAsFixed(2)}',
+      ));
     }
   }
+
+  Future<SmsDispatchOutcome> _dispatchSmsWithRetry(String payload, {double? lat, double? lng}) async {
+    final mesh = _ref.read(meshNetworkServiceProvider);
+    final first = await mesh.triggerSmsFallback(payload, lat: lat, lng: lng);
+    if (first.primaryAutomatedBarMet) return first;
+    await Future<void>.delayed(const Duration(seconds: 3));
+    return await mesh.triggerSmsFallback(payload, lat: lat, lng: lng);
+  }
+
+  List<DispatchChannelRow> _initialDispatchRows() {
+    return const [
+      DispatchChannelRow(id: 'mesh', title: 'Mesh beacon (BLE)', lifecycle: DispatchChannelLifecycle.pending, detail: 'Waiting…'),
+      DispatchChannelRow(id: 'sms', title: 'SMS to emergency number', lifecycle: DispatchChannelLifecycle.pending, detail: 'Waiting…'),
+      DispatchChannelRow(id: 'local_log', title: 'On-device incident log', lifecycle: DispatchChannelLifecycle.pending, detail: 'Waiting…'),
+      DispatchChannelRow(id: 'family_link', title: 'Family tracking link', lifecycle: DispatchChannelLifecycle.pending, detail: 'Waiting…'),
+    ];
+  }
+
+  void _patchDispatchChannel(String id, DispatchChannelLifecycle lifecycle, String detail) {
+    final list = List<DispatchChannelRow>.from(state.dispatchChannels);
+    final i = list.indexWhere((e) => e.id == id);
+    if (i >= 0) {
+      list[i] = list[i].copyWith(lifecycle: lifecycle, detail: detail);
+      state = state.copyWith(dispatchChannels: list);
+    }
+  }
+
+  Future<({bool ok, String detail})> _persistIncidentSnapshot({
+    required String incidentId,
+    required LocationFix location,
+    required TriageResult triage,
+  }) async {
+    if (kIsWeb || !isDatabaseInitialized) return (ok: false, detail: 'Database off.');
+    try {
+      final now = DateTime.now().toIso8601String();
+      await appDb.execute(
+        'INSERT INTO reported_incidents (id, latitude, longitude, severity, services_needed, status, reported_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [incidentId, location.latitude, location.longitude, triage.severityLevel, triage.requiredServices.join(','), 'dispatched', now, now],
+      );
+      return (ok: true, detail: 'Saved ✓');
+    } catch (e) {
+      return (ok: false, detail: 'Error.');
+    }
+  }
+
+  void triggerSOS() => startSos();
+  void cancelSOS() => cancelSos();
 }
 
-/// Riverpod provider for the Emergency Orchestrator.
-final emergencyOrchestratorProvider =
-    StateNotifierProvider<EmergencyOrchestrator, SOSState>((ref) {
+final emergencyOrchestratorProvider = StateNotifierProvider<EmergencyOrchestrator, SOSState>((ref) {
   return EmergencyOrchestrator(ref);
+});
+
+final voiceAssistantServiceProvider = Provider<VoiceAssistantService>((ref) {
+  return VoiceAssistantService();
+});
+
+final userProfileServiceProvider = Provider<UserProfileService>((ref) {
+  return UserProfileService();
 });
