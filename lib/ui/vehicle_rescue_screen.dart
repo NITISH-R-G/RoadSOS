@@ -82,9 +82,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.15),
+              color: Colors.green.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.green.withOpacity(0.4)),
+              border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
             ),
             child: const Row(
               children: [
@@ -120,12 +120,12 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.red.shade900.withOpacity(0.6), Colors.black],
+                colors: [Colors.red.shade900.withValues(alpha: 0.6), Colors.black],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.red.withOpacity(0.3)),
+              border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
             ),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,7 +169,7 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.white12),
             ),
@@ -238,9 +238,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.08),
+              color: Colors.amber.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.withOpacity(0.2)),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
             ),
             child: const Row(
               children: [
@@ -275,10 +275,10 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isEV ? Colors.yellow.withOpacity(0.4) : Colors.white12,
+            color: isEV ? Colors.yellow.withValues(alpha: 0.4) : Colors.white12,
           ),
         ),
         child: Column(
@@ -356,7 +356,7 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white12),
       ),
@@ -385,7 +385,7 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.15),
+                    color: Colors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -420,9 +420,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.08),
+        color: Colors.red.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withOpacity(0.25)),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -446,12 +446,12 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: step.isCritical
-            ? Colors.red.withOpacity(0.08)
-            : Colors.white.withOpacity(0.04),
+            ? Colors.red.withValues(alpha: 0.08)
+            : Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: step.isCritical
-              ? Colors.red.withOpacity(0.3)
+              ? Colors.red.withValues(alpha: 0.3)
               : Colors.white12,
         ),
       ),
@@ -464,8 +464,8 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             height: 32,
             decoration: BoxDecoration(
               color: step.isCritical
-                  ? Colors.red.withOpacity(0.2)
-                  : Colors.white.withOpacity(0.1),
+                  ? Colors.red.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -500,7 +500,7 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.2),
+                          color: Colors.red.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
@@ -529,9 +529,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.07),
+        color: Colors.blue.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
