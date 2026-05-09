@@ -249,6 +249,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
             ),
           ),
+          const SizedBox(height: 48),
+          Center(
+            child: Column(
+              children: [
+                const Text(
+                  'RoadSOS v1.0.0',
+                  style: TextStyle(color: Colors.white24, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Made with ',
+                      style: TextStyle(color: Colors.white12, fontSize: 11),
+                    ),
+                    const Icon(Icons.favorite, color: Colors.red, size: 12),
+                    const Text(
+                      ' in India',
+                      style: TextStyle(color: Colors.white12, fontSize: 11),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
         ],
       ),
     );

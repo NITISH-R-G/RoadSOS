@@ -22,4 +22,13 @@ const schema = Schema([
     Column.text('created_at'),
     Column.integer('extended_retention'),
   ]),
+  Table('profiles', [
+    Column.text('full_name'),
+    Column.text('blood_type'),
+    Column.text('allergies'),
+    Column.text('medications'),
+    Column.text('conditions'),
+    Column.text('emergency_contact'),
+    Column.text('user_id'),
+  ]),
 ]);

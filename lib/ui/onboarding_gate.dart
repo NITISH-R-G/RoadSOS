@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/gemma_model_manager.dart';
 import 'gemma_model_download_screen.dart';
 import 'permission_onboarding_screen.dart';
+import 'auth/auth_screen.dart';
 
 const _kPermsDone = 'permissions_onboarding_v1_done';
 const _kModelPromptDone = 'model_download_prompt_v1_done';
@@ -39,11 +41,19 @@ class _OnboardingGateState extends State<OnboardingGate> {
     final permsDone = prefs.getBool(_kPermsDone) ?? false;
     final modelPromptDone = prefs.getBool(_kModelPromptDone) ?? false;
     final modelReady = await GemmaModelManager.isModelReady();
+    
+    // Check if the user is authenticated (non-anonymous)
+    final user = Supabase.instance.client.auth.currentUser;
+    final isAuth = user != null && user.appMetadata['provider'] != 'anonymous';
 
     if (!mounted) return;
 
-    if (!permsDone) {
+    if (!isAuth && !permsDone) {
+      // If not auth and haven't done perms, start with perms or auth.
+      // We'll prioritize perms for basic functionality, then auth.
       setState(() => _phase = _GatePhase.permissions);
+    } else if (!isAuth) {
+      setState(() => _phase = _GatePhase.auth);
     } else if (!modelPromptDone && !modelReady) {
       setState(() => _phase = _GatePhase.modelDownload);
     } else {
@@ -56,7 +66,23 @@ class _OnboardingGateState extends State<OnboardingGate> {
     await prefs.setBool(_kPermsDone, true);
     if (!mounted) return;
 
-    // Check if model is already downloaded before showing prompt.
+    final user = Supabase.instance.client.auth.currentUser;
+    final isAuth = user != null && user.appMetadata['provider'] != 'anonymous';
+
+    if (!isAuth) {
+      setState(() => _phase = _GatePhase.auth);
+    } else {
+      _checkModelPhase(prefs);
+    }
+  }
+
+  Future<void> _onAuthDone() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    _checkModelPhase(prefs);
+  }
+
+  Future<void> _checkModelPhase(SharedPreferences prefs) async {
     final modelReady = await GemmaModelManager.isModelReady();
     final modelPromptDone = prefs.getBool(_kModelPromptDone) ?? false;
 
@@ -85,6 +111,8 @@ class _OnboardingGateState extends State<OnboardingGate> {
         );
       case _GatePhase.permissions:
         return PermissionOnboardingScreen(onComplete: _onPermsDone);
+      case _GatePhase.auth:
+        return AuthScreen(onComplete: _onAuthDone);
       case _GatePhase.modelDownload:
         return GemmaModelDownloadScreen(onComplete: _onModelPhaseDone);
       case _GatePhase.app:
@@ -93,4 +121,4 @@ class _OnboardingGateState extends State<OnboardingGate> {
   }
 }
 
-enum _GatePhase { loading, permissions, modelDownload, app }
+enum _GatePhase { loading, permissions, auth, modelDownload, app }

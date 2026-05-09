@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../logging/app_log.dart';
 import '../services/ai_triage_service.dart';
+import '../services/auth_service.dart';
 import '../services/driving_mode_service.dart';
 import '../services/emergency_orchestrator.dart';
 import '../services/proactive_monitor_service.dart';
@@ -528,9 +529,35 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _profileTab(BuildContext context) {
+    final user = ref.watch(authServiceProvider);
+    
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
+        if (user != null) ...[
+          Center(
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: _kRed.withOpacity(0.1),
+                  child: const Icon(Icons.person, color: _kRed, size: 40),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  user.email ?? 'Authenticated User',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Account verified via Supabase',
+                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ],
         _sectionLabel('MY INFORMATION'),
         const SizedBox(height: 8),
         _toolCard(
@@ -585,6 +612,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
           ),
         ),
+        
+        if (user != null) ...[
+          const SizedBox(height: 20),
+          _sectionLabel('ACCOUNT'),
+          const SizedBox(height: 8),
+          _toolCard(
+            context,
+            icon: Icons.logout,
+            color: Colors.redAccent,
+            title: 'Sign Out',
+            subtitle: 'Securely log out of your RoadSOS account',
+            onTap: () async {
+              final ok = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: _kSurface,
+                  title: const Text('Sign Out?', style: TextStyle(color: Colors.white)),
+                  content: const Text('You will need to sign in again to sync your data.', style: TextStyle(color: Colors.white70)),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('SIGN OUT', style: TextStyle(color: Colors.redAccent)),
+                    ),
+                  ],
+                ),
+              );
+              if (ok == true) {
+                await ref.read(authServiceProvider.notifier).signOut();
+              }
+            },
+          ),
+        ],
       ],
     );
   }
