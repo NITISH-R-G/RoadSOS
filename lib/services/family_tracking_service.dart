@@ -93,12 +93,12 @@ class FamilyTrackingService {
         '$root/functions/v1/family-track?t=${Uri.encodeComponent(token)}';
 
     final profile = _ref.read(userProfileProvider);
-    final phone = normalizePhoneDigits(profile.emergencyContact);
+    final contacts = profile.allEmergencyContacts;
 
-    if (phone == null || phone.isEmpty) {
+    if (contacts.isEmpty) {
       return (
         ok: true,
-        detail: 'Family link active — add a phone in Medical profile to auto-SMS.',
+        detail: 'Family link active — add contacts in Medical profile to auto-SMS.',
       );
     }
 
@@ -108,17 +108,25 @@ class FamilyTrackingService {
         'RoadSOS: $name needs help. Live location & triage: $trackingUrl '
         '(updates if app online; expires 24h).';
 
+    int sentCount = 0;
     if (!kIsWeb && Platform.isAndroid) {
-      final sent = await sendSmsDirectAndroid(phone, body);
-      if (sent) {
+      for (final rawPhone in contacts) {
+        final phone = normalizePhoneDigits(rawPhone);
+        if (phone != null && phone.isNotEmpty) {
+          final sent = await sendSmsDirectAndroid(phone, body);
+          if (sent) sentCount++;
+        }
+      }
+
+      if (sentCount > 0) {
         return (
           ok: true,
-          detail: 'Family link sent SMS to contact ending …${phone.substring(phone.length - 4)} ✓',
+          detail: 'Family link sent SMS to $sentCount contact(s) ✓',
         );
       }
       return (
         ok: true,
-        detail: 'Link ready — SMS failed (permission?). Open link: $trackingUrl',
+        detail: 'Link ready — SMS failed for all contacts (permission?). Open link: $trackingUrl',
       );
     }
 

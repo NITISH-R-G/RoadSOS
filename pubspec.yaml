@@ -15,7 +15,6 @@ dependencies:
   intl: ^0.20.2
   path: ^1.9.1
   flutter_markdown: ^0.7.7
-
   cupertino_icons: ^1.0.8
   google_fonts: ^6.3.3
   supabase_flutter: ^2.12.4
@@ -52,25 +51,9 @@ dependencies:
   image_picker: ^1.1.2
   flutter_inappwebview: ^6.0.0
   qr_flutter: ^4.1.0
-
-  # Screen wake lock during active SOS — keeps dispatch panel visible.
-  # Maps to FLAG_KEEP_SCREEN_ON (Android) / isIdleTimerDisabled (iOS).
   wakelock_plus: ^1.1.5
-
-  # Connectivity-aware triage tier selection.
-  # Enables instant skip of Tier 1 cloud call (saves the 5s timeout)
-  # when device has no network — critical for Indian highway scenarios.
   connectivity_plus: ^7.1.1
-
-  # Gemma 4 on-device inference via MediaPipe / LiteRT.
-  # Tier 2: Gemma 4 E4B (Edge 4B, ~2.4 GB Q4_K_M) runs offline on device.
-  # Satisfies Cactus + LiteRT special prizes.
-  # Requires model download (~2.4 GB) during onboarding — see GemmaLocalService.
-  # pub.dev: https://pub.dev/packages/flutter_gemma
   flutter_gemma: ^0.3.0
-
-  # Firebase — required by NearbySosPushService (opt-in bystander alerts).
-  # The service degrades gracefully when google-services.json is absent.
   firebase_core: ^3.0.0
   firebase_messaging: ^15.0.0
 
