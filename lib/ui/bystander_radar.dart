@@ -31,7 +31,7 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
+    final beacons = ref.watch(meshPeersProvider);
     return Column(
       children: [
         Stack(
@@ -42,43 +42,33 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
               size: const Size(200, 200),
               painter: _RadarPainter(_controller),
             ),
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                // Radar Background Rings
-                CustomPaint(
-                  size: const Size(200, 200),
-                  painter: _RadarPainter(_controller),
-                ),
-                // Radar Pulse
-                // ⚡ Bolt Optimization: Use RotationTransition with a static child to prevent
-                // the expensive SweepGradient shader from being rebuilt on every frame.
-                RotationTransition(
-                  turns: _controller,
-                  child: const CustomPaint(
-                    size: Size(200, 200),
-                    painter: _SweepPainter(),
-                  ),
-                ),
-                ..._buildBeaconDots(beacons),
-                const Icon(Icons.my_location, color: Colors.blue, size: 24),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              beacons.isEmpty
-                  ? 'SCANNING (NO PEERS)'
-                  : 'PEERS DETECTED: ${beacons.length}',
-              style: const TextStyle(
-                color: Colors.blue,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
+            // Radar Pulse
+            // ⚡ Bolt Optimization: Use RotationTransition with a static child to prevent
+            // the expensive SweepGradient shader from being rebuilt on every frame.
+            RotationTransition(
+              turns: _controller,
+              child: const CustomPaint(
+                size: Size(200, 200),
+                painter: _SweepPainter(),
               ),
             ),
+            ..._buildBeaconDots(beacons),
+            const Icon(Icons.my_location, color: Colors.blue, size: 24),
           ],
-        );
-      },
+        ),
+        const SizedBox(height: 16),
+        Text(
+          beacons.isEmpty
+              ? 'SCANNING (NO PEERS)'
+              : 'PEERS DETECTED: ${beacons.length}',
+          style: const TextStyle(
+            color: Colors.blue,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+          ),
+        ),
+      ],
     );
   }
 
@@ -99,7 +89,6 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
     }
     return out;
   }
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 }
 
 class _RadarPainter extends CustomPainter {
