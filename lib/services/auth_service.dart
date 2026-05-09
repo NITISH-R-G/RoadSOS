@@ -1,7 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../logging/app_log.dart';
 
 class AuthService extends StateNotifier<User?> {
@@ -37,34 +35,14 @@ class AuthService extends StateNotifier<User?> {
 
   Future<void> signInWithGoogle() async {
     try {
-      // 1. Initialize Google Sign In
-      // In production, you'll need to set up the SHA-1 fingerprint in Firebase/Google Console
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],
+      // Direct Supabase OAuth — opens a browser window.
+      // Easiest to set up and works on the free tier without native SDK hurdles.
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'io.roadsos.auth://callback',
       );
-      
-      // 2. Trigger the native picker
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) return; // User cancelled
-
-      // 3. Obtain auth details from the request
-      final googleAuth = await googleUser.authentication;
-      final accessToken = googleAuth.accessToken;
-      final idToken = googleAuth.idToken;
-
-      if (idToken == null) {
-        throw 'No ID Token found.';
-      }
-
-      // 4. Authenticate with Supabase using the ID Token
-      await _client.auth.signInWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: idToken,
-        accessToken: accessToken,
-      );
-      
     } catch (e, st) {
-      appLog.e('Auth: Native Google sign in failed', error: e, stackTrace: st);
+      appLog.e('Auth: Supabase Google sign in failed', error: e, stackTrace: st);
       rethrow;
     }
   }
