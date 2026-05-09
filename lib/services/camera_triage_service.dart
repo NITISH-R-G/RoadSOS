@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-
-
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -94,7 +92,11 @@ class CameraTriageService {
         capturedAt: DateTime.now().toUtc(),
       );
     } catch (e, st) {
-      appLog.w('[CameraTriageService] Image selection failed', error: e, stackTrace: st);
+      appLog.w(
+        '[CameraTriageService] Image selection failed',
+        error: e,
+        stackTrace: st,
+      );
       return null;
     }
   }

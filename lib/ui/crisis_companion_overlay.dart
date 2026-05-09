@@ -12,10 +12,13 @@ class CrisisCompanionOverlay extends ConsumerWidget {
   String _honestStatusLine(SOSState state) {
     if (state.phase == SOSPhase.triaging) return 'TRIAGING…';
     if (state.dispatchChannels.isEmpty) return 'DISPATCH IN PROGRESS…';
-    final anyOk = state.dispatchChannels.any((c) => c.lifecycle == DispatchChannelLifecycle.success);
+    final anyOk = state.dispatchChannels.any(
+      (c) => c.lifecycle == DispatchChannelLifecycle.success,
+    );
     if (anyOk) return 'DISPATCH CONFIRMED (CHECK CHANNELS)';
-    final anyInProgress =
-        state.dispatchChannels.any((c) => c.lifecycle == DispatchChannelLifecycle.inProgress);
+    final anyInProgress = state.dispatchChannels.any(
+      (c) => c.lifecycle == DispatchChannelLifecycle.inProgress,
+    );
     return anyInProgress ? 'DISPATCH IN PROGRESS…' : 'NO DISPATCH CONFIRMATION';
   }
 
@@ -26,7 +29,8 @@ class CrisisCompanionOverlay extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final lang = ref.watch(appLocaleProvider).languageCode;
 
-    if (sosState.phase != SOSPhase.active && sosState.phase != SOSPhase.triaging) {
+    if (sosState.phase != SOSPhase.active &&
+        sosState.phase != SOSPhase.triaging) {
       return const SizedBox.shrink();
     }
 
@@ -72,9 +76,10 @@ class CrisisCompanionOverlay extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          assistant.lastResponse.isEmpty
-                              ? l10n.crisisCompanionBreathing
-                              : assistant.lastResponse,
+                          sosState.agenticThought ??
+                              (assistant.lastResponse.isEmpty
+                                  ? l10n.crisisCompanionBreathing
+                                  : assistant.lastResponse),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 14,
@@ -109,10 +114,16 @@ class CrisisCompanionOverlay extends ConsumerWidget {
       height: 48,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const SweepGradient(colors: [Colors.blue, Colors.cyan, Colors.blue]),
-        boxShadow: [BoxShadow(color: Colors.blue.withValues(alpha: 0.5), blurRadius: 10)],
+        gradient: const SweepGradient(
+          colors: [Colors.blue, Colors.cyan, Colors.blue],
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.blue.withValues(alpha: 0.5), blurRadius: 10),
+        ],
       ),
-      child: const Center(child: Icon(Icons.psychology, color: Colors.white, size: 28)),
+      child: const Center(
+        child: Icon(Icons.psychology, color: Colors.white, size: 28),
+      ),
     );
   }
 
@@ -141,7 +152,9 @@ class CrisisCompanionOverlay extends ConsumerWidget {
             const SizedBox(width: 8),
             ElevatedButton(
               onPressed: () {
-                ref.read(roadsosAssistantProvider.notifier).getNextWitnessQuestion(
+                ref
+                    .read(roadsosAssistantProvider.notifier)
+                    .getNextWitnessQuestion(
                       'I am feeling dizzy',
                       languageCode: lang,
                     );
@@ -149,10 +162,17 @@ class CrisisCompanionOverlay extends ConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white10,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
-              child: Text(l10n.talkButton,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              child: Text(
+                l10n.talkButton,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),

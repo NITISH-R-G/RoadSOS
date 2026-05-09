@@ -1,17 +1,12 @@
 /// Lifecycle of one emergency dispatch channel shown in honest status UI.
-enum DispatchChannelLifecycle {
-  pending,
-  inProgress,
-  success,
-  failed,
-  skipped,
-}
+enum DispatchChannelLifecycle { pending, inProgress, success, failed, skipped }
 
 /// One row in the dispatch confirmation list (SMS, mesh, cloud, etc.).
 class DispatchChannelRow {
   final String id;
   final String title;
   final DispatchChannelLifecycle lifecycle;
+
   /// Short line for accessibility and panic readability (WCAG-minded contrast in UI).
   final String detail;
 
@@ -35,11 +30,11 @@ class DispatchChannelRow {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'lifecycle': lifecycle.name,
-        'detail': detail,
-      };
+    'id': id,
+    'title': title,
+    'lifecycle': lifecycle.name,
+    'detail': detail,
+  };
 
   DispatchChannelRow copyWith({
     DispatchChannelLifecycle? lifecycle,

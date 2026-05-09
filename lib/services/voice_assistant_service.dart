@@ -59,7 +59,10 @@ class VoiceAssistantService {
   /// Called when driving mode is active at SOS trigger — the user cannot
   /// look at the screen, so the device announces what is happening and how
   /// to cancel. The message is spoken in the app's current locale.
-  Future<void> speakHandsFreeCountdown(int totalSeconds, String locationHint) async {
+  Future<void> speakHandsFreeCountdown(
+    int totalSeconds,
+    String locationHint,
+  ) async {
     final msg = _localizedCountdownMessage(totalSeconds, locationHint);
     await _tts.setSpeechRate(0.52);
     await speak(msg);
@@ -113,12 +116,18 @@ class VoiceAssistantService {
 
   String _serviceLabel(String service) {
     switch (service) {
-      case 'ambulance':       return 'ambulance';
-      case 'police':          return 'police';
-      case 'fire_department': return 'fire department';
-      case 'rescue':          return 'rescue team';
-      case 'towing':          return 'towing service';
-      default:                return service;
+      case 'ambulance':
+        return 'ambulance';
+      case 'police':
+        return 'police';
+      case 'fire_department':
+        return 'fire department';
+      case 'rescue':
+        return 'rescue team';
+      case 'towing':
+        return 'towing service';
+      default:
+        return service;
     }
   }
 
@@ -180,6 +189,100 @@ class VoiceAssistantService {
     }
   }
 
+  /// Listens for voice commands after SOS is active (e.g., "all clear", "status").
+  Future<void> listenForEmergencyCommands({
+    required Function() onAllClear,
+    required Function() onStatusRequest,
+    Duration listenFor = const Duration(minutes: 5),
+  }) async {
+    if (_isListening) return;
+    final available = await _stt.initialize();
+    if (!available) return;
+
+    _isListening = true;
+
+    // We use a continuous listener or a loop for a 5-minute window.
+    final startTime = DateTime.now();
+    while (DateTime.now().difference(startTime) < listenFor && _isListening) {
+      await _stt.listen(
+        onResult: (result) {
+          final words = result.recognizedWords.toLowerCase();
+          if (_matchesAllClear(words)) {
+            _isListening = false;
+            onAllClear();
+          } else if (_matchesStatusRequest(words)) {
+            onStatusRequest();
+          }
+        },
+        listenFor: const Duration(seconds: 10),
+      );
+      await Future<void>.delayed(const Duration(seconds: 11));
+    }
+
+    _isListening = false;
+  }
+
+  /// Speaks a status update of the current dispatch channels.
+  Future<void> speakDispatchStatus(
+    List<({String title, bool success})> channels,
+  ) async {
+    final successList = channels
+        .where((e) => e.success)
+        .map((e) => e.title)
+        .join(', ');
+    final failList = channels
+        .where((e) => !e.success)
+        .map((e) => e.title)
+        .join(', ');
+
+    String msg;
+    switch (_locale.languageCode) {
+      case 'hi':
+        msg =
+            'स्टेटस: ${successList.isNotEmpty ? "$successList सफल रहे।" : ""}'
+            '${failList.isNotEmpty ? "$failList विफल रहे।" : ""}';
+        break;
+      default:
+        msg =
+            'Status: ${successList.isNotEmpty ? "$successList succeeded. " : ""}'
+            '${failList.isNotEmpty ? "$failList failed. " : "All channels success."}';
+    }
+    await speak(msg);
+  }
+
+  bool _matchesStatusRequest(String words) {
+    return words.contains('status') ||
+        words.contains('what happened') ||
+        words.contains('update') ||
+        words.contains('report');
+  }
+
+  bool _matchesAllClear(String words) {
+    if (words.contains('safe') ||
+        words.contains('all clear') ||
+        words.contains('help arrived') ||
+        words.contains('resolved') ||
+        words.contains('okay') ||
+        words.contains('fine')) {
+      return true;
+    }
+    switch (_locale.languageCode) {
+      case 'hi':
+        return words.contains('theek') ||
+            words.contains('thik') ||
+            words.contains('theek hoon') ||
+            words.contains('surakshit') ||
+            words.contains('ठीक') ||
+            words.contains('सुरक्षित');
+      case 'ta':
+        return words.contains('nalam') || words.contains('pathukappu');
+      case 'te':
+        return words.contains('kshemam') || words.contains('bagunnanu');
+      default:
+        return false;
+    }
+  }
+
   // ── Existing confirmation listener (unchanged) ────────────────────────────
 
   /// Simple confirmation — English + common Hindi tokens for India.
@@ -228,7 +331,9 @@ class VoiceAssistantService {
       case 'bn':
         return words.contains('হ্যাঁ') || words.contains('haan');
       case 'mr':
-        return words.contains('हो') || words.contains('ho') || words.contains('barob');
+        return words.contains('हो') ||
+            words.contains('ho') ||
+            words.contains('barob');
       default:
         return false;
     }

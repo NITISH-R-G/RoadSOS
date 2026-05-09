@@ -26,7 +26,8 @@ class LocationFix {
   }
 
   @override
-  String toString() => '($latitude, $longitude) ±${accuracy.round()}m [$source]';
+  String toString() =>
+      '($latitude, $longitude) ±${accuracy.round()}m [$source]';
 }
 
 /// Provides real-time location with dead-reckoning fallback.
@@ -77,10 +78,14 @@ class LocationService {
       );
       final fix = _toFix(position, source: 'gps');
       _recordFix(fix);
-      appLog.d('[Location] GPS fix acquired (attempt 1): ${fix.accuracy.round()}m');
+      appLog.d(
+        '[Location] GPS fix acquired (attempt 1): ${fix.accuracy.round()}m',
+      );
       return fix;
     } catch (e) {
-      appLog.d('[Location] Attempt 1 failed ($e) — retrying at medium accuracy');
+      appLog.d(
+        '[Location] Attempt 1 failed ($e) — retrying at medium accuracy',
+      );
     }
 
     // Attempt 2: medium accuracy (cell-towers + GPS), 5-second window.
@@ -94,7 +99,9 @@ class LocationService {
       );
       final fix = _toFix(position, source: 'network');
       _recordFix(fix);
-      appLog.d('[Location] GPS fix acquired (attempt 2 medium): ${fix.accuracy.round()}m');
+      appLog.d(
+        '[Location] GPS fix acquired (attempt 2 medium): ${fix.accuracy.round()}m',
+      );
       return fix;
     } catch (e) {
       appLog.d('[Location] Attempt 2 failed ($e) — trying last known from OS');
@@ -106,7 +113,9 @@ class LocationService {
       if (last != null) {
         final fix = _toFix(last, source: 'last_known');
         _recordFix(fix);
-        appLog.d('[Location] Using OS last-known position: ${fix.accuracy.round()}m');
+        appLog.d(
+          '[Location] Using OS last-known position: ${fix.accuracy.round()}m',
+        );
         return fix;
       }
     } catch (_) {}
@@ -151,11 +160,27 @@ class LocationService {
     _lastGoodFix = fix;
     _positionHistory.addLast(fix);
 
-    final cutoff = DateTime.now().subtract(const Duration(seconds: _maxHistorySeconds));
+    final cutoff = DateTime.now().subtract(
+      const Duration(seconds: _maxHistorySeconds),
+    );
     while (_positionHistory.isNotEmpty &&
         _positionHistory.first.timestamp.isBefore(cutoff)) {
       _positionHistory.removeFirst();
     }
+  }
+
+  /// Streams location updates for live tracking during an active SOS.
+  Stream<LocationFix> getPositionStream() {
+    return Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 10, // Update every 10 meters
+      ),
+    ).map((position) {
+      final fix = _toFix(position, source: 'gps_stream');
+      _recordFix(fix);
+      return fix;
+    });
   }
 }
 

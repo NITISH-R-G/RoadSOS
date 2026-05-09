@@ -8,7 +8,7 @@ class UserProfile {
   final String allergies;
   final String medications;
   final String conditions;
-  final String emergencyContact;
+  final List<String> emergencyContacts;
 
   UserProfile({
     this.fullName = '',
@@ -16,7 +16,7 @@ class UserProfile {
     this.allergies = 'None',
     this.medications = 'None',
     this.conditions = 'None',
-    this.emergencyContact = '',
+    this.emergencyContacts = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -26,18 +26,26 @@ class UserProfile {
       'allergies': allergies,
       'medications': medications,
       'conditions': conditions,
-      'emergencyContact': emergencyContact,
+      'emergencyContacts': emergencyContacts,
     };
   }
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
+    // Migration: handle old single string 'emergencyContact' if it exists.
+    List<String> contacts = [];
+    if (map['emergencyContacts'] is List) {
+      contacts = List<String>.from(map['emergencyContacts']);
+    } else if (map['emergencyContact'] is String &&
+        map['emergencyContact'].isNotEmpty) {
+      contacts = [map['emergencyContact']];
+    }
     return UserProfile(
       fullName: map['fullName'] ?? '',
       bloodType: map['bloodType'] ?? 'Unknown',
       allergies: map['allergies'] ?? 'None',
       medications: map['medications'] ?? 'None',
       conditions: map['conditions'] ?? 'None',
-      emergencyContact: map['emergencyContact'] ?? '',
+      emergencyContacts: contacts,
     );
   }
 
@@ -74,6 +82,7 @@ class UserProfileService extends StateNotifier<UserProfile> {
   }
 }
 
-final userProfileProvider = StateNotifierProvider<UserProfileService, UserProfile>((ref) {
-  return UserProfileService();
-});
+final userProfileProvider =
+    StateNotifierProvider<UserProfileService, UserProfile>((ref) {
+      return UserProfileService();
+    });

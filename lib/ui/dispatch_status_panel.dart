@@ -36,13 +36,14 @@ class DispatchStatusPanel extends StatelessWidget {
                 child: Text(
                   'DISPATCH STATUS',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        letterSpacing: 1.2,
-                        color: scheme.onSurface.withValues(alpha: 0.88),
-                        fontWeight: FontWeight.w800,
-                      ),
+                    letterSpacing: 1.2,
+                    color: scheme.onSurface.withValues(alpha: 0.88),
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-              for (final row in channels) _DispatchRow(row: row, scheme: scheme),
+              for (final row in channels)
+                _DispatchRow(row: row, scheme: scheme),
             ],
           ),
         ),
@@ -75,17 +76,17 @@ class _DispatchRow extends StatelessWidget {
                 Text(
                   row.title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
-                      ),
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   row.detail,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface.withValues(alpha: 0.87),
-                        height: 1.35,
-                      ),
+                    color: scheme.onSurface.withValues(alpha: 0.87),
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),
@@ -95,7 +96,10 @@ class _DispatchRow extends StatelessWidget {
     );
   }
 
-  (IconData, Color) _iconFor(DispatchChannelLifecycle life, ColorScheme scheme) {
+  (IconData, Color) _iconFor(
+    DispatchChannelLifecycle life,
+    ColorScheme scheme,
+  ) {
     switch (life) {
       case DispatchChannelLifecycle.pending:
         return (Icons.radio_button_unchecked, scheme.outline);
