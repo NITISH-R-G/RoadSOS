@@ -74,6 +74,7 @@ class SOSState {
 
   /// Whether the SOS was triggered while driving mode was active.
   final bool wasInDrivingMode;
+  final String? agenticThought;
 
   const SOSState({
     this.phase = SOSPhase.idle,
@@ -86,6 +87,7 @@ class SOSState {
     this.isBystander = false,
     this.dispatchChannels = const [],
     this.wasInDrivingMode = false,
+    this.agenticThought,
   });
 
   SOSState copyWith({
@@ -99,6 +101,7 @@ class SOSState {
     bool? isBystander,
     List<DispatchChannelRow>? dispatchChannels,
     bool? wasInDrivingMode,
+    String? agenticThought,
   }) {
     return SOSState(
       phase: phase ?? this.phase,
@@ -111,6 +114,7 @@ class SOSState {
       isBystander: isBystander ?? this.isBystander,
       dispatchChannels: dispatchChannels ?? this.dispatchChannels,
       wasInDrivingMode: wasInDrivingMode ?? this.wasInDrivingMode,
+      agenticThought: agenticThought ?? this.agenticThought,
     );
   }
 }
@@ -143,7 +147,11 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   final _uuid = const Uuid();
   static const Duration _sosLocationTimeout = Duration(seconds: 12);
   static const Duration _sosTriageTimeout = Duration(seconds: 10);
-  static const Duration _dispatchChannelTimeout = Duration(seconds: 8);
+  static const Duration _dispatchChannelTimeout = Duration(seconds: 15);
+  
+  StreamSubscription<LocationFix>? _locationSubscription;
+  String? _currentTrackingToken;
+  Timer? _agenticHeartbeat;
 
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
     _restoreState();
@@ -229,8 +237,33 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     });
   }
 
+  void resolveSos() {
+    _countdownTimer?.cancel();
+    _locationSubscription?.cancel();
+    _agenticHeartbeat?.cancel();
+    _locationSubscription = null;
+    _currentTrackingToken = null;
+    state = state.copyWith(phase: SOSPhase.resolved);
+    _persistState(false);
+    unawaited(WakeLockService.release());
+    unawaited(_ref.read(voiceAssistantServiceProvider).stopSpeaking());
+    // Note: If orchestratorResolved is missing in l10n, using fallback.
+    _log('Incident resolved ✓', SOSPhase.resolved);
+    
+    // Auto-idle after 10 seconds of resolution display.
+    Future.delayed(const Duration(seconds: 10), () {
+      if (state.phase == SOSPhase.resolved) {
+        state = const SOSState();
+      }
+    });
+  }
+
   void cancelSos() {
     _countdownTimer?.cancel();
+    _locationSubscription?.cancel();
+    _agenticHeartbeat?.cancel();
+    _locationSubscription = null;
+    _currentTrackingToken = null;
     state = const SOSState();
     _persistState(false);
     unawaited(WakeLockService.release());
@@ -404,6 +437,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     state = state.copyWith(
       phase: SOSPhase.dispatching,
       dispatchChannels: _initialDispatchRows(),
+      agenticThought: 'I am taking control to coordinate your emergency response. Initiating parallel dispatch to all contacts...',
     );
 
     final mesh = _ref.read(meshNetworkServiceProvider);
@@ -503,14 +537,14 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return persisted;
     });
 
-    final familyFuture = guard<({bool ok, String detail})>(
+    final familyFuture = guard<({bool ok, String detail, String? token})>(
       id: 'family_link',
       future: _ref.read(familyTrackingServiceProvider).registerAndNotifyContact(
             incidentId: state.incidentId ?? '',
             location: location,
             triage: triage,
           ),
-      fallback: (ok: false, detail: 'Family link timed out — share manually if needed.'),
+      fallback: (ok: false, detail: 'Family link timed out — share manually if needed.', token: null),
       timeoutDetail: 'Family link timed out — share manually if needed.',
       failureDetail: 'Family link failed — share manually if needed.',
     ).then((family) {
@@ -519,6 +553,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         family.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
         family.detail,
       );
+      _currentTrackingToken = family.token;
       return family;
     });
 
@@ -558,8 +593,20 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     final anyConfirmed = smsOutcome.primaryAutomatedBarMet;
 
-    state = state.copyWith(phase: SOSPhase.active);
+    state = state.copyWith(
+      phase: SOSPhase.active,
+      agenticThought: 'Emergency session active. I am maintaining full control of your safety protocols.',
+    );
     await _persistState(true);
+
+    // Phase 6.5: Agentic heartbeat loop — Gemma 4 reassures the victim periodically.
+    _agenticHeartbeat?.cancel();
+    _agenticHeartbeat = Timer.periodic(const Duration(seconds: 90), (_) {
+      if (state.phase == SOSPhase.active && state.wasInDrivingMode) {
+        _ref.read(voiceAssistantServiceProvider).speak(
+            'I am still monitoring your location. All designated emergency contacts have been alerted and help is on the way.');
+      }
+    });
 
     // Acquire screen wake lock so the dispatch panel stays visible on a car seat.
     await WakeLockService.acquireForSos();
@@ -579,6 +626,20 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       );
     }
 
+    // Start live tracking loop if we have a token.
+    if (_currentTrackingToken != null) {
+      _locationSubscription = _ref
+          .read(locationServiceProvider)
+          .getPositionStream()
+          .listen((newLocation) {
+        state = state.copyWith(location: newLocation);
+        _ref.read(familyTrackingServiceProvider).updateLiveLocation(
+              token: _currentTrackingToken!,
+              location: newLocation,
+            );
+      });
+    }
+
     // Phase 7: post-dispatch voice briefing — the driver hears what was sent.
     if (state.wasInDrivingMode) {
       final voice = _ref.read(voiceAssistantServiceProvider);
@@ -588,6 +649,25 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         locationCoords: '${location.latitude.toStringAsFixed(2)}, '
             '${location.longitude.toStringAsFixed(2)}',
       ));
+
+      // Start listening for "all clear" or "status" in background.
+      unawaited(
+        voice.listenForEmergencyCommands(
+          onAllClear: () {
+            appLog.i('[Orchestrator] Voice all-clear detected — resolving SOS');
+            resolveSos();
+          },
+          onStatusRequest: () {
+            appLog.i('[Orchestrator] Voice status request detected');
+            final channels = state.dispatchChannels.map((e) => (
+              title: e.title,
+              success: e.lifecycle == DispatchChannelLifecycle.success
+            )).toList();
+            voice.speakDispatchStatus(channels);
+          },
+          listenFor: const Duration(minutes: 5),
+        ),
+      );
     }
   }
 

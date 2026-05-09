@@ -97,7 +97,19 @@ class MeshNetworkService {
 
       var updated = false;
       for (final r in results) {
-        final md = r.advertisementData.manufacturerData[0xFFFF];
+        // RoadSOS binary packets use a magic byte (0x52) at index 0.
+        // We scan all manufacturer data entries since different devices might
+        // assign the data to different company IDs or 0xFFFF.
+        List<int>? md;
+        for (final entry in r.advertisementData.manufacturerData.values) {
+          if (entry.isNotEmpty && entry[0] == 0x52) {
+            md = entry;
+            break;
+          }
+        }
+        
+        // Fallback: check the legacy 0xFFFF slot if magic byte not found.
+        md ??= r.advertisementData.manufacturerData[0xFFFF];
         if (md == null) continue;
 
         final id = r.device.remoteId.str;

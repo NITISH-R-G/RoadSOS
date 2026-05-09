@@ -13,7 +13,7 @@ class MedicalCardScreen extends ConsumerWidget {
     
     // QR contains a short, offline-safe summary (no network dependency).
     final qrData =
-        'ROADSOS_MEDICAL_V1|NAME:${profile.fullName}|BLOOD:${profile.bloodType}|ALLERGIES:${profile.allergies}|MEDS:${profile.medications}|CONTACT:${profile.emergencyContact}';
+        'ROADSOS_MEDICAL_V1|NAME:${profile.fullName}|BLOOD:${profile.bloodType}|ALLERGIES:${profile.allergies}|MEDS:${profile.medications}|CONTACTS:${profile.emergencyContacts.join(',')}';
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -60,7 +60,7 @@ class MedicalCardScreen extends ConsumerWidget {
             _buildDivider(),
             _buildInfoRow(Icons.warning, 'ALLERGIES', profile.allergies),
             _buildDivider(),
-            _buildInfoRow(Icons.contact_phone, 'EMERGENCY CONTACT', profile.emergencyContact.isEmpty ? 'NOT SET' : profile.emergencyContact),
+            _buildInfoRow(Icons.contact_phone, 'EMERGENCY CONTACTS', profile.emergencyContacts.isEmpty ? 'NOT SET' : profile.emergencyContacts.join(', ')),
             
             const Spacer(),
             const Text(

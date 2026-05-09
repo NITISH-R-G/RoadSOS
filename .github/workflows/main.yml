@@ -30,27 +30,49 @@ jobs:
         run: flutter analyze
         continue-on-error: true
 
-  build-validation:
-    name: Build Validation
+  build-web:
+    name: Build Web
     needs: quality-assurance
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
-
       - name: Install dependencies
         run: flutter pub get
-
       - name: Build Web (Release)
         run: flutter build web --release
-
       - name: Upload Web Artifact
         uses: actions/upload-artifact@v4
         with:
           name: roadsos-web-build
           path: build/web
+
+  build-android:
+    name: Build Android APK
+    needs: quality-assurance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build APK (Release)
+        run: flutter build apk --release --no-tree-shake-icons
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: roadsos-android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk

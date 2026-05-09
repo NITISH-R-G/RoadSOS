@@ -125,7 +125,12 @@ Future<void> initializeDatabase() async {
 
     appDb = PowerSyncDatabase(schema: schema, path: path);
     await appDb.initialize();
-    await GovernmentFacilitySeedService().importBundledSeedIfNeeded(appDb);
+    
+    try {
+      await GovernmentFacilitySeedService().importBundledSeedIfNeeded(appDb);
+    } catch (e) {
+      appLog.w('Facility seed failed, ignoring: $e');
+    }
 
     final url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
     final anonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';

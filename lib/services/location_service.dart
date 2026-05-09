@@ -157,6 +157,20 @@ class LocationService {
       _positionHistory.removeFirst();
     }
   }
+
+  /// Streams location updates for live tracking during an active SOS.
+  Stream<LocationFix> getPositionStream() {
+    return Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 10, // Update every 10 meters
+      ),
+    ).map((position) {
+      final fix = _toFix(position, source: 'gps_stream');
+      _recordFix(fix);
+      return fix;
+    });
+  }
 }
 
 final locationServiceProvider = Provider<LocationService>((ref) {

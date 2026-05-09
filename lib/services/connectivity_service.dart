@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import '../logging/app_log.dart';
 
 /// Network quality as seen by the emergency dispatch pipeline.
@@ -53,10 +54,35 @@ class ConnectivityService {
 
   void _updateFromResults(List<ConnectivityResult> results) {
     final q = _qualityFromResults(results);
-    if (q != _quality) {
-      _quality = q;
-      appLog.d('[Connectivity] Network quality → ${q.name}');
+    _quality = q;
+    appLog.d('[Connectivity] Network quality → ${q.name}');
+    
+    // Perform active reachability probe if not 'none'.
+    if (q != NetworkQuality.none) {
+      _probeInternetAccess();
+    } else {
       if (!_controller.isClosed) _controller.add(q);
+    }
+  }
+
+  Future<void> _probeInternetAccess() async {
+    try {
+      // Use a fast HEAD request to a reliable endpoint to verify actual reachability.
+      // This detects 'connected but no internet' scenarios common on highway Wi-Fi.
+      final response = await http
+          .head(Uri.parse('https://www.google.com'))
+          .timeout(const Duration(seconds: 2));
+      
+      final realQuality = response.statusCode >= 200 && response.statusCode < 400
+          ? _quality
+          : NetworkQuality.none;
+          
+      if (!_controller.isClosed) _controller.add(realQuality);
+      if (realQuality == NetworkQuality.none) {
+        appLog.w('[Connectivity] Radio connected but internet unreachable — forcing offline mode.');
+      }
+    } catch (_) {
+      if (!_controller.isClosed) _controller.add(NetworkQuality.none);
     }
   }
 

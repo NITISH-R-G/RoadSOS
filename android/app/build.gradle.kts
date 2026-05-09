@@ -59,6 +59,7 @@ android {
         }
     }
 
+    /*
     // Split APKs per ABI so each download is ~30-45 MB instead of ~90 MB.
     // Controlled by --split-per-abi in the Flutter CLI (see build_apk.yml).
     splits {
@@ -69,6 +70,7 @@ android {
             isUniversalApk = false
         }
     }
+    */
 }
 
 flutter {

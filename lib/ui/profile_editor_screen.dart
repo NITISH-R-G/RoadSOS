@@ -27,7 +27,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
     _allergiesController = TextEditingController(text: profile.allergies);
     _medsController = TextEditingController(text: profile.medications);
     _conditionsController = TextEditingController(text: profile.conditions);
-    _contactController = TextEditingController(text: profile.emergencyContact);
+    _contactController = TextEditingController(text: profile.emergencyContacts.join(', '));
   }
 
   void _save() {
@@ -37,7 +37,11 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
       allergies: _allergiesController.text,
       medications: _medsController.text,
       conditions: _conditionsController.text,
-      emergencyContact: _contactController.text,
+      emergencyContacts: _contactController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList(),
     );
     
     // Simulate async save or handle provider
@@ -71,7 +75,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
             _buildField('Allergies', _allergiesController, Icons.warning),
             _buildField('Current Medications', _medsController, Icons.medication),
             _buildField('Chronic Conditions', _conditionsController, Icons.medical_information),
-            _buildField('Emergency Contact', _contactController, Icons.contact_phone),
+            _buildField('Emergency Contacts (comma-separated)', _contactController, Icons.contact_phone),
             const SizedBox(height: 40),
             Text(
               AppLocalizations.of(context)!.profileAiLine,

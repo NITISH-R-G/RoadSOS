@@ -72,9 +72,10 @@ class CrisisCompanionOverlay extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          assistant.lastResponse.isEmpty
+                          sosState.agenticThought ?? 
+                          (assistant.lastResponse.isEmpty
                               ? l10n.crisisCompanionBreathing
-                              : assistant.lastResponse,
+                              : assistant.lastResponse),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 14,

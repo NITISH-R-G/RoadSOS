@@ -12,6 +12,13 @@
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
 
     <!-- ═══════════════════════════════════════════════════════════════
+         SMS — Direct emergency dispatch to 112/911.
+         Required for [EmergencySmsDispatchService.sendSmsDirectAndroid].
+    ═══════════════════════════════════════════════════════════════ -->
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+
+    <!-- ═══════════════════════════════════════════════════════════════
          EMERGENCY ALERTS — SMS dispatch + haptic emergency feedback
     ═══════════════════════════════════════════════════════════════ -->
     <uses-permission android:name="android.permission.VIBRATE"/>
