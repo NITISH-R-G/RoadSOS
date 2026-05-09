@@ -21,7 +21,6 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat();
-
     // Start scanning
     ref.read(meshNetworkServiceProvider).listenForSosBeacons();
   }

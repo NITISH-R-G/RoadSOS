@@ -1,4 +1,37 @@
 import 'dart:async';
+<<<<<<< HEAD
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:state_notifier/state_notifier.dart';
+import 'package:uuid/uuid.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../main.dart';
+import '../database/app_database.dart';
+import 'ai_triage_service.dart';
+import 'location_service.dart';
+import 'mesh_network_service.dart';
+import 'crash_detection_service.dart';
+import 'voice_assistant_service.dart';
+import 'user_profile_service.dart';
+import 'gemma_assistant_service.dart';
+import '../models/facility.dart';
+
+/// The lifecycle of an SOS event.
+enum SOSPhase {
+  idle,         // Normal operation
+  bystanderMode, // Witness reporting an incident
+  countdown,    // 10s cancellation window (false-positive guard)
+  gpsLocking,   // Acquiring GPS fix
+  triaging,     // Gemma 4 is analyzing the situation
+  dispatching,  // Writing to DB + connectivity cascade
+  active,       // SOS is live and broadcasting
+  resolved,     // SOS cancelled or resolved
+}
+
+/// A single status message in the SOS event log.
+=======
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -48,6 +81,7 @@ enum SOSPhase {
   resolved,
 }
 
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 class SOSStatusMessage {
   final String message;
   final DateTime timestamp;
@@ -61,6 +95,10 @@ class SOSStatusMessage {
   }) : timestamp = DateTime.now();
 }
 
+<<<<<<< HEAD
+/// Complete state of an SOS event.
+=======
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 class SOSState {
   final SOSPhase phase;
   final int countdownSeconds;
@@ -70,10 +108,13 @@ class SOSState {
   final String? incidentId;
   final List<Facility> nearbyFacilities;
   final bool isBystander;
+<<<<<<< HEAD
+=======
   final List<DispatchChannelRow> dispatchChannels;
 
   /// Whether the SOS was triggered while driving mode was active.
   final bool wasInDrivingMode;
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
   const SOSState({
     this.phase = SOSPhase.idle,
@@ -84,8 +125,11 @@ class SOSState {
     this.incidentId,
     this.nearbyFacilities = const [],
     this.isBystander = false,
+<<<<<<< HEAD
+=======
     this.dispatchChannels = const [],
     this.wasInDrivingMode = false,
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
   });
 
   SOSState copyWith({
@@ -97,8 +141,11 @@ class SOSState {
     String? incidentId,
     List<Facility>? nearbyFacilities,
     bool? isBystander,
+<<<<<<< HEAD
+=======
     List<DispatchChannelRow>? dispatchChannels,
     bool? wasInDrivingMode,
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
   }) {
     return SOSState(
       phase: phase ?? this.phase,
@@ -109,13 +156,18 @@ class SOSState {
       incidentId: incidentId ?? this.incidentId,
       nearbyFacilities: nearbyFacilities ?? this.nearbyFacilities,
       isBystander: isBystander ?? this.isBystander,
+<<<<<<< HEAD
+=======
       dispatchChannels: dispatchChannels ?? this.dispatchChannels,
       wasInDrivingMode: wasInDrivingMode ?? this.wasInDrivingMode,
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     );
   }
 }
 
 /// Emergency Orchestrator — the central brain of RoadSOS.
+<<<<<<< HEAD
+=======
 ///
 /// Phase 3 — Zero-hallucination safety validation:
 ///   After each AI tier returns a triage, [TriageValidationAgent] enforces
@@ -137,19 +189,26 @@ class SOSState {
 /// Phase 8 — RL feedback loop:
 ///   Initializes [TriageFeedbackService] so the severity bias is available
 ///   for Tier 3 / Tier 4 classifiers immediately at app start.
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 class EmergencyOrchestrator extends StateNotifier<SOSState> {
   final Ref _ref;
   Timer? _countdownTimer;
   final _uuid = const Uuid();
+<<<<<<< HEAD
+=======
   static const Duration _sosLocationTimeout = Duration(seconds: 12);
   static const Duration _sosTriageTimeout = Duration(seconds: 10);
   static const Duration _dispatchChannelTimeout = Duration(seconds: 8);
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
     _restoreState();
     _ref.read(crashDetectionServiceProvider).startMonitoring();
+<<<<<<< HEAD
+=======
     // Phase 8: ensure RL bias is loaded before any SOS fires.
     unawaited(TriageFeedbackService.instance.initialize());
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
   }
 
   Future<void> _restoreState() async {
@@ -157,10 +216,16 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     if (prefs.getBool('sos_active') ?? false) {
       _log('🚨 Recovering active SOS state after restart...', SOSPhase.active);
       state = state.copyWith(
+<<<<<<< HEAD
+        phase: SOSPhase.active, 
+        incidentId: prefs.getString('sos_id')
+      );
+=======
         phase: SOSPhase.active,
         incidentId: prefs.getString('sos_id'),
       );
       await WakeLockService.acquireForSos();
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     }
   }
 
@@ -173,6 +238,22 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   void _log(String message, SOSPhase phase, {bool isError = false}) {
     final msg = SOSStatusMessage(message: message, phase: phase, isError: isError);
     state = state.copyWith(statusLog: [msg, ...state.statusLog]);
+<<<<<<< HEAD
+    debugPrint('🚒 [ORCHESTRATOR] $message');
+  }
+
+  /// Trigger the emergency cascade.
+  Future<void> startSos({bool isBystander = false}) async {
+    if (state.phase != SOSPhase.idle) return;
+
+    state = state.copyWith(
+      phase: SOSPhase.countdown,
+      isBystander: isBystander,
+      incidentId: _uuid.v4(),
+    );
+    
+    _log(isBystander ? 'Bystander Alert Initiated' : 'Self-SOS Initiated', SOSPhase.countdown);
+=======
     appLog.d('🚒 [ORCHESTRATOR] $message');
   }
 
@@ -218,6 +299,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         }),
       );
     }
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.countdownSeconds > 1) {
@@ -233,6 +315,47 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     _countdownTimer?.cancel();
     state = const SOSState();
     _persistState(false);
+<<<<<<< HEAD
+    _log('SOS Cancelled by user', SOSPhase.idle);
+  }
+
+  Future<void> _executeEmergencyPipeline() async {
+    _log('Acquiring location fix...', SOSPhase.gpsLocking);
+    state = state.copyWith(phase: SOSPhase.gpsLocking);
+    
+    final location = await _ref.read(locationServiceProvider).getCurrentLocation();
+    state = state.copyWith(location: location);
+    _log('Location secured: ${location.latitude}, ${location.longitude}', SOSPhase.gpsLocking);
+
+    _log('Gemma 4: Generating Situational Brief...', SOSPhase.triaging);
+    state = state.copyWith(phase: SOSPhase.triaging);
+    
+    final triage = await _ref.read(aiTriageServiceProvider).performTriage(
+      location: location,
+      isBystander: state.isBystander,
+    );
+    state = state.copyWith(triageResult: triage);
+    _log('AI Triage Complete: ${triage.severity.name.toUpperCase()}', SOSPhase.triaging);
+
+    _log('Dispatching connectivity cascade...', SOSPhase.dispatching);
+    state = state.copyWith(phase: SOSPhase.dispatching);
+
+    // Mesh Broadcast
+    await _ref.read(meshNetworkServiceProvider).startBroadcasting(
+      triage.encryptedPayload,
+      lat: location.latitude,
+      lng: location.longitude,
+    );
+    
+    // SMS Fallback if needed
+    await _ref.read(meshNetworkServiceProvider).triggerSmsFallback(triage.encryptedPayload);
+
+    // ── Pipeline Complete ─────────────────────────────────
+    state = state.copyWith(phase: SOSPhase.active);
+    await _persistState(true);
+    _log('🚨 SOS IS LIVE — all channels active', SOSPhase.active);
+  }
+=======
     unawaited(WakeLockService.release());
     // Stop any in-progress TTS so the countdown announcement does not keep playing.
     unawaited(_ref.read(voiceAssistantServiceProvider).stopSpeaking());
@@ -721,6 +844,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
   void triggerSOS() => startSos();
   void cancelSOS() => cancelSos();
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 }
 
 final emergencyOrchestratorProvider = StateNotifierProvider<EmergencyOrchestrator, SOSState>((ref) {

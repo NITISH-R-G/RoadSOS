@@ -31,17 +31,17 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
 
   @override
   Widget build(BuildContext context) {
-    final beaconsStream = ref
-        .watch(meshNetworkServiceProvider)
-        .discoveredBeacons;
-
-    return StreamBuilder<List<String>>(
-      stream: beaconsStream,
-      initialData: const [],
-      builder: (context, snapshot) {
-        final beacons = snapshot.data ?? const <String>[];
-        return Column(
+<<<<<<< HEAD
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.center,
           children: [
+            // Radar Background Rings
+            CustomPaint(
+              size: const Size(200, 200),
+              painter: _RadarPainter(_controller),
+            ),
             Stack(
               alignment: Alignment.center,
               children: [
@@ -99,6 +99,7 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
     }
     return out;
   }
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 }
 
 class _RadarPainter extends CustomPainter {

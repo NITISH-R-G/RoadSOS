@@ -71,17 +71,12 @@ class SupabaseConnector extends PowerSyncBackendConnector {
   @override
   Future<PowerSyncCredentials?> fetchCredentials() async {
     await ensureSupabaseAnonymousSession(db);
-    final session = db.auth.currentSession;
-    if (session == null) {
-      appLog.w(
-        'PowerSync fetchCredentials: no session — enable Anonymous sign-ins in Supabase '
         'or check SUPABASE_URL / SUPABASE_ANON_KEY',
       );
       return null;
     }
     return PowerSyncCredentials(
       endpoint: dotenv.env['POWERSYNC_URL'] ?? '',
-      token: session.accessToken,
     );
   }
 
@@ -108,13 +103,14 @@ class SupabaseConnector extends PowerSyncBackendConnector {
     }
   }
 }
-
-late PowerSyncDatabase appDb;
-bool _dbInitialized = false;
-
 Future<void> initializeDatabase() async {
   if (kIsWeb) {
+    // PowerSync with SQLite doesn't work on web — skip DB init.
+    // The app will still render; DB operations will be no-ops.
+    print('[Database] Running on Web — PowerSync/SQLite disabled.');
+=======
     appLog.i('Running on Web — PowerSync/SQLite disabled.');
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     _dbInitialized = false;
     return;
   }
