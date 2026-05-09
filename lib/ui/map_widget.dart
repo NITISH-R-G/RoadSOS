@@ -66,10 +66,20 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(RoadSosMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.autoCenter && widget.state.location != null) {
-      final loc = widget.state.location!;
+    
+    final oldLoc = oldWidget.state.location;
+    final newLoc = widget.state.location;
+    
+    final hasNewFix = newLoc != null &&
+        newLoc.source != 'unknown' &&
+        !(newLoc.latitude == 0.0 && newLoc.longitude == 0.0);
+        
+    final locationChanged = oldLoc?.latitude != newLoc?.latitude || 
+                            oldLoc?.longitude != newLoc?.longitude;
+
+    if (widget.autoCenter && hasNewFix && locationChanged) {
       _mapController.animateTo(
-        dest: LatLng(loc.latitude, loc.longitude),
+        dest: LatLng(newLoc!.latitude, newLoc.longitude),
         zoom: 15,
       );
     }
@@ -131,7 +141,11 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                       stackTrace: stackTrace,
                     );
                   }
-                  if (mounted && _tileErrorCount == 1) setState(() {});
+                  if (mounted && _tileErrorCount == 1) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) setState(() {});
+                    });
+                  }
                 },
               ),
               MarkerLayer(
@@ -183,10 +197,15 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                 _MapButton(
                   icon: Icons.my_location,
                   onTap: () {
-                    if (widget.state.location != null) {
+                    if (userLoc != null) {
                       _mapController.animateTo(
                         dest: userLoc,
                         zoom: 15,
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('User location not available yet.')),
                       );
                     }
                   },
@@ -365,6 +384,7 @@ class _FacilityMarker extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
