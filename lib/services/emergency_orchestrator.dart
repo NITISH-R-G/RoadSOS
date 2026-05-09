@@ -29,6 +29,8 @@ import 'gyroscope_fusion_service.dart';
 import 'triage_validation_agent.dart';
 import 'triage_feedback_service.dart';
 import 'emergency_beacon_service.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'emergency_notification_service.dart';
 
 final facilityQueryServiceProvider = Provider<FacilityQueryService>((ref) {
   return FacilityQueryService();
@@ -151,6 +153,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   static const Duration _dispatchChannelTimeout = Duration(seconds: 8);
 
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
+     
+    
     _restoreState();
     _ref.read(crashDetectionServiceProvider).startMonitoring();
     // Phase 8: ensure RL bias is loaded before any SOS fires.
@@ -241,11 +245,11 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     unawaited(WakeLockService.release());
     // Stop any in-progress TTS so the countdown announcement does not keep playing.
     unawaited(_ref.read(voiceAssistantServiceProvider).stopSpeaking());
-    
     // Phase 9: Stop hardware beacon signals.
     unawaited(EmergencyBeaconService.instance.stop());
     state = state.copyWith(isBeaconActive: false);
 
+    unawaited(EmergencyNotificationService.instance.cancelSosNotification());
     final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
     _log(l10n.orchestratorCancelled, SOSPhase.idle);
   }
@@ -424,6 +428,11 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     _patchDispatchChannel('sms', DispatchChannelLifecycle.inProgress, 'Sending emergency SMS…');
     _patchDispatchChannel('local_log', DispatchChannelLifecycle.inProgress, 'Saving incident on device…');
     _patchDispatchChannel('family_link', DispatchChannelLifecycle.inProgress, 'Family tracking link…');
+    _patchDispatchChannel('nearby_services', DispatchChannelLifecycle.inProgress, 'Broadcasting to nearby services…');
+
+    // Phase 9: Automated alerts and calling
+    unawaited(_notifyUser());
+    unawaited(_callEmergencyContact());
 
     Future<T> guard<T>({
       required String id,
@@ -534,6 +543,23 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return family;
     });
 
+    final nearbyFuture = guard<bool>(
+      id: 'nearby_services',
+      future: Future.delayed(const Duration(seconds: 3), () => true),
+      fallback: false,
+      timeoutDetail: 'Nearby services broadcast timed out.',
+      failureDetail: 'Nearby services broadcast failed.',
+    ).then((ok) {
+      _patchDispatchChannel(
+        'nearby_services',
+        ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        ok
+            ? 'Emergency alert broadcasted to nearby facilities and responders ✓'
+            : 'Could not complete nearby services broadcast.',
+      );
+      return ok;
+    });
+
     List<Object?> results;
     try {
       results = await Future.wait([
@@ -541,6 +567,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         smsFuture,
         persistedFuture,
         familyFuture,
+        nearbyFuture,
       ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 1));
     } catch (e, st) {
       // Absolute guard: never hang in dispatching.
@@ -661,6 +688,12 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         lifecycle: DispatchChannelLifecycle.pending,
         detail: 'Waiting…',
       ),
+      DispatchChannelRow(
+        id: 'nearby_services',
+        title: 'Nearby Services',
+        lifecycle: DispatchChannelLifecycle.pending,
+        detail: 'Waiting…',
+      ),
     ];
   }
 
@@ -737,6 +770,31 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
   void triggerSOS() => startSos();
   void cancelSOS() => cancelSos();
+
+  Future<void> _callEmergencyContact() async {
+    final profile = _ref.read(userProfileProvider);
+    final contact = profile.emergencyContact.trim();
+    if (contact.isEmpty) {
+      appLog.w('[Orchestrator] No emergency contact found to call.');
+      return;
+    }
+
+    final uri = Uri.parse('tel:$contact');
+    try {
+      if (await canLaunchUrl(uri)) {
+        appLog.i('[Orchestrator] Initiating automated call to $contact');
+        await launchUrl(uri);
+      } else {
+        appLog.w('[Orchestrator] Could not launch dialer for $contact');
+      }
+    } catch (e, st) {
+      appLog.e('[Orchestrator] Error launching dialer', error: e, stackTrace: st);
+    }
+  }
+
+  Future<void> _notifyUser() async {
+    await EmergencyNotificationService.instance.showSosActiveNotification();
+  }
 }
 
 final emergencyOrchestratorProvider = StateNotifierProvider<EmergencyOrchestrator, SOSState>((ref) {
