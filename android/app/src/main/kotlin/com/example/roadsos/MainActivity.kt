@@ -23,6 +23,15 @@ class MainActivity : FlutterActivity() {
                     startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                     result.success(null)
                 }
+<<<<<<< HEAD
+=======
+                // Called by EmergencyBackgroundService so the QS tile stays in sync.
+                "setCrashMonitorActive" -> {
+                    val active = call.arguments as? Boolean ?: false
+                    CrashMonitorPrefs.setActive(this, active)
+                    result.success(null)
+                }
+>>>>>>> origin/main
                 else -> result.notImplemented()
             }
         }

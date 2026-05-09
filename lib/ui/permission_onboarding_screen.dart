@@ -52,10 +52,30 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     _PermPage(
       title: 'SMS',
       body:
+<<<<<<< HEAD
           'SMS can carry your compressed alert to 112 when data networks are down. '
           'Without SMS permission on Android, automatic SMS dispatch may fail silently.',
       actionLabel: 'Allow SMS',
       request: _PermRequest.sms,
+=======
+          'RoadSOS can send an emergency alert via a secure server relay (recommended) and can also '
+          'open your phone\\\'s SMS app with the message pre-filled as a fallback when the relay is unavailable. '
+          'On modern Android versions, direct background SMS sending permissions are often restricted. '
+          'For reliability, enable the cloud relay (Twilio / Edge Function) and keep emergency dial available.',
+      actionLabel: null,
+      request: null,
+    ),
+    _PermPage(
+      title: 'Camera',
+      body:
+          'When a bystander stops to help, they can capture a crash-scene photo. '
+          'Gemma 4 analyzes the image for fire, smoke, trapped persons, and '
+          'damage — improving triage accuracy without describing the scene in words. '
+          'Camera is NOT accessed automatically during SOS; only when you tap '
+          '"Capture Scene" in the bystander flow.',
+      actionLabel: 'Allow camera',
+      request: _PermRequest.camera,
+>>>>>>> origin/main
     ),
     _PermPage(
       title: 'Microphone',
@@ -109,7 +129,15 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
         }
         break;
       case _PermRequest.sms:
+<<<<<<< HEAD
         if (Platform.isAndroid) await Permission.sms.request();
+=======
+        // Direct SEND_SMS is intentionally not requested here: modern Android/Play
+        // policies often restrict it, and RoadSOS prefers server relay + SMS intent fallback.
+        break;
+      case _PermRequest.camera:
+        await Permission.camera.request();
+>>>>>>> origin/main
         break;
       case _PermRequest.microphone:
         await Permission.microphone.request();
@@ -248,6 +276,10 @@ enum _PermRequest {
   locationAlways,
   bluetooth,
   sms,
+<<<<<<< HEAD
+=======
+  camera,
+>>>>>>> origin/main
   microphone,
   notification,
   battery,

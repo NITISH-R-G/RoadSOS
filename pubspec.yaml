@@ -1,4 +1,5 @@
 name: roadsos
+<<<<<<< HEAD
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -16,17 +17,25 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
+=======
+description: "RoadSOS — Gemma 4 powered offline-first road emergency platform for India."
+publish_to: 'none'
+
+>>>>>>> origin/main
 version: 1.0.0+1
 
 environment:
   sdk: ^3.11.0
 
+<<<<<<< HEAD
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+=======
+>>>>>>> origin/main
 dependencies:
   flutter:
     sdk: flutter
@@ -36,6 +45,7 @@ dependencies:
   path: ^1.9.1
   flutter_markdown: ^0.7.7
 
+<<<<<<< HEAD
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -46,6 +56,16 @@ dependencies:
   path_provider: ^2.1.5
   flutter_riverpod: ^2.5.1
   flutter_blue_plus: ^2.2.1
+=======
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.3.3
+  supabase_flutter: ^2.12.4
+  powersync: ^2.1.0
+  sqlite3_flutter_libs: ^0.6.0+eol
+  path_provider: ^2.1.5
+  flutter_riverpod: ^2.5.1
+  flutter_blue_plus: ^2.3.2
+>>>>>>> origin/main
   url_launcher: ^6.3.2
   geolocator: ^14.0.2
   uuid: ^4.5.3
@@ -65,6 +85,7 @@ dependencies:
   flutter_background_service: ^5.1.0
   flutter_local_notifications: ^21.0.0
   package_info_plus: ^9.0.1
+<<<<<<< HEAD
   telephony: ^0.2.0
   encrypt: ^5.0.3
   crypto: ^3.0.7
@@ -76,10 +97,19 @@ dependencies:
   flutter_map_tile_caching: ^10.0.0
   
   # Your module packages
+=======
+  encrypt: ^5.0.3
+  crypto: ^3.0.7
+  flutter_secure_storage: ^10.1.0
+  logger: ^2.6.2
+  permission_handler: ^11.4.0
+  flutter_map_tile_caching: ^10.0.0
+>>>>>>> origin/main
   image_picker: ^1.1.2
   flutter_inappwebview: ^6.0.0
   qr_flutter: ^4.1.0
 
+<<<<<<< HEAD
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -102,6 +132,37 @@ flutter:
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
+=======
+  # Screen wake lock during active SOS — keeps dispatch panel visible.
+  # Maps to FLAG_KEEP_SCREEN_ON (Android) / isIdleTimerDisabled (iOS).
+  wakelock_plus: ^1.1.5
+
+  # Connectivity-aware triage tier selection.
+  # Enables instant skip of Tier 1 cloud call (saves the 5s timeout)
+  # when device has no network — critical for Indian highway scenarios.
+  connectivity_plus: ^7.1.1
+
+  # Gemma 4 on-device inference via MediaPipe / LiteRT.
+  # Tier 2: Gemma 4 E4B (Edge 4B, ~2.4 GB Q4_K_M) runs offline on device.
+  # Satisfies Cactus + LiteRT special prizes.
+  # Requires model download (~2.4 GB) during onboarding — see GemmaLocalService.
+  # pub.dev: https://pub.dev/packages/flutter_gemma
+  flutter_gemma: ^0.3.0
+
+  # Firebase — required by NearbySosPushService (opt-in bystander alerts).
+  # The service degrades gracefully when google-services.json is absent.
+  firebase_core: ^3.0.0
+  firebase_messaging: ^15.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.14.1
+
+flutter:
+  generate: true
+>>>>>>> origin/main
   uses-material-design: true
 
   assets:
@@ -110,9 +171,12 @@ flutter:
     - assets/data/government_facilities_seed.json
     - assets/legal/privacy_policy_en.txt
     - assets/legal/privacy_policy_hi.txt
+<<<<<<< HEAD
 
   # To add assets to your application, add an assets section, like this:
   
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
   #   - images/a_dot_ham.jpeg
+=======
+>>>>>>> origin/main

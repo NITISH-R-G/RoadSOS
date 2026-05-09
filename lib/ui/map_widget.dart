@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -7,6 +8,15 @@ import 'package:flutter_map_animations/flutter_map_animations.dart';
 import '../config/map_tile_config.dart';
 import '../services/emergency_orchestrator.dart';
 import '../services/map_tile_cache.dart';
+=======
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:flutter_map_animations/flutter_map_animations.dart';
+import '../config/map_tile_config.dart';
+import '../logging/app_log.dart';
+import '../services/emergency_orchestrator.dart';
+>>>>>>> origin/main
 import '../models/facility.dart';
 
 /// A robust, offline-capable Map widget for RoadSOS.
@@ -32,6 +42,7 @@ class RoadSosMap extends StatefulWidget {
 
 class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   late final AnimatedMapController _mapController;
+<<<<<<< HEAD
   late final TileProvider _tileProvider = _makeTileProvider();
 
   TileProvider _makeTileProvider() {
@@ -44,10 +55,42 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
     );
   }
 
+=======
+  // NOTE (SOS reliability): keep the SOS map on network tiles only.
+  // Offline caching is handled by `OfflineMapScreen` + FMTC. In the SOS
+  // surface, using the cache provider can hide network/tile failures behind
+  // silent cache logic and has produced “blank grey map” reports.
+  late final TileProvider _tileProvider = NetworkTileProvider();
+  int _tileErrorCount = 0;
+  int _tileLayerNonce = 0;
+  DateTime _mountedAt = DateTime.now();
+
+  bool get _templateLooksValid {
+    final t = MapTileConfig.effectiveUrlTemplate;
+    return t.contains('{z}') && t.contains('{x}') && t.contains('{y}');
+  }
+
+  String? get _fallbackUrl {
+    final t = MapTileConfig.effectiveUrlTemplate;
+    // Fallback chain for reliability (demo safety):
+    // - If custom provider fails (keys/restrictions), fall back to Carto.
+    // - If Carto fails (blocked network / DNS / captive portal), fall back to
+    //   OSM tile CDN for demo resilience (do not ship high-volume traffic there).
+    if (!t.contains('basemaps.cartocdn.com')) return MapTileConfig.cartoDarkMatter;
+    return MapTileConfig.tileOpenstreetmapOrgViolatesPolicyAtScale;
+  }
+
+  // Cache tile provider intentionally not used in SOS map.
+
+>>>>>>> origin/main
   @override
   void initState() {
     super.initState();
     _mapController = AnimatedMapController(vsync: this);
+<<<<<<< HEAD
+=======
+    _mountedAt = DateTime.now();
+>>>>>>> origin/main
   }
 
   @override
@@ -88,21 +131,50 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
+<<<<<<< HEAD
+=======
+          Container(color: Colors.black),
+>>>>>>> origin/main
           FlutterMap(
             mapController: _mapController.mapController,
             options: MapOptions(
               initialCenter: userLoc ?? const LatLng(20.5937, 78.9629),
               initialZoom: userLoc != null ? 15 : 4.5,
+<<<<<<< HEAD
+=======
+              minZoom: 2.5,
+              maxZoom: 18,
+>>>>>>> origin/main
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               ),
             ),
             children: [
               TileLayer(
+<<<<<<< HEAD
+=======
+                key: ValueKey('tiles_${_tileLayerNonce}_${MapTileConfig.effectiveUrlTemplate}'),
+>>>>>>> origin/main
                 urlTemplate: MapTileConfig.effectiveUrlTemplate,
                 subdomains: MapTileConfig.effectiveSubdomains,
                 userAgentPackageName: 'com.roadsos.app',
                 tileProvider: _tileProvider,
+<<<<<<< HEAD
+=======
+                fallbackUrl: _fallbackUrl,
+                errorTileCallback: (tile, error, stackTrace) {
+                  // Avoid log spam; still record enough to debug.
+                  _tileErrorCount += 1;
+                  if (_tileErrorCount <= 3 || _tileErrorCount % 20 == 0) {
+                    appLog.w(
+                      '[Map] Tile load error (#$_tileErrorCount) z=${tile.coordinates.z} x=${tile.coordinates.x} y=${tile.coordinates.y}',
+                      error: error,
+                      stackTrace: stackTrace,
+                    );
+                  }
+                  if (mounted && _tileErrorCount == 1) setState(() {});
+                },
+>>>>>>> origin/main
               ),
               MarkerLayer(
                 markers: [
@@ -174,6 +246,80 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
               ],
             ),
           ),
+<<<<<<< HEAD
+=======
+
+          // Fail-safe overlay: never allow a silent grey map.
+          if (!_templateLooksValid || _tileErrorCount > 0)
+            Positioned(
+              left: 12,
+              top: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.78),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: _templateLooksValid ? Colors.amber : Colors.redAccent,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        !_templateLooksValid
+                            ? 'Map tiles misconfigured (missing {z}/{x}/{y}).'
+                            : 'Map tiles failed to load. Check internet / tile provider.\n'
+                              'Template: ${MapTileConfig.effectiveUrlTemplate}',
+                        style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.25),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _tileErrorCount = 0;
+                          _tileLayerNonce += 1; // forces TileLayer rebuild
+                        });
+                      },
+                      child: const Text('RETRY'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // If no tile errors are reported but the map still appears blank,
+          // show a timed hint so users aren't left with a silent grey box.
+          if (_templateLooksValid && _tileErrorCount == 0)
+            Positioned(
+              left: 12,
+              bottom: 46,
+              child: Builder(
+                builder: (context) {
+                  final seconds = DateTime.now().difference(_mountedAt).inSeconds;
+                  if (seconds < 6) return const SizedBox.shrink();
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: const Text(
+                      'Map still loading… If this stays blank, check internet or switch networks.',
+                      style: TextStyle(color: Colors.white70, fontSize: 11),
+                    ),
+                  );
+                },
+              ),
+            ),
+>>>>>>> origin/main
         ],
       ),
     );

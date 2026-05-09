@@ -46,9 +46,15 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
   }
 
   void startSafeWalk(String dest, Duration duration) {
+<<<<<<< HEAD
     _monitorTimer?.cancel(); // Clear existing
     _escalationTimer?.cancel();
     
+=======
+    _monitorTimer?.cancel();
+    _escalationTimer?.cancel();
+
+>>>>>>> origin/main
     state = state.copyWith(
       isMonitoring: true,
       destination: dest,
@@ -56,7 +62,11 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
       alertTriggered: false,
     );
 
+<<<<<<< HEAD
     _monitorTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+=======
+    _monitorTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+>>>>>>> origin/main
       _checkSafety();
     });
   }
@@ -82,16 +92,24 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
       monitor: this,
     );
 
+<<<<<<< HEAD
     // Give a grace window to confirm safety; then escalate to SOS.
     _escalationTimer?.cancel();
     _escalationTimer = Timer(const Duration(seconds: 60), () {
       // Only escalate if still in the alert state.
+=======
+    _escalationTimer?.cancel();
+    _escalationTimer = Timer(const Duration(seconds: 60), () {
+>>>>>>> origin/main
       if (!state.isMonitoring || !state.alertTriggered) return;
       _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
     });
   }
 
+<<<<<<< HEAD
   /// User explicitly confirmed they're safe.
+=======
+>>>>>>> origin/main
   void confirmImSafe() {
     if (!state.isMonitoring) return;
     _escalationTimer?.cancel();
@@ -99,7 +117,10 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
     SafeWalkNotificationService.instance.cancelCheckInNotification();
   }
 
+<<<<<<< HEAD
   /// User explicitly wants SOS now from the check-in prompt.
+=======
+>>>>>>> origin/main
   void escalateToSosNow() {
     if (!state.isMonitoring) return;
     SafeWalkNotificationService.instance.cancelCheckInNotification();
@@ -114,6 +135,18 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
   }
 }
 
+<<<<<<< HEAD
 final proactiveMonitorProvider = StateNotifierProvider.autoDispose<ProactiveMonitorService, ProactiveMonitorState>((ref) {
+=======
+/// IMPORTANT: NOT autoDispose.
+///
+/// The previous autoDispose caused the safe-walk escalation timer to be killed
+/// whenever any widget watching this provider was rebuilt or removed from the
+/// widget tree — e.g., when the user navigated from Dashboard to Settings.
+/// The escalation must survive widget lifecycle changes to guarantee the 60s
+/// SOS escalation fires even when the app is in the background.
+final proactiveMonitorProvider =
+    StateNotifierProvider<ProactiveMonitorService, ProactiveMonitorState>((ref) {
+>>>>>>> origin/main
   return ProactiveMonitorService(ref);
 });

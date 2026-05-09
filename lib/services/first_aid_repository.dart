@@ -80,6 +80,27 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
     return _lookupFts(q);
   }
 
+<<<<<<< HEAD
+=======
+  /// Returns a list of titles for autocomplete suggestions.
+  Future<List<String>> getSuggestions(String query) async {
+    await ensureInitialized();
+    final q = query.toLowerCase().trim();
+    if (q.isEmpty) return [];
+
+    final suggestions = <String>[];
+    for (final row in _corpusRows!) {
+      final title = row['title'] as String? ?? '';
+      final tags = row['tags'] as String? ?? '';
+      if (title.toLowerCase().contains(q) || tags.toLowerCase().contains(q)) {
+        suggestions.add(title);
+      }
+      if (suggestions.length >= 6) break;
+    }
+    return suggestions;
+  }
+
+>>>>>>> origin/main
   String _lookupTokenScore(String query) {
     final tokens = _tokenize(query);
     if (tokens.isEmpty) {
