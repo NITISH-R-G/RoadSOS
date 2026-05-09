@@ -13,17 +13,22 @@ bool _supabaseSdkInitialized = false;
 
 bool get isSupabaseSdkInitialized => _supabaseSdkInitialized;
 
+// Global database instance and init flag.
+late PowerSyncDatabase appDb;
+bool _dbInitialized = false;
+
 /// Initializes Supabase and anonymous auth **at app launch** (before [initializeDatabase]).
 /// Requires [dotenv.load] first. Safe no-op when URL/key missing or on web.
 Future<void> bootstrapSupabaseAuth() async {
   if (kIsWeb) return;
 
-  final url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
-  final anonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
+  final String url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
+  final String anonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
   if (url.isEmpty || anonKey.isEmpty) {
     _supabaseSdkInitialized = false;
     appLog.w(
-      'Supabase bootstrap skipped — set SUPABASE_URL and SUPABASE_ANON_KEY via --dart-define or local .env',
+      'Supabase bootstrap skipped — set SUPABASE_URL and SUPABASE_ANON_KEY '
+      'via --dart-define or local .env',
     );
     return;
   }
@@ -42,19 +47,17 @@ Future<void> bootstrapSupabaseAuth() async {
 /// Ensures a JWT exists for PowerSync ([fetchCredentials]). Call after [Supabase.initialize].
 Future<void> ensureSupabaseAnonymousSession(SupabaseClient client) async {
   try {
-    final existing = client.auth.currentSession;
-    if (existing != null && !existing.isExpired) {
-      return;
-    }
+    final Session? existing = client.auth.currentSession;
+    if (existing != null && !existing.isExpired) return;
+
     if (existing != null) {
       try {
         await client.auth.refreshSession();
-        final after = client.auth.currentSession;
-        if (after != null && !after.isExpired) {
-          return;
-        }
+        final Session? after = client.auth.currentSession;
+        if (after != null && !after.isExpired) return;
       } catch (e, st) {
-        appLog.w('Session refresh failed; re-authenticating', error: e, stackTrace: st);
+        appLog.w('Session refresh failed; re-authenticating',
+            error: e, stackTrace: st);
       }
     }
     await client.auth.signInAnonymously();
@@ -71,24 +74,30 @@ class SupabaseConnector extends PowerSyncBackendConnector {
   @override
   Future<PowerSyncCredentials?> fetchCredentials() async {
     await ensureSupabaseAnonymousSession(db);
+
+    final Session? session = db.auth.currentSession;
+    if (session == null) {
+      appLog.w(
+        'No Supabase session for PowerSync — check anonymous auth '
         'or check SUPABASE_URL / SUPABASE_ANON_KEY',
       );
       return null;
     }
+
     return PowerSyncCredentials(
       endpoint: dotenv.env['POWERSYNC_URL'] ?? '',
+      token: session.accessToken,
     );
   }
 
   @override
   Future<void> uploadData(PowerSyncDatabase database) async {
-    final transaction = await database.getNextCrudTransaction();
-    if (transaction == null) {
-      return;
-    }
+    final CrudTransaction? transaction =
+        await database.getNextCrudTransaction();
+    if (transaction == null) return;
 
     try {
-      for (var op in transaction.crud) {
+      for (final CrudEntry op in transaction.crud) {
         if (op.op == UpdateType.put) {
           await db.from(op.table).upsert(op.opData!);
         } else if (op.op == UpdateType.patch) {
@@ -103,33 +112,30 @@ class SupabaseConnector extends PowerSyncBackendConnector {
     }
   }
 }
+
 Future<void> initializeDatabase() async {
   if (kIsWeb) {
-    // PowerSync with SQLite doesn't work on web — skip DB init.
-    // The app will still render; DB operations will be no-ops.
-    print('[Database] Running on Web — PowerSync/SQLite disabled.');
-=======
     appLog.i('Running on Web — PowerSync/SQLite disabled.');
->>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     _dbInitialized = false;
     return;
   }
 
   try {
     final dir = await getApplicationDocumentsDirectory();
-    final path = join(dir.path, 'roadsos.sqlite');
+    final String path = join(dir.path, 'roadsos.sqlite');
 
     appDb = PowerSyncDatabase(schema: schema, path: path);
     await appDb.initialize();
     await GovernmentFacilitySeedService().importBundledSeedIfNeeded(appDb);
 
-    final url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
-    final anonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
+    final String url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
+    final String anonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
 
     if (url.isEmpty || anonKey.isEmpty) {
       appLog.w(
         'SUPABASE_URL / SUPABASE_ANON_KEY missing — local SQLite only. '
-        'Set credentials via --dart-define or local .env (not in Dart source) and enable RLS in Supabase.',
+        'Set credentials via --dart-define or local .env (not in Dart source) '
+        'and enable RLS in Supabase.',
       );
       _dbInitialized = true;
       return;
