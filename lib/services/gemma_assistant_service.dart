@@ -26,8 +26,8 @@ class AssistantState {
 }
 
 /// GemmaAssistantService: The intelligence layer for RoadSOS V4.0.
-/// 
-/// Handles complex reasoning tasks like telemetry synthesis and 
+///
+/// Handles complex reasoning tasks like telemetry synthesis and
 /// conversational witness reporting.
 class GemmaAssistantService extends StateNotifier<AssistantState> {
   GemmaAssistantService() : super(AssistantState());
@@ -39,19 +39,13 @@ class GemmaAssistantService extends StateNotifier<AssistantState> {
     required String impactVector,
   }) async {
     state = state.copyWith(isThinking: true);
-    
-    // Prompt Engineering for Gemma 4 IT
-    final prompt = """
-    Context: Vehicle Crash Telemetry
-    Input: Max G=$maxG, Deceleration=$speedDelta km/h, Impact=$impactVector
-    Task: Synthesize a 15-word situational brief for paramedics. 
-    Format: "Brief: [Result]"
-    """;
 
-    // In production, this calls the local llama.dart or cloud fallback
-    await Future.delayed(const Duration(seconds: 1)); 
-    final result = "Brief: High-G $impactVector impact with severe deceleration. Possible internal trauma.";
-    
+    // In production, this calls the local Gemma 4 model or cloud fallback.
+    await Future.delayed(const Duration(seconds: 1));
+    final String result =
+        'Brief: High-G $impactVector impact with severe deceleration. '
+        'Possible internal trauma.';
+
     state = state.copyWith(isThinking: false, lastResponse: result);
     return result;
   }
@@ -60,14 +54,13 @@ class GemmaAssistantService extends StateNotifier<AssistantState> {
   Future<String> getNextWitnessQuestion(String previousAnswer) async {
     state = state.copyWith(isThinking: true);
 
-    // Intent detection logic
-    final prompt = "Witness said: '$previousAnswer'. What is the most critical follow-up question for safety?";
-    
+    // In production, this calls the local Gemma 4 model or cloud fallback.
     await Future.delayed(const Duration(milliseconds: 800));
-    final nextQuestion = "Are there any leaked fluids or smoke visible near the vehicles?";
-    
+    const String nextQuestion =
+        'Are there any leaked fluids or smoke visible near the vehicles?';
+
     state = state.copyWith(
-      isThinking: false, 
+      isThinking: false,
       lastResponse: nextQuestion,
       history: [...state.history, previousAnswer, nextQuestion],
     );
@@ -75,6 +68,7 @@ class GemmaAssistantService extends StateNotifier<AssistantState> {
   }
 }
 
-final gemmaAssistantProvider = StateNotifierProvider<GemmaAssistantService, AssistantState>((ref) {
+final gemmaAssistantProvider =
+    StateNotifierProvider<GemmaAssistantService, AssistantState>((ref) {
   return GemmaAssistantService();
 });
