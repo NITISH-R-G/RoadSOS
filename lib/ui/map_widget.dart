@@ -79,7 +79,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
 
     if (widget.autoCenter && hasNewFix && locationChanged) {
       _mapController.animateTo(
-        dest: LatLng(newLoc!.latitude, newLoc.longitude),
+        dest: LatLng(newLoc.latitude, newLoc.longitude),
         zoom: 15,
       );
     }
