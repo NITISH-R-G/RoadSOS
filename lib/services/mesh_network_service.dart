@@ -286,3 +286,15 @@ final meshListeningBootstrapProvider = FutureProvider<void>((ref) async {
     appLog.w('Mesh listening bootstrap failed', error: e, stackTrace: st);
   }
 });
+
+/// Stream-backed provider of currently-discovered peer beacon IDs.
+///
+/// Watches [MeshNetworkService.discoveredBeacons] and updates reactively.
+/// This provider is also NOT autoDispose so the mesh service stays alive
+/// for the full app session.
+final meshPeersProvider = StreamProvider<List<String>>((ref) {
+  final mesh = ref.watch(meshNetworkServiceProvider);
+  // Ensure listening is bootstrapped; idempotent if already running.
+  mesh.ensureListeningForPeers();
+  return mesh.discoveredBeacons;
+});

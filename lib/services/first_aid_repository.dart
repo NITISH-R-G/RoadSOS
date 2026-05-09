@@ -282,7 +282,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
 
     // Pass 2: OR query (broader)
     if (rows.isEmpty) {
-      final orQuery = tokens.map(_escapeFtsToken).join(' OR ');
+      final orQuery = _buildFtsQuery(query);
       try {
         rows = await appDb.getAll(
           'SELECT title, body, source FROM first_aid_fts WHERE first_aid_fts MATCH ? LIMIT 4',

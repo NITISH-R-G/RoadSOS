@@ -31,7 +31,7 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
 
   @override
   Widget build(BuildContext context) {
-    final List<String> beacons = ref.watch(meshPeersProvider);
+    final List<String> beacons = ref.watch(meshPeersProvider).valueOrNull ?? [];
     return Column(
       children: [
         Stack(

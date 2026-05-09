@@ -11,54 +11,12 @@ class VitalSigns {
   final double bloodOxygen;
   final String interpretation;
   final DateTime recordedAtUtc;
-
+  final String source;
 
   VitalSigns({
     required this.bpm,
     required this.respiratoryRate,
     required this.bloodOxygen,
-    required this.gemmaInterpretation,
-  });
-}
-
-class VitalSignsService extends StateNotifier<VitalSigns?> {
-  Timer? _scanTimer;
-
-  VitalSignsService() : super(null);
-
-  void startScan() {
-    _scanTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      final bpm = 70 + (timer.tick % 40); // Simulate fluctuating heart rate
-      final rr = 12 + (timer.tick % 8);
-      
-      String interpretation = "STABLE";
-      if (bpm > 100) interpretation = "Gemma: TACHYCARDIA DETECTED. Monitor for Shock.";
-      if (rr > 20) interpretation = "Gemma: HYPERVENTILATION. Assist with Breathing.";
-
-      state = VitalSigns(
-        bpm: bpm,
-        respiratoryRate: rr,
-        bloodOxygen: 98.0 - (timer.tick % 3),
-        gemmaInterpretation: interpretation,
-      );
-    });
-  }
-
-  void stopScan() {
-    _scanTimer?.cancel();
-    state = null;
-  }
-
-  @override
-  void dispose() {
-    _scanTimer?.cancel();
-    super.dispose();
-  }
-}
-
-final vitalSignsProvider = StateNotifierProvider.autoDispose<VitalSignsService, VitalSigns?>((ref) {
-  return VitalSignsService();
-=======
     required this.interpretation,
     required this.recordedAtUtc,
     this.source = 'manual',
@@ -75,13 +33,12 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
   VitalSignsLogger() : super(null);
 
   /// Records manually-entered vital sign observations.
-  /// All three parameters must be provided by the bystander directly.
   void recordManual({
     required int bpm,
     required int respiratoryRate,
     required double bloodOxygen,
   }) {
-    final interpretation = _interpretForDispatch(
+    final String interpretation = _interpretForDispatch(
       bpm: bpm,
       respiratoryRate: respiratoryRate,
       bloodOxygen: bloodOxygen,
@@ -92,17 +49,16 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
       bloodOxygen: bloodOxygen,
       interpretation: interpretation,
       recordedAtUtc: DateTime.now().toUtc(),
-      source: 'manual',
     );
   }
 
   /// Produces a dispatcher-ready summary for relay to 108/112 operators.
   String? get dispatcherSummary {
     if (state == null) return null;
-    final v = state!;
+    final VitalSigns v = state!;
     return 'Vitals (bystander-observed): '
-        'HR=${v.bpm}bpm RR=${v.respiratoryRate}/min SpO2=${v.bloodOxygen.toStringAsFixed(0)}% '
-        '— ${v.interpretation}';
+        'HR=${v.bpm}bpm RR=${v.respiratoryRate}/min '
+        'SpO2=${v.bloodOxygen.toStringAsFixed(0)}% — ${v.interpretation}';
   }
 
   /// Alias used by VitalScanScreen.
@@ -111,7 +67,11 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
     required int respiratoryRate,
     required double bloodOxygen,
   }) =>
-      recordManual(bpm: bpm, respiratoryRate: respiratoryRate, bloodOxygen: bloodOxygen);
+      recordManual(
+        bpm: bpm,
+        respiratoryRate: respiratoryRate,
+        bloodOxygen: bloodOxygen,
+      );
 
   void clear() => state = null;
 
@@ -120,13 +80,15 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
     required int respiratoryRate,
     required double bloodOxygen,
   }) {
-    final flags = <String>[];
+    final List<String> flags = <String>[];
     if (bpm >= 120) flags.add('tachycardia (very fast pulse)');
     if (bpm <= 45) flags.add('bradycardia (very slow pulse)');
     if (respiratoryRate >= 24) flags.add('tachypnoea (rapid breathing)');
     if (respiratoryRate <= 8) flags.add('bradypnoea (slow breathing)');
     if (bloodOxygen < 90) flags.add('hypoxia (SpO2 <90% — CRITICAL)');
-    if (bloodOxygen >= 90 && bloodOxygen < 94) flags.add('borderline oxygen (SpO2 90-93%)');
+    if (bloodOxygen >= 90 && bloodOxygen < 94) {
+      flags.add('borderline oxygen (SpO2 90-93%)');
+    }
 
     if (flags.isEmpty) {
       return 'No immediately critical vital signs from bystander observation.';
@@ -136,7 +98,7 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
   }
 }
 
-// Keep backward-compatible alias used by existing UI code.
+// Backward-compatible alias used by existing UI code.
 typedef VitalSignsService = VitalSignsLogger;
 
 final vitalSignsProvider =
