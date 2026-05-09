@@ -756,7 +756,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               ),
             ),
             const SizedBox(height: 16),
-            DispatchStatusPanel(channels: state.dispatchChannels),
+            DispatchStatusPanel(
+              channels: state.dispatchChannels,
+              isBeaconActive: state.isBeaconActive,
+            ),
             const SizedBox(height: 24),
             Center(
               child: SizedBox(
@@ -782,7 +785,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (state.dispatchChannels.isNotEmpty) ...[
-              DispatchStatusPanel(channels: state.dispatchChannels),
+              DispatchStatusPanel(
+                channels: state.dispatchChannels,
+                isBeaconActive: state.isBeaconActive,
+              ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: () => Navigator.push(
