@@ -35,7 +35,8 @@ class UserProfile {
     List<String> contacts = [];
     if (map['emergencyContacts'] is List) {
       contacts = List<String>.from(map['emergencyContacts']);
-    } else if (map['emergencyContact'] is String && map['emergencyContact'].isNotEmpty) {
+    } else if (map['emergencyContact'] is String &&
+        map['emergencyContact'].isNotEmpty) {
       contacts = [map['emergencyContact']];
     }
     return UserProfile(
@@ -81,6 +82,7 @@ class UserProfileService extends StateNotifier<UserProfile> {
   }
 }
 
-final userProfileProvider = StateNotifierProvider<UserProfileService, UserProfile>((ref) {
-  return UserProfileService();
-});
+final userProfileProvider =
+    StateNotifierProvider<UserProfileService, UserProfile>((ref) {
+      return UserProfileService();
+    });

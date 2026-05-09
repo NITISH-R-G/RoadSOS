@@ -89,7 +89,11 @@ class NearbySosPushService {
         await messaging.unsubscribeFromTopic(_topic);
       }
     } catch (e, st) {
-      appLog.w('FCM topic subscribe/unsubscribe failed', error: e, stackTrace: st);
+      appLog.w(
+        'FCM topic subscribe/unsubscribe failed',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -108,7 +112,9 @@ class NearbySosPushService {
       importance: Importance.high,
     );
     await _local
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
   }
 
@@ -116,14 +122,17 @@ class NearbySosPushService {
     final ctx = appNavigatorKey.currentContext;
     if (ctx != null && ctx.mounted) {
       ScaffoldMessenger.of(ctx).showSnackBar(
-        const SnackBar(content: Text('Open Settings → Nearby SOS for Good Samaritan info.')),
+        const SnackBar(
+          content: Text('Open Settings → Nearby SOS for Good Samaritan info.'),
+        ),
       );
     }
   }
 
   Future<void> _onForegroundMessage(RemoteMessage message) async {
     final title = message.notification?.title ?? 'Nearby SOS';
-    final body = message.notification?.body ??
+    final body =
+        message.notification?.body ??
         message.data['body']?.toString() ??
         'Someone nearby may need help.';
 
@@ -147,9 +156,9 @@ class NearbySosPushService {
 
     final ctx = appNavigatorKey.currentContext;
     if (ctx != null && ctx.mounted) {
-      ScaffoldMessenger.of(ctx).showSnackBar(
-        SnackBar(content: Text('$title — $body')),
-      );
+      ScaffoldMessenger.of(
+        ctx,
+      ).showSnackBar(SnackBar(content: Text('$title — $body')));
     }
   }
 
@@ -157,7 +166,9 @@ class NearbySosPushService {
     final ctx = appNavigatorKey.currentContext;
     if (ctx != null && ctx.mounted) {
       ScaffoldMessenger.of(ctx).showSnackBar(
-        SnackBar(content: Text(message.notification?.title ?? 'Nearby SOS alert')),
+        SnackBar(
+          content: Text(message.notification?.title ?? 'Nearby SOS alert'),
+        ),
       );
     }
   }

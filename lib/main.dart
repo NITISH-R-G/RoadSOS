@@ -82,7 +82,11 @@ void main() async {
     await RuntimeConfig.bootstrap();
   } catch (e, st) {
     // Non-fatal: all services check for missing config and degrade gracefully.
-    appLog.w('[boot] RuntimeConfig.bootstrap() failed — proceeding without config', error: e, stackTrace: st);
+    appLog.w(
+      '[boot] RuntimeConfig.bootstrap() failed — proceeding without config',
+      error: e,
+      stackTrace: st,
+    );
   }
 
   // ← First frame renders here.  The loading spinner in _RoadSOSAppState is
@@ -170,8 +174,9 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
       await Future.wait<void>([
         initializeFirstAidRepository(),
         initializeFmtcMapCache(),
-        EmergencyBackgroundService.initialize()
-            .then((_) => EmergencyBackgroundService.ensureNotificationChannel()),
+        EmergencyBackgroundService.initialize().then(
+          (_) => EmergencyBackgroundService.ensureNotificationChannel(),
+        ),
       ]);
 
       // Phase 4: Kick off remote crash-config fetch (non-blocking).
@@ -184,7 +189,11 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
       appLog.i('[boot] All services bootstrapped successfully.');
     } catch (e, st) {
       // Non-fatal: app runs in offline/degraded mode.
-      appLog.e('[boot] Service bootstrap error — running in degraded mode', error: e, stackTrace: st);
+      appLog.e(
+        '[boot] Service bootstrap error — running in degraded mode',
+        error: e,
+        stackTrace: st,
+      );
     } finally {
       if (mounted) {
         setState(() => _servicesReady = true);
@@ -222,8 +231,9 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
     ref.watch(inactivityCrashDetectorProvider);
     ref.watch(sosLocationTrackerProvider);
 
-    final sosPhase =
-        ref.watch(emergencyOrchestratorProvider.select((s) => s.phase));
+    final sosPhase = ref.watch(
+      emergencyOrchestratorProvider.select((s) => s.phase),
+    );
     final appLocale = ref.watch(appLocaleProvider);
 
     ref.listen(appLocaleProvider, (_, next) {
@@ -334,7 +344,11 @@ class _LogoMark extends StatelessWidget {
             color: const Color(0xFFE8281A),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(Icons.emergency_share, color: Colors.white, size: 40),
+          child: const Icon(
+            Icons.emergency_share,
+            color: Colors.white,
+            size: 40,
+          ),
         ),
         const SizedBox(height: 16),
         const Text(

@@ -4,7 +4,9 @@ import 'package:roadsos/models/dispatch_channel_status.dart';
 import 'package:roadsos/ui/dispatch_status_panel.dart';
 
 void main() {
-  testWidgets('DispatchStatusPanel shows channel titles and lifecycle detail', (tester) async {
+  testWidgets('DispatchStatusPanel shows channel titles and lifecycle detail', (
+    tester,
+  ) async {
     const channels = [
       DispatchChannelRow(
         id: 'sms',
@@ -22,10 +24,11 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: ThemeData(useMaterial3: true, colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal)),
-        home: const Scaffold(
-          body: DispatchStatusPanel(channels: channels),
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         ),
+        home: const Scaffold(body: DispatchStatusPanel(channels: channels)),
       ),
     );
 
@@ -36,12 +39,12 @@ void main() {
     expect(find.text('No peers in range.'), findsOneWidget);
   });
 
-  testWidgets('DispatchStatusPanel renders nothing for empty channels', (tester) async {
+  testWidgets('DispatchStatusPanel renders nothing for empty channels', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: DispatchStatusPanel(channels: const []),
-        ),
+        home: Scaffold(body: DispatchStatusPanel(channels: const [])),
       ),
     );
 

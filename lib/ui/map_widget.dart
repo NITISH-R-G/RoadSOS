@@ -18,11 +18,7 @@ class RoadSosMap extends StatefulWidget {
   final SOSState state;
   final bool autoCenter;
 
-  const RoadSosMap({
-    super.key,
-    required this.state,
-    this.autoCenter = true,
-  });
+  const RoadSosMap({super.key, required this.state, this.autoCenter = true});
 
   @override
   State<RoadSosMap> createState() => _RoadSosMapState();
@@ -50,7 +46,8 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
     // - If custom provider fails (keys/restrictions), fall back to Carto.
     // - If Carto fails (blocked network / DNS / captive portal), fall back to
     //   OSM tile CDN for demo resilience (do not ship high-volume traffic there).
-    if (!t.contains('basemaps.cartocdn.com')) return MapTileConfig.cartoDarkMatter;
+    if (!t.contains('basemaps.cartocdn.com'))
+      return MapTileConfig.cartoDarkMatter;
     return MapTileConfig.tileOpenstreetmapOrgViolatesPolicyAtScale;
   }
 
@@ -66,16 +63,18 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(RoadSosMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     final oldLoc = oldWidget.state.location;
     final newLoc = widget.state.location;
-    
-    final hasNewFix = newLoc != null &&
+
+    final hasNewFix =
+        newLoc != null &&
         newLoc.source != 'unknown' &&
         !(newLoc.latitude == 0.0 && newLoc.longitude == 0.0);
-        
-    final locationChanged = oldLoc?.latitude != newLoc?.latitude || 
-                            oldLoc?.longitude != newLoc?.longitude;
+
+    final locationChanged =
+        oldLoc?.latitude != newLoc?.latitude ||
+        oldLoc?.longitude != newLoc?.longitude;
 
     if (widget.autoCenter && hasNewFix && locationChanged) {
       _mapController.animateTo(
@@ -93,12 +92,16 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final hasFix = widget.state.location != null &&
+    final hasFix =
+        widget.state.location != null &&
         widget.state.location!.source != 'unknown' &&
         !(widget.state.location!.latitude == 0.0 &&
             widget.state.location!.longitude == 0.0);
     final userLoc = hasFix
-        ? LatLng(widget.state.location!.latitude, widget.state.location!.longitude)
+        ? LatLng(
+            widget.state.location!.latitude,
+            widget.state.location!.longitude,
+          )
         : null;
 
     return Container(
@@ -125,7 +128,9 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
             ),
             children: [
               TileLayer(
-                key: ValueKey('tiles_${_tileLayerNonce}_${MapTileConfig.effectiveUrlTemplate}'),
+                key: ValueKey(
+                  'tiles_${_tileLayerNonce}_${MapTileConfig.effectiveUrlTemplate}',
+                ),
                 urlTemplate: MapTileConfig.effectiveUrlTemplate,
                 subdomains: MapTileConfig.effectiveSubdomains,
                 userAgentPackageName: 'com.roadsos.app',
@@ -158,10 +163,10 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                       height: 40,
                       child: _buildUserMarker(),
                     ),
-                  
+
                   // Incident Markers
                   ..._buildIncidentMarkers(),
-                  
+
                   // Facility Markers (seeded + cloud-synced via PowerSync when configured)
                   ..._buildFacilityMarkers(),
                 ],
@@ -178,9 +183,7 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                 style: TextStyle(
                   fontSize: 9,
                   color: Colors.white.withValues(alpha: 0.45),
-                  shadows: const [
-                    Shadow(color: Colors.black54, blurRadius: 4),
-                  ],
+                  shadows: const [Shadow(color: Colors.black54, blurRadius: 4)],
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -198,14 +201,13 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                   icon: Icons.my_location,
                   onTap: () {
                     if (userLoc != null) {
-                      _mapController.animateTo(
-                        dest: userLoc,
-                        zoom: 15,
-                      );
+                      _mapController.animateTo(dest: userLoc, zoom: 15);
                     } else {
                       ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('User location not available yet.')),
+                        const SnackBar(
+                          content: Text('User location not available yet.'),
+                        ),
                       );
                     }
                   },
@@ -241,7 +243,9 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                   children: [
                     Icon(
                       Icons.warning_amber_rounded,
-                      color: _templateLooksValid ? Colors.amber : Colors.redAccent,
+                      color: _templateLooksValid
+                          ? Colors.amber
+                          : Colors.redAccent,
                       size: 18,
                     ),
                     const SizedBox(width: 10),
@@ -250,8 +254,12 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                         !_templateLooksValid
                             ? 'Map tiles misconfigured (missing {z}/{x}/{y}).'
                             : 'Map tiles failed to load. Check internet / tile provider.\n'
-                              'Template: ${MapTileConfig.effectiveUrlTemplate}',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.25),
+                                  'Template: ${MapTileConfig.effectiveUrlTemplate}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          height: 1.25,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -277,10 +285,15 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
               bottom: 46,
               child: Builder(
                 builder: (context) {
-                  final seconds = DateTime.now().difference(_mountedAt).inSeconds;
+                  final seconds = DateTime.now()
+                      .difference(_mountedAt)
+                      .inSeconds;
                   if (seconds < 6) return const SizedBox.shrink();
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.65),
                       borderRadius: BorderRadius.circular(10),
@@ -313,12 +326,16 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   }
 
   List<Marker> _buildIncidentMarkers() {
-    if (widget.state.incidentId == null || widget.state.location == null) return [];
+    if (widget.state.incidentId == null || widget.state.location == null)
+      return [];
     if (widget.state.location!.source == 'unknown') return [];
-    
+
     return [
       Marker(
-        point: LatLng(widget.state.location!.latitude, widget.state.location!.longitude),
+        point: LatLng(
+          widget.state.location!.latitude,
+          widget.state.location!.longitude,
+        ),
         width: 50,
         height: 50,
         child: const Icon(Icons.emergency, color: Colors.red, size: 40),

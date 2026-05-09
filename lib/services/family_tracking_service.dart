@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as dart_math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -30,8 +31,10 @@ class FamilyTrackingService {
     final digits = raw.replaceAll(RegExp(r'\D'), '');
     if (digits.length < 10) return null;
     if (digits.length == 10) return digits;
-    if (digits.length == 11 && digits.startsWith('0')) return digits.substring(1);
-    if (digits.length >= 12 && digits.startsWith('91')) return digits.substring(digits.length - 10);
+    if (digits.length == 11 && digits.startsWith('0'))
+      return digits.substring(1);
+    if (digits.length >= 12 && digits.startsWith('91'))
+      return digits.substring(digits.length - 10);
     return digits.length > 10 ? digits.substring(digits.length - 10) : digits;
   }
 
@@ -48,28 +51,45 @@ class FamilyTrackingService {
         .toList();
 
     Future<({bool ok, String detail, String? token})> fallbackOffline() async {
-      final name = profile.fullName.trim().isEmpty ? 'RoadSOS user' : profile.fullName.trim();
-      final body = 'RoadSOS: $name needs help. LOC: (${location.latitude.toStringAsFixed(5)}, ${location.longitude.toStringAsFixed(5)}). '
+      final name = profile.fullName.trim().isEmpty
+          ? 'RoadSOS user'
+          : profile.fullName.trim();
+      final body =
+          'RoadSOS: $name needs help. LOC: (${location.latitude.toStringAsFixed(5)}, ${location.longitude.toStringAsFixed(5)}). '
           'Services: ${triage.requiredServices.join(", ")}. Emergency mode active.';
-      
+
       if (contacts.isEmpty) {
-        return (ok: false, detail: 'Offline fallback ready but no contacts configured.', token: null);
+        return (
+          ok: false,
+          detail: 'Offline fallback ready but no contacts configured.',
+          token: null,
+        );
       }
 
       if (!kIsWeb && Platform.isAndroid) {
-        final results = await Future.wait(contacts.map((p) => sendSmsDirectAndroid(p, body)));
+        final results = await Future.wait(
+          contacts.map((p) => sendSmsDirectAndroid(p, body)),
+        );
         final ok = results.any((e) => e);
         return (
           ok: ok,
-          detail: ok ? 'Offline SOS SMS sent to family ✓' : 'Offline SOS SMS failed (permission?).',
-          token: null
+          detail: ok
+              ? 'Offline SOS SMS sent to family ✓'
+              : 'Offline SOS SMS failed (permission?).',
+          token: null,
         );
       }
-      return (ok: false, detail: 'Offline: share coordinates manually: $body', token: null);
+      return (
+        ok: false,
+        detail: 'Offline: share coordinates manually: $body',
+        token: null,
+      );
     }
 
     if (kIsWeb || !isSupabaseSdkInitialized) {
-      appLog.w('Family link needs Supabase on mobile — falling back to offline SMS.');
+      appLog.w(
+        'Family link needs Supabase on mobile — falling back to offline SMS.',
+      );
       return fallbackOffline();
     }
 
@@ -86,11 +106,14 @@ class FamilyTrackingService {
       return fallbackOffline();
     }
 
-    final token = const Uuid().v4();
+    final r = dart_math.Random.secure();
+    String hex(int bytes) => List.generate(bytes, (_) => r.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+    final token = '${hex(4)}-${hex(2)}-4${hex(2).substring(1)}-${['8','9','a','b'][r.nextInt(4)]}${hex(2).substring(1)}-${hex(6)}';
     final rawSummary =
         '${triage.functionCall} · sev ${triage.severityLevel} · ${triage.compressedPayload}';
-    final triageSummary =
-        rawSummary.length > 1200 ? '${rawSummary.substring(0, 1197)}…' : rawSummary;
+    final triageSummary = rawSummary.length > 1200
+        ? '${rawSummary.substring(0, 1197)}…'
+        : rawSummary;
 
     final expiresAt = DateTime.now().toUtc().add(const Duration(hours: 24));
 
@@ -108,14 +131,19 @@ class FamilyTrackingService {
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
     } catch (e, st) {
-      appLog.w('incident_live_links insert failed — falling back to offline SMS.', error: e, stackTrace: st);
+      appLog.w(
+        'incident_live_links insert failed — falling back to offline SMS.',
+        error: e,
+        stackTrace: st,
+      );
       return fallbackOffline();
     }
 
     if (contacts.isEmpty) {
       return (
         ok: true,
-        detail: 'Family link active — add phone numbers in Medical profile to auto-SMS.',
+        detail:
+            'Family link active — add phone numbers in Medical profile to auto-SMS.',
         token: token,
       );
     }
@@ -145,7 +173,8 @@ class FamilyTrackingService {
       }
       return (
         ok: true,
-        detail: 'Link ready — SMS failed for all ${contacts.length} contacts (permission?).',
+        detail:
+            'Link ready — SMS failed for all ${contacts.length} contacts (permission?).',
         token: token,
       );
     }

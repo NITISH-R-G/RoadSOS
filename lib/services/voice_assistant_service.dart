@@ -59,7 +59,10 @@ class VoiceAssistantService {
   /// Called when driving mode is active at SOS trigger — the user cannot
   /// look at the screen, so the device announces what is happening and how
   /// to cancel. The message is spoken in the app's current locale.
-  Future<void> speakHandsFreeCountdown(int totalSeconds, String locationHint) async {
+  Future<void> speakHandsFreeCountdown(
+    int totalSeconds,
+    String locationHint,
+  ) async {
     final msg = _localizedCountdownMessage(totalSeconds, locationHint);
     await _tts.setSpeechRate(0.52);
     await speak(msg);
@@ -113,12 +116,18 @@ class VoiceAssistantService {
 
   String _serviceLabel(String service) {
     switch (service) {
-      case 'ambulance':       return 'ambulance';
-      case 'police':          return 'police';
-      case 'fire_department': return 'fire department';
-      case 'rescue':          return 'rescue team';
-      case 'towing':          return 'towing service';
-      default:                return service;
+      case 'ambulance':
+        return 'ambulance';
+      case 'police':
+        return 'police';
+      case 'fire_department':
+        return 'fire department';
+      case 'rescue':
+        return 'rescue team';
+      case 'towing':
+        return 'towing service';
+      default:
+        return service;
     }
   }
 
@@ -214,19 +223,29 @@ class VoiceAssistantService {
   }
 
   /// Speaks a status update of the current dispatch channels.
-  Future<void> speakDispatchStatus(List<({String title, bool success})> channels) async {
-    final successList = channels.where((e) => e.success).map((e) => e.title).join(', ');
-    final failList = channels.where((e) => !e.success).map((e) => e.title).join(', ');
-    
+  Future<void> speakDispatchStatus(
+    List<({String title, bool success})> channels,
+  ) async {
+    final successList = channels
+        .where((e) => e.success)
+        .map((e) => e.title)
+        .join(', ');
+    final failList = channels
+        .where((e) => !e.success)
+        .map((e) => e.title)
+        .join(', ');
+
     String msg;
     switch (_locale.languageCode) {
       case 'hi':
-        msg = 'स्टेटस: ${successList.isNotEmpty ? "$successList सफल रहे।" : ""}'
-              '${failList.isNotEmpty ? "$failList विफल रहे।" : ""}';
+        msg =
+            'स्टेटस: ${successList.isNotEmpty ? "$successList सफल रहे।" : ""}'
+            '${failList.isNotEmpty ? "$failList विफल रहे।" : ""}';
         break;
       default:
-        msg = 'Status: ${successList.isNotEmpty ? "$successList succeeded. " : ""}'
-              '${failList.isNotEmpty ? "$failList failed. " : "All channels success."}';
+        msg =
+            'Status: ${successList.isNotEmpty ? "$successList succeeded. " : ""}'
+            '${failList.isNotEmpty ? "$failList failed. " : "All channels success."}';
     }
     await speak(msg);
   }
@@ -312,7 +331,9 @@ class VoiceAssistantService {
       case 'bn':
         return words.contains('হ্যাঁ') || words.contains('haan');
       case 'mr':
-        return words.contains('हो') || words.contains('ho') || words.contains('barob');
+        return words.contains('हो') ||
+            words.contains('ho') ||
+            words.contains('barob');
       default:
         return false;
     }

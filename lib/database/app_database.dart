@@ -54,7 +54,11 @@ Future<void> ensureSupabaseAnonymousSession(SupabaseClient client) async {
           return;
         }
       } catch (e, st) {
-        appLog.w('Session refresh failed; re-authenticating', error: e, stackTrace: st);
+        appLog.w(
+          'Session refresh failed; re-authenticating',
+          error: e,
+          stackTrace: st,
+        );
       }
     }
     await client.auth.signInAnonymously();
@@ -125,7 +129,7 @@ Future<void> initializeDatabase() async {
 
     appDb = PowerSyncDatabase(schema: schema, path: path);
     await appDb.initialize();
-    
+
     try {
       await GovernmentFacilitySeedService().importBundledSeedIfNeeded(appDb);
     } catch (e) {

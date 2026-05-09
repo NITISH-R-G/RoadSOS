@@ -41,8 +41,8 @@ class OfflineTriageClassifier {
     return fromText > h
         ? fromText
         : fromText >= h
-            ? fromText
-            : ((fromText + h + 1) ~/ 2).clamp(1, 5);
+        ? fromText
+        : ((fromText + h + 1) ~/ 2).clamp(1, 5);
   }
 
   int _estimateSeverityFromText(String text) {

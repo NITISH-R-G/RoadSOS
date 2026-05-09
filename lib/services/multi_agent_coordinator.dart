@@ -30,10 +30,8 @@ class AgentTask {
   DateTime? startedAt;
   DateTime? completedAt;
 
-  AgentTask({
-    required this.id,
-    required this.displayName,
-  }) : status = AgentStatus.pending;
+  AgentTask({required this.id, required this.displayName})
+    : status = AgentStatus.pending;
 
   Duration? get duration => (startedAt != null && completedAt != null)
       ? completedAt!.difference(startedAt!)
@@ -60,7 +58,7 @@ class AgentTask {
 /// await coord.awaitAll();
 /// ```
 class MultiAgentCoordinator {
-  final _tasks   = <String, AgentTask>{};
+  final _tasks = <String, AgentTask>{};
   final _controller = StreamController<AgentTask>.broadcast();
   bool _aborted = false;
 
@@ -97,9 +95,9 @@ class MultiAgentCoordinator {
 
   void _transition(AgentTask task, AgentStatus next, {String? error}) {
     task.status = next;
-    if (next == AgentStatus.running)   task.startedAt   = DateTime.now();
-    if (task.isTerminal)               task.completedAt = DateTime.now();
-    if (error != null)                 task.errorDetail = error;
+    if (next == AgentStatus.running) task.startedAt = DateTime.now();
+    if (task.isTerminal) task.completedAt = DateTime.now();
+    if (error != null) task.errorDetail = error;
 
     final dur = task.duration;
     appLog.d(
@@ -117,7 +115,9 @@ class MultiAgentCoordinator {
   }
 
   /// Wait for all registered tasks to reach a terminal state.
-  Future<void> awaitAll({Duration timeout = const Duration(seconds: 30)}) async {
+  Future<void> awaitAll({
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
     final deadline = DateTime.now().add(timeout);
     while (!_tasks.values.every((t) => t.isTerminal)) {
       if (DateTime.now().isAfter(deadline)) {
@@ -145,9 +145,13 @@ class MultiAgentCoordinator {
 
   /// Summary stats for the activity log.
   String get summaryLine {
-    final done    = _tasks.values.where((t) => t.status == AgentStatus.completed).length;
-    final failed  = _tasks.values.where((t) => t.status == AgentStatus.failed).length;
-    final total   = _tasks.length;
+    final done = _tasks.values
+        .where((t) => t.status == AgentStatus.completed)
+        .length;
+    final failed = _tasks.values
+        .where((t) => t.status == AgentStatus.failed)
+        .length;
+    final total = _tasks.length;
     return '$done/$total agents completed${failed > 0 ? ", $failed failed" : ""}.';
   }
 }

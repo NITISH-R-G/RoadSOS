@@ -56,7 +56,7 @@ class ConnectivityService {
     final q = _qualityFromResults(results);
     _quality = q;
     appLog.d('[Connectivity] Network quality → ${q.name}');
-    
+
     // Perform active reachability probe if not 'none'.
     if (q != NetworkQuality.none) {
       _probeInternetAccess();
@@ -72,14 +72,17 @@ class ConnectivityService {
       final response = await http
           .head(Uri.parse('https://www.google.com'))
           .timeout(const Duration(seconds: 2));
-      
-      final realQuality = response.statusCode >= 200 && response.statusCode < 400
+
+      final realQuality =
+          response.statusCode >= 200 && response.statusCode < 400
           ? _quality
           : NetworkQuality.none;
-          
+
       if (!_controller.isClosed) _controller.add(realQuality);
       if (realQuality == NetworkQuality.none) {
-        appLog.w('[Connectivity] Radio connected but internet unreachable — forcing offline mode.');
+        appLog.w(
+          '[Connectivity] Radio connected but internet unreachable — forcing offline mode.',
+        );
       }
     } catch (_) {
       if (!_controller.isClosed) _controller.add(NetworkQuality.none);
@@ -90,9 +93,9 @@ class ConnectivityService {
     if (results.isEmpty || results.every((r) => r == ConnectivityResult.none)) {
       return NetworkQuality.none;
     }
-    if (results.any((r) =>
-        r == ConnectivityResult.wifi ||
-        r == ConnectivityResult.ethernet)) {
+    if (results.any(
+      (r) => r == ConnectivityResult.wifi || r == ConnectivityResult.ethernet,
+    )) {
       return NetworkQuality.wifi;
     }
     return NetworkQuality.cellular;

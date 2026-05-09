@@ -10,7 +10,7 @@ class MedicalCardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider);
-    
+
     // QR contains a short, offline-safe summary (no network dependency).
     final qrData =
         'ROADSOS_MEDICAL_V1|NAME:${profile.fullName}|BLOOD:${profile.bloodType}|ALLERGIES:${profile.allergies}|MEDS:${profile.medications}|CONTACTS:${profile.emergencyContacts.join(',')}';
@@ -18,11 +18,17 @@ class MedicalCardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('EMERGENCY MEDICAL ID', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+        title: const Text(
+          'EMERGENCY MEDICAL ID',
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+        ),
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileEditorScreen())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfileEditorScreen()),
+            ),
             icon: const Icon(Icons.edit, size: 20),
           ),
         ],
@@ -50,18 +56,33 @@ class MedicalCardScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             const Text(
               'SCAN FOR MEDICAL SUMMARY',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.white54),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                color: Colors.white54,
+              ),
             ),
-            
+
             const SizedBox(height: 48),
-            _buildInfoRow(Icons.person, 'FULL NAME', profile.fullName.isEmpty ? 'NOT SET' : profile.fullName),
+            _buildInfoRow(
+              Icons.person,
+              'FULL NAME',
+              profile.fullName.isEmpty ? 'NOT SET' : profile.fullName,
+            ),
             _buildDivider(),
             _buildInfoRow(Icons.bloodtype, 'BLOOD TYPE', profile.bloodType),
             _buildDivider(),
             _buildInfoRow(Icons.warning, 'ALLERGIES', profile.allergies),
             _buildDivider(),
-            _buildInfoRow(Icons.contact_phone, 'EMERGENCY CONTACTS', profile.emergencyContacts.isEmpty ? 'NOT SET' : profile.emergencyContacts.join(', ')),
-            
+            _buildInfoRow(
+              Icons.contact_phone,
+              'EMERGENCY CONTACTS',
+              profile.emergencyContacts.isEmpty
+                  ? 'NOT SET'
+                  : profile.emergencyContacts.join(', '),
+            ),
+
             const Spacer(),
             const Text(
               'Tip: Keep this screen open for responders. For lock-screen wallpaper export, use your device screenshot tools.',
@@ -84,9 +105,23 @@ class MedicalCardScreen extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 10, color: Colors.white38, fontWeight: FontWeight.w900)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.white38,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(value, style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ],
