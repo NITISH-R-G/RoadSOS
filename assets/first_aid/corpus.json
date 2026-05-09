@@ -51,36 +51,22 @@
   {
     "id": "head-spinal-precaution",
     "title": "Head injury & spinal precautions (road crashes)",
-<<<<<<< HEAD
-    "body": "1) Assume spinal injury after significant crash forces until cleared by professionals.\n2) Keep the head aligned with the neck; stabilize manually if trained — avoid twisting.\n3) Do not remove helmets unless airway obstruction trained protocols require it.\n4) Monitor level of consciousness, pupil changes, vomiting, or worsening headache.\n5) Rapid EMS transport; even “mild” head injury warrants assessment if symptoms are worsening.",
-    "tags": "head injury concussion c spine spinal helmet",
-=======
     "body": "1) Assume spinal injury after significant crash forces until cleared by professionals.\n2) Keep the head aligned with the neck; stabilize manually if trained — avoid twisting.\n3) Do not remove helmets unless airway obstruction trained protocols require it.\n4) Monitor level of consciousness, pupil changes, vomiting, or worsening headache.\n5) Rapid EMS transport; even 'mild' head injury warrants assessment if symptoms are worsening.",
     "tags": "head injury concussion c spine spinal helmet tbi",
->>>>>>> origin/main
     "source": "Prehospital trauma spine-stabilization teaching (PHTLS-aligned summary)"
   },
   {
     "id": "choking-adult",
     "title": "Choking — responsive adult",
-<<<<<<< HEAD
-    "body": "1) Ask “Can you speak?” If they cannot cough effectively, give 5 back blows between shoulder blades.\n2) Then 5 abdominal thrusts (Heimlich) in midline above the navel; repeat cycles.\n3) If the person becomes unresponsive, lower them carefully and start CPR — look in the mouth for visible object each time before breaths.\n4) Call emergency services if not already done.\n5) Pregnant or very large persons: use chest thrusts instead of abdominal thrusts.",
-=======
     "body": "1) Ask 'Can you speak?' If they cannot cough effectively, give 5 back blows between shoulder blades.\n2) Then 5 abdominal thrusts (Heimlich) in midline above the navel; repeat cycles.\n3) If the person becomes unresponsive, lower them carefully and start CPR — look in the mouth for visible object each time before breaths.\n4) Call emergency services if not already done.\n5) Pregnant or very large persons: use chest thrusts instead of abdominal thrusts.",
->>>>>>> origin/main
     "tags": "choking heimlich airway obstructed swallow",
     "source": "ILCOR/AHA choking algorithm summary for lay rescuers"
   },
   {
     "id": "shock-care",
     "title": "Shock (circulatory compromise) after trauma",
-<<<<<<< HEAD
-    "body": "1) Lay the person flat unless breathing is easier sitting (e.g., heart-related symptoms per local protocol).\n2) Keep them warm with a blanket; loosen tight clothing.\n3) Do not give food or drink.\n4) Control obvious bleeding and cover open wounds.\n5) Monitor breathing and responsiveness; be ready to start CPR if breathing stops.",
-    "tags": "shock trauma pale weak pulse rapid",
-=======
     "body": "1) Lay the person flat unless breathing is easier sitting.\n2) Keep them warm with a blanket; loosen tight clothing.\n3) Do not give food or drink.\n4) Control obvious bleeding and cover open wounds.\n5) Monitor breathing and responsiveness; be ready to start CPR if breathing stops.",
     "tags": "shock trauma pale weak pulse rapid hemorrhagic",
->>>>>>> origin/main
     "source": "Trauma first-aid fundamentals; professional care required"
   },
   {
@@ -156,17 +142,11 @@
   {
     "id": "penetrating-trauma",
     "title": "Penetrating trauma (stab / impalement)",
-<<<<<<< HEAD
-    "body": "1) Control external bleeding without removing embedded objects.\n2) Stabilize impaled objects with bulky dressings; move as one unit.\n3) Seal open chest wounds that suck with a commercial or improvised chest seal only if trained — otherwise keep still and support breathing.\n4) Call EMS; monitor for tension pneumothorax signs (training issue).\n5) Do not pull objects from deep wounds.",
-=======
     "body": "1) Control external bleeding without removing embedded objects.\n2) Stabilize impaled objects with bulky dressings; move as one unit.\n3) Seal open chest wounds that suck with a commercial or improvised chest seal only if trained — otherwise keep still and support breathing.\n4) Call EMS; monitor for tension pneumothorax signs.\n5) Do not pull objects from deep wounds.",
->>>>>>> origin/main
     "tags": "stab wound chest seal impaled knife",
     "source": "Tactical / prehospital penetrating trauma basics"
   },
   {
-<<<<<<< HEAD
-=======
     "id": "psychological-first-aid",
     "title": "Psychological first aid after a frightening crash",
     "body": "1) Stay calm; offer a safe, quiet space away from hazards.\n2) Listen without forcing the person to retell trauma; avoid judgment.\n3) Help them contact family or friends; keep children with caregivers.\n4) Encourage professional mental health follow-up after serious events.\n5) Do not dismiss dissociation, trembling, or confusion — these are stress responses.",
@@ -531,7 +511,6 @@
     "source": "British Thoracic Society / GINA acute asthma guidelines — lay version"
   },
   {
->>>>>>> origin/main
     "id": "puncture-tire-roadside",
     "title": "Roadside mechanical — safety first (non-medical)",
     "body": "1) Pull fully off the travel lane; hazard lights on; reflective vest if available.\n2) Use wheel wedges; work on flat, stable ground — not in live traffic.\n3) Call police/road assistance on high-speed corridors if unsafe to change a wheel yourself.\n4) For medical needs (injury after crash), revert to EMS and trauma first-aid topics.\n5) Never work under a vehicle supported only by a jack.",
@@ -539,13 +518,6 @@
     "source": "General road-safety guidance; align with NH / state highway rules"
   },
   {
-<<<<<<< HEAD
-    "id": "psychological-first-aid",
-    "title": "Psychological first aid after a frightening crash",
-    "body": "1) Stay calm; offer a safe, quiet space away from hazards.\n2) Listen without forcing the person to retell trauma; avoid judgment.\n3) Help them contact family or friends; keep children with caregivers.\n4) Encourage professional mental health follow-up after serious events.\n5) Do not dismiss dissociation, trembling, or confusion — these are stress responses.",
-    "tags": "panic anxiety stress ptsd mental health bystander",
-    "source": "WHO Psychological First Aid (PFA) field guide — condensed"
-=======
     "id": "muscle-tear-strain",
     "title": "Muscle tear / strain",
     "body": "1) Rest: stop the activity that caused the injury.\n2) Ice: apply cold packs for 15-20 minutes every few hours (not directly on skin).\n3) Compression: use an elastic bandage to reduce swelling.\n4) Elevation: keep the injured limb raised above heart level.\n5) Seek medical advice if pain is severe, you cannot move the limb, or there is significant deformity.",
@@ -572,6 +544,5 @@
     "body": "1) Do NOT attempt to 'pop' the joint back in — this can cause nerve or vessel damage.\n2) Immobilize the joint in the position it was found using a sling or splint.\n3) Apply ice packs to the area to reduce swelling and pain.\n4) Seek emergency medical care immediately for professional reduction.\n5) Check for pulse and sensation beyond the joint — if absent, this is a critical emergency.",
     "tags": "dislocation joint shoulder elbow finger deformity",
     "source": "Emergency medicine protocols"
->>>>>>> origin/main
   }
 ]

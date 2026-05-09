@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="accessibility_sos_description">RoadSOS emergency gesture: press volume up three times and volume down three times within two seconds. Intercepts volume keys while enabled—use only if you accept that behavior.</string>
-<<<<<<< HEAD
-=======
 
     <!-- Quick Settings tile — crash-monitor toggle -->
     <string name="qs_tile_label_on">Crash Monitor: ON</string>
@@ -17,5 +15,4 @@
     <string name="shortcut_safewalk_short">Safe Walk</string>
     <string name="shortcut_safewalk_long">Start Safe Walk Timer</string>
     <string name="shortcut_safewalk_disabled">RoadSOS is not available</string>
->>>>>>> origin/main
 </resources>
