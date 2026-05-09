@@ -17,6 +17,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
   late TextEditingController _medsController;
   late TextEditingController _conditionsController;
   late TextEditingController _contactController;
+  final List<TextEditingController> _additionalContactControllers = [];
 
   @override
   void initState() {
@@ -28,6 +29,24 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
     _medsController = TextEditingController(text: profile.medications);
     _conditionsController = TextEditingController(text: profile.conditions);
     _contactController = TextEditingController(text: profile.emergencyContact);
+    
+    for (final contact in profile.emergencyContacts) {
+      _additionalContactControllers.add(TextEditingController(text: contact));
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _bloodController.dispose();
+    _allergiesController.dispose();
+    _medsController.dispose();
+    _conditionsController.dispose();
+    _contactController.dispose();
+    for (final c in _additionalContactControllers) {
+      c.dispose();
+    }
+    super.dispose();
   }
 
   void _save() {
@@ -38,9 +57,9 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
       medications: _medsController.text,
       conditions: _conditionsController.text,
       emergencyContact: _contactController.text,
+      emergencyContacts: _additionalContactControllers.map((c) => c.text).where((t) => t.isNotEmpty).toList(),
     );
     
-    // Simulate async save or handle provider
     ref.read(userProfileProvider.notifier).updateProfile(newProfile);
     
     if (!mounted) return;
@@ -65,18 +84,54 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildField('Full Name', _nameController, Icons.person),
             _buildField('Blood Type', _bloodController, Icons.bloodtype),
             _buildField('Allergies', _allergiesController, Icons.warning),
             _buildField('Current Medications', _medsController, Icons.medication),
             _buildField('Chronic Conditions', _conditionsController, Icons.medical_information),
-            _buildField('Emergency Contact', _contactController, Icons.contact_phone),
+            
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: Text(
+                'EMERGENCY CONTACTS',
+                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+              ),
+            ),
+            _buildField('Primary Contact', _contactController, Icons.contact_phone),
+            
+            ..._additionalContactControllers.asMap().entries.map((entry) {
+              final index = entry.key;
+              final controller = entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(child: _buildField('Additional Contact ${index + 1}', controller, Icons.contact_phone, showLabel: false)),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () => setState(() => _additionalContactControllers.removeAt(index)),
+                      icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                    ),
+                  ],
+                ),
+              );
+            }),
+            
+            TextButton.icon(
+              onPressed: () => setState(() => _additionalContactControllers.add(TextEditingController())),
+              icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
+              label: const Text('ADD CONTACT', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+            ),
+
             const SizedBox(height: 40),
-            Text(
-              AppLocalizations.of(context)!.profileAiLine,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 11),
+            Center(
+              child: Text(
+                AppLocalizations.of(context)!.profileAiLine,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 11),
+              ),
             ),
           ],
         ),
@@ -84,14 +139,16 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller, IconData icon) {
+  Widget _buildField(String label, TextEditingController controller, IconData icon, {bool showLabel = true}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: EdgeInsets.only(bottom: showLabel ? 24 : 0),
       child: TextField(
         controller: controller,
         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         decoration: InputDecoration(
-          labelText: label.toUpperCase(),
+          labelText: showLabel ? label.toUpperCase() : null,
+          hintText: !showLabel ? label.toUpperCase() : null,
+          hintStyle: TextStyle(color: Colors.white24, fontSize: 10),
           labelStyle: TextStyle(color: Colors.blue.withValues(alpha: 0.6), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5),
           prefixIcon: Icon(icon, color: Colors.white24),
           filled: true,
