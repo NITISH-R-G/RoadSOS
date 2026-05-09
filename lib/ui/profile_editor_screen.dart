@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
+=======
+import 'package:roadsos/l10n/app_localizations.dart';
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/user_profile_service.dart';
 
@@ -73,9 +77,15 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
             _buildField('Emergency Contact', _contactController, Icons.contact_phone),
             const SizedBox(height: 40),
             Text(
+<<<<<<< HEAD
               'Gemma 4 analyzes this data to prioritize specific life-saving instructions during an SOS event.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11),
+=======
+              AppLocalizations.of(context)!.profileAiLine,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 11),
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
             ),
           ],
         ),
@@ -91,10 +101,17 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         decoration: InputDecoration(
           labelText: label.toUpperCase(),
+<<<<<<< HEAD
           labelStyle: TextStyle(color: Colors.blue.withOpacity(0.6), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5),
           prefixIcon: Icon(icon, color: Colors.white24),
           filled: true,
           fillColor: Colors.white.withOpacity(0.05),
+=======
+          labelStyle: TextStyle(color: Colors.blue.withValues(alpha: 0.6), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+          prefixIcon: Icon(icon, color: Colors.white24),
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.05),
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         ),
       ),

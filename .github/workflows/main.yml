@@ -47,7 +47,11 @@ jobs:
         run: flutter pub get
 
       - name: Build Web (Release)
+<<<<<<< HEAD
         run: flutter build web --release --base-href="/RoadSOS/"
+=======
+        run: flutter build web --release
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
       - name: Upload Web Artifact
         uses: actions/upload-artifact@v4

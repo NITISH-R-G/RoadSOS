@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /// A grounded store of verified medical advice.
 /// 
 /// In a production app, this would be a local JSON file or a small 
@@ -33,4 +34,16 @@ class FirstAidStore {
   static String getVerifiedAdvice(String query) {
     return advice[query] ?? advice['general road accident first aid emergency response']!;
   }
+=======
+import 'first_aid_repository.dart';
+
+/// Async first-aid lookup against the bundled FTS5 corpus (mobile) or token search (web).
+/// Prefer [FirstAidRepository.instance.lookup] for direct access.
+class FirstAidStore {
+  static Future<String> getVerifiedAdvice(String query) =>
+      FirstAidRepository.instance.lookup(query);
+
+  static Future<List<String>> getSuggestions(String query) =>
+      FirstAidRepository.instance.getSuggestions(query);
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 }

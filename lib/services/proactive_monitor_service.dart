@@ -1,5 +1,10 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+<<<<<<< HEAD
+=======
+import 'emergency_orchestrator.dart';
+import 'safe_walk_notification_service.dart';
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
 class ProactiveMonitorState {
   final bool isMonitoring;
@@ -30,19 +35,37 @@ class ProactiveMonitorState {
 }
 
 class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
+<<<<<<< HEAD
   Timer? _monitorTimer;
 
   ProactiveMonitorService() : super(ProactiveMonitorState());
+=======
+  ProactiveMonitorService(this._ref) : super(ProactiveMonitorState());
+
+  final Ref _ref;
+  Timer? _monitorTimer;
+  Timer? _escalationTimer;
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
   @override
   void dispose() {
     _monitorTimer?.cancel();
+<<<<<<< HEAD
+=======
+    _escalationTimer?.cancel();
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     super.dispose();
   }
 
   void startSafeWalk(String dest, Duration duration) {
+<<<<<<< HEAD
     _monitorTimer?.cancel(); // Clear existing
     
+=======
+    _monitorTimer?.cancel();
+    _escalationTimer?.cancel();
+
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     state = state.copyWith(
       isMonitoring: true,
       destination: dest,
@@ -50,7 +73,11 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
       alertTriggered: false,
     );
 
+<<<<<<< HEAD
     _monitorTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+=======
+    _monitorTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
       _checkSafety();
     });
   }
@@ -63,14 +90,66 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
 
   void _triggerCheckIn() {
     state = state.copyWith(alertTriggered: true);
+<<<<<<< HEAD
+=======
+
+    final dest = state.destination ?? 'your destination';
+    final orchestrator = _ref.read(emergencyOrchestratorProvider.notifier);
+    SafeWalkNotificationService.instance.ensureInitialized(
+      orchestrator: orchestrator,
+      monitor: this,
+    );
+    SafeWalkNotificationService.instance.showCheckInNow(destination: dest);
+    SafeWalkNotificationService.instance.showForegroundDialogIfPossible(
+      destination: dest,
+      monitor: this,
+    );
+
+    _escalationTimer?.cancel();
+    _escalationTimer = Timer(const Duration(seconds: 60), () {
+      if (!state.isMonitoring || !state.alertTriggered) return;
+      _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
+    });
+  }
+
+  void confirmImSafe() {
+    if (!state.isMonitoring) return;
+    _escalationTimer?.cancel();
+    state = state.copyWith(alertTriggered: false);
+    SafeWalkNotificationService.instance.cancelCheckInNotification();
+  }
+
+  void escalateToSosNow() {
+    if (!state.isMonitoring) return;
+    SafeWalkNotificationService.instance.cancelCheckInNotification();
+    _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
   }
 
   void endSafeWalk() {
     _monitorTimer?.cancel();
+<<<<<<< HEAD
+=======
+    _escalationTimer?.cancel();
+    SafeWalkNotificationService.instance.cancelCheckInNotification();
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     state = ProactiveMonitorState();
   }
 }
 
+<<<<<<< HEAD
 final proactiveMonitorProvider = StateNotifierProvider.autoDispose<ProactiveMonitorService, ProactiveMonitorState>((ref) {
   return ProactiveMonitorService();
+=======
+/// IMPORTANT: NOT autoDispose.
+///
+/// The previous autoDispose caused the safe-walk escalation timer to be killed
+/// whenever any widget watching this provider was rebuilt or removed from the
+/// widget tree — e.g., when the user navigated from Dashboard to Settings.
+/// The escalation must survive widget lifecycle changes to guarantee the 60s
+/// SOS escalation fires even when the app is in the background.
+final proactiveMonitorProvider =
+    StateNotifierProvider<ProactiveMonitorService, ProactiveMonitorState>((ref) {
+  return ProactiveMonitorService(ref);
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 });

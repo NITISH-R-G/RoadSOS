@@ -2,13 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
+<<<<<<< HEAD
+=======
+import '../config/map_tile_config.dart';
+import '../logging/app_log.dart';
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 import '../services/emergency_orchestrator.dart';
 import '../models/facility.dart';
 
 /// A robust, offline-capable Map widget for RoadSOS.
 ///
 /// Features:
+<<<<<<< HEAD
 /// - Renders OSM tiles (supports local tile path for hybrid-offline)
+=======
+/// - Raster tiles from [MapTileConfig] (defaults to Carto CDN — not OSM.org;
+///   supports Mappls/CARTO/self-hosted URLs via env)
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 /// - Displays user location, reported incidents, and nearby facilities
 /// - Supports auto-centering on user location
 class RoadSosMap extends StatefulWidget {
@@ -27,11 +37,43 @@ class RoadSosMap extends StatefulWidget {
 
 class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   late final AnimatedMapController _mapController;
+<<<<<<< HEAD
+=======
+  // NOTE (SOS reliability): keep the SOS map on network tiles only.
+  // Offline caching is handled by `OfflineMapScreen` + FMTC. In the SOS
+  // surface, using the cache provider can hide network/tile failures behind
+  // silent cache logic and has produced “blank grey map” reports.
+  late final TileProvider _tileProvider = NetworkTileProvider();
+  int _tileErrorCount = 0;
+  int _tileLayerNonce = 0;
+  DateTime _mountedAt = DateTime.now();
+
+  bool get _templateLooksValid {
+    final t = MapTileConfig.effectiveUrlTemplate;
+    return t.contains('{z}') && t.contains('{x}') && t.contains('{y}');
+  }
+
+  String? get _fallbackUrl {
+    final t = MapTileConfig.effectiveUrlTemplate;
+    // Fallback chain for reliability (demo safety):
+    // - If custom provider fails (keys/restrictions), fall back to Carto.
+    // - If Carto fails (blocked network / DNS / captive portal), fall back to
+    //   OSM tile CDN for demo resilience (do not ship high-volume traffic there).
+    if (!t.contains('basemaps.cartocdn.com')) return MapTileConfig.cartoDarkMatter;
+    return MapTileConfig.tileOpenstreetmapOrgViolatesPolicyAtScale;
+  }
+
+  // Cache tile provider intentionally not used in SOS map.
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
   @override
   void initState() {
     super.initState();
     _mapController = AnimatedMapController(vsync: this);
+<<<<<<< HEAD
+=======
+    _mountedAt = DateTime.now();
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
   }
 
   @override
@@ -54,9 +96,19 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final userLoc = widget.state.location != null
         ? LatLng(widget.state.location!.latitude, widget.state.location!.longitude)
         : const LatLng(0, 0);
+=======
+    final hasFix = widget.state.location != null &&
+        widget.state.location!.source != 'unknown' &&
+        !(widget.state.location!.latitude == 0.0 &&
+            widget.state.location!.longitude == 0.0);
+    final userLoc = hasFix
+        ? LatLng(widget.state.location!.latitude, widget.state.location!.longitude)
+        : null;
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
 
     return Container(
       height: 300,
@@ -68,27 +120,63 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
+<<<<<<< HEAD
           FlutterMap(
             mapController: _mapController.mapController,
             options: MapOptions(
               initialCenter: userLoc,
               initialZoom: 15,
+=======
+          Container(color: Colors.black),
+          FlutterMap(
+            mapController: _mapController.mapController,
+            options: MapOptions(
+              initialCenter: userLoc ?? const LatLng(20.5937, 78.9629),
+              initialZoom: userLoc != null ? 15 : 4.5,
+              minZoom: 2.5,
+              maxZoom: 18,
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               ),
             ),
             children: [
               TileLayer(
+<<<<<<< HEAD
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.roadsos.app',
                 // Hybrid-Offline: If a local tile path exists, use it.
                 // Otherwise, the online OSM tiles will be used as a fallback.
                 tileProvider: _getTileProvider(),
+=======
+                key: ValueKey('tiles_${_tileLayerNonce}_${MapTileConfig.effectiveUrlTemplate}'),
+                urlTemplate: MapTileConfig.effectiveUrlTemplate,
+                subdomains: MapTileConfig.effectiveSubdomains,
+                userAgentPackageName: 'com.roadsos.app',
+                tileProvider: _tileProvider,
+                fallbackUrl: _fallbackUrl,
+                errorTileCallback: (tile, error, stackTrace) {
+                  // Avoid log spam; still record enough to debug.
+                  _tileErrorCount += 1;
+                  if (_tileErrorCount <= 3 || _tileErrorCount % 20 == 0) {
+                    appLog.w(
+                      '[Map] Tile load error (#$_tileErrorCount) z=${tile.coordinates.z} x=${tile.coordinates.x} y=${tile.coordinates.y}',
+                      error: error,
+                      stackTrace: stackTrace,
+                    );
+                  }
+                  if (mounted && _tileErrorCount == 1) setState(() {});
+                },
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
               ),
               MarkerLayer(
                 markers: [
                   // User Location Marker
+<<<<<<< HEAD
                   if (widget.state.location != null)
+=======
+                  if (userLoc != null)
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
                     Marker(
                       point: userLoc,
                       width: 40,
@@ -99,13 +187,40 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                   // Incident Markers
                   ..._buildIncidentMarkers(),
                   
+<<<<<<< HEAD
                   // Facility Markers (Placeholder for now)
+=======
+                  // Facility Markers (seeded + cloud-synced via PowerSync when configured)
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
                   ..._buildFacilityMarkers(),
                 ],
               ),
             ],
           ),
+<<<<<<< HEAD
           
+=======
+          Positioned(
+            left: 8,
+            bottom: 8,
+            right: 56,
+            child: IgnorePointer(
+              child: Text(
+                MapTileConfig.attributionLabel,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.white.withValues(alpha: 0.45),
+                  shadows: const [
+                    Shadow(color: Colors.black54, blurRadius: 4),
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
           // Map Overlay Controls
           Positioned(
             right: 12,
@@ -136,11 +251,86 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
               ],
             ),
           ),
+<<<<<<< HEAD
+=======
+
+          // Fail-safe overlay: never allow a silent grey map.
+          if (!_templateLooksValid || _tileErrorCount > 0)
+            Positioned(
+              left: 12,
+              top: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.78),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: _templateLooksValid ? Colors.amber : Colors.redAccent,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        !_templateLooksValid
+                            ? 'Map tiles misconfigured (missing {z}/{x}/{y}).'
+                            : 'Map tiles failed to load. Check internet / tile provider.\n'
+                              'Template: ${MapTileConfig.effectiveUrlTemplate}',
+                        style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.25),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _tileErrorCount = 0;
+                          _tileLayerNonce += 1; // forces TileLayer rebuild
+                        });
+                      },
+                      child: const Text('RETRY'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // If no tile errors are reported but the map still appears blank,
+          // show a timed hint so users aren't left with a silent grey box.
+          if (_templateLooksValid && _tileErrorCount == 0)
+            Positioned(
+              left: 12,
+              bottom: 46,
+              child: Builder(
+                builder: (context) {
+                  final seconds = DateTime.now().difference(_mountedAt).inSeconds;
+                  if (seconds < 6) return const SizedBox.shrink();
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: const Text(
+                      'Map still loading… If this stays blank, check internet or switch networks.',
+                      style: TextStyle(color: Colors.white70, fontSize: 11),
+                    ),
+                  );
+                },
+              ),
+            ),
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
         ],
       ),
     );
   }
 
+<<<<<<< HEAD
   TileProvider _getTileProvider() {
     return NetworkTileProvider();
   }
@@ -149,6 +339,12 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
     return Container(
       decoration: BoxDecoration(
         color: Colors.blue.withOpacity(0.2),
+=======
+  Widget _buildUserMarker() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.blue.withValues(alpha: 0.2),
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
         shape: BoxShape.circle,
         border: Border.all(color: Colors.blue, width: 2),
       ),
@@ -160,6 +356,10 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
 
   List<Marker> _buildIncidentMarkers() {
     if (widget.state.incidentId == null || widget.state.location == null) return [];
+<<<<<<< HEAD
+=======
+    if (widget.state.location!.source == 'unknown') return [];
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
     
     return [
       Marker(
@@ -196,6 +396,10 @@ class _FacilityMarker extends StatelessWidget {
     switch (facility.type.toLowerCase()) {
       case 'hospital':
       case 'ambulance':
+<<<<<<< HEAD
+=======
+      case 'primary_health_centre':
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
         icon = Icons.local_hospital;
         color = Colors.green;
         break;
@@ -230,14 +434,26 @@ class _FacilityMarker extends StatelessWidget {
       onTap: () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+<<<<<<< HEAD
             content: Text('${facility.name} (${facility.type})'),
             duration: const Duration(seconds: 2),
+=======
+            content: Text(
+              '${facility.name} (${facility.type})'
+              '${facility.dataSource != null ? ' · ${facility.dataSource}' : ''}',
+            ),
+            duration: const Duration(seconds: 3),
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
           ),
         );
       },
       child: Container(
         decoration: BoxDecoration(
+<<<<<<< HEAD
           color: color.withOpacity(0.8),
+=======
+          color: color.withValues(alpha: 0.8),
+>>>>>>> 11eadcec90ad9567a8ccab6309695935049f4e41
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 1),
         ),
