@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-<<<<<<< HEAD
-=======
 import 'package:url_launcher/url_launcher.dart';
->>>>>>> origin/main
 import '../services/proactive_monitor_service.dart';
 
 class SafeWalkOverlay extends ConsumerWidget {
@@ -28,40 +25,6 @@ class SafeWalkOverlay extends ConsumerWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
           ),
-<<<<<<< HEAD
-          child: Row(
-            children: [
-              Icon(
-                monitor.alertTriggered ? Icons.warning : Icons.directions_walk, 
-                color: Colors.white,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      monitor.alertTriggered ? 'CHECK-IN REQUIRED' : 'SAFE-WALK ACTIVE',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 10),
-                    ),
-                    Text(
-                      monitor.alertTriggered 
-                        ? 'Confirm your safety now or SOS will trigger.' 
-                        : 'Heading to ${monitor.destination}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              TextButton(
-                // "I'm safe" should acknowledge the check-in without stopping Safe Walk monitoring.
-                onPressed: () => ref.read(proactiveMonitorProvider.notifier).confirmImSafe(),
-                child: const Text('I AM SAFE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-=======
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -132,7 +95,6 @@ class SafeWalkOverlay extends ConsumerWidget {
                 ),
               ],
             ),
->>>>>>> origin/main
         ),
       ),
     );

@@ -52,8 +52,6 @@ class VoiceAssistantService {
     await _tts.stop();
   }
 
-<<<<<<< HEAD
-=======
   // ── Phase 7: Hands-free SOS countdown (driving mode) ─────────────────────
 
   /// Speaks the SOS countdown message once at the start of the countdown.
@@ -184,7 +182,6 @@ class VoiceAssistantService {
 
   // ── Existing confirmation listener (unchanged) ────────────────────────────
 
->>>>>>> origin/main
   /// Simple confirmation — English + common Hindi tokens for India.
   Future<bool> listenForConfirmation() async {
     if (_isListening) return false;

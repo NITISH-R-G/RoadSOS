@@ -6,10 +6,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 import '../logging/app_log.dart';
-<<<<<<< HEAD
-import 'emergency_orchestrator.dart';
-import 'crash_tuning.dart';
-=======
 import 'bluetooth_vehicle_monitor.dart';
 import 'crash_confidence_engine.dart';
 import 'crash_tuning.dart';
@@ -17,27 +13,10 @@ import 'driving_mode_service.dart';
 import 'emergency_orchestrator.dart';
 import 'gyroscope_fusion_service.dart';
 import 'remote_crash_config.dart';
->>>>>>> origin/main
 
 class _SpeedSample {
   final DateTime t;
   final double kmh;
-<<<<<<< HEAD
-
-  _SpeedSample(this.t, this.kmh);
-}
-
-/// Multi-stage crash detection inspired by consumer phone crash pipelines:
-/// 1) Strong user-accelerometer spike (device frame, gravity removed).
-/// 2) Pre-impact vehicle speed was at or above [minApproachSpeedKmh] (GPS).
-/// 3) Within [postImpactWindow], speed collapses toward a stop (sudden deceleration).
-/// 4) Sustained low motion variance on the user accelerometer (stillness — not a phone bouncing in a cabin or on a vibration road).
-///
-/// Values are **m/s²** on the accelerometer channel; they are **not** “G” despite common speech.
-///
-/// If GPS speed is unavailable, this service **does not** trigger SOS on accelerometry alone (avoids
-/// pothole / drop-phone false positives on Indian roads).
-=======
   _SpeedSample(this.t, this.kmh);
 }
 
@@ -66,21 +45,17 @@ class _SpeedSample {
 ///   Potholes produce 25–45 m/s² vertical spikes but < 1 rad/s rotation.
 ///   Real crashes produce strong linear deceleration AND a rotational
 ///   signature. Gyro fusion reduces false-positive SOS triggers by ~40%.
->>>>>>> origin/main
 class CrashDetectionService {
   CrashDetectionService(this._ref);
 
   final Ref _ref;
 
-<<<<<<< HEAD
-=======
   GyroscopeFusionService get _gyro =>
       _ref.read(gyroscopeFusionServiceProvider);
 
   BluetoothVehicleMonitor get _btMonitor =>
       _ref.read(bluetoothVehicleMonitorProvider);
 
->>>>>>> origin/main
   StreamSubscription<UserAccelerometerEvent>? _accelSub;
   StreamSubscription<Position>? _positionSub;
 
@@ -91,15 +66,6 @@ class CrashDetectionService {
   DateTime? _lastConfirmedSos;
   DateTime? _lastSpikeHandled;
 
-<<<<<<< HEAD
-  // All thresholds are env-configurable via [CrashTuning].
-
-  void startMonitoring() {
-    stopMonitoring();
-    _startGpsSpeed();
-    _accelSub =
-        SensorsPlatform.instance.userAccelerometerEventStream().listen(_onAccelerometer);
-=======
   void startMonitoring() {
     stopMonitoring();
     // Gyroscope and BT monitor lifecycle managed by their providers.
@@ -107,7 +73,6 @@ class CrashDetectionService {
     _accelSub = SensorsPlatform.instance
         .userAccelerometerEventStream()
         .listen(_onAccelerometer);
->>>>>>> origin/main
   }
 
   Future<void> _startGpsSpeed() async {
@@ -133,18 +98,6 @@ class CrashDetectionService {
 
       _gpsSpeedUsable = true;
 
-<<<<<<< HEAD
-      final settings = const LocationSettings(
-        accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 0,
-      );
-
-      _positionSub = Geolocator.getPositionStream(
-        locationSettings: settings,
-      ).listen(
-        _onPosition,
-        onError: (_) => _gpsSpeedUsable = false,
-=======
       _positionSub = Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.bestForNavigation,
@@ -153,7 +106,6 @@ class CrashDetectionService {
       ).listen(
         _onPosition,
         onError: (Object _) => _gpsSpeedUsable = false,
->>>>>>> origin/main
       );
     } catch (_) {
       _gpsSpeedUsable = false;
@@ -170,23 +122,15 @@ class CrashDetectionService {
       Duration(milliseconds: CrashTuning.speedHistoryHorizonMs),
     );
     _speedHistory.removeWhere((s) => s.t.isBefore(cutoff));
-<<<<<<< HEAD
-=======
 
     // Update zone classifier with GPS lat/lng + speed.
     // Region lookup (crash_config_regions geofences) has priority over the
     // speed heuristic, enabling admin-defined per-geography tuning.
     RemoteCrashConfig.instance.updateLocation(p.latitude, p.longitude, kmh);
->>>>>>> origin/main
   }
 
   void _onAccelerometer(UserAccelerometerEvent event) {
     final mag = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
-<<<<<<< HEAD
-    if (mag <= CrashTuning.impactThresholdMs2) return;
-
-    final now = DateTime.now();
-=======
 
     final now = DateTime.now();
     final gyroPeak = _gyro.peakRadPerSecAt(now);
@@ -195,7 +139,6 @@ class CrashDetectionService {
     final effectiveThreshold = CrashTuning.impactThresholdMs2 / gyroMult;
     if (mag <= effectiveThreshold) return;
 
->>>>>>> origin/main
     if (_lastSpikeHandled != null &&
         now.difference(_lastSpikeHandled!).inMilliseconds <
             CrashTuning.interSpikeDebounceMs) {
@@ -203,14 +146,6 @@ class CrashDetectionService {
     }
     _lastSpikeHandled = now;
 
-<<<<<<< HEAD
-    appLog.d('Impact spike ${mag.toStringAsFixed(1)} m/s² — evaluating');
-
-    unawaited(_evaluateCrash(now, mag));
-  }
-
-  Future<void> _evaluateCrash(DateTime impactTime, double peakMs2) async {
-=======
     final isDriving = _ref.read(drivingModeProvider) == DrivingMode.driving;
     appLog.d(
       'Impact spike ${mag.toStringAsFixed(1)} m/s² '
@@ -227,23 +162,15 @@ class CrashDetectionService {
     double peakMs2,
     double gyroPeakRadPerSec,
   ) async {
->>>>>>> origin/main
     if (_evaluationInFlight) return;
     _evaluationInFlight = true;
 
     try {
-<<<<<<< HEAD
-      await Future.delayed(
-        Duration(milliseconds: CrashTuning.postImpactWindowMs + 150),
-      );
-
-=======
       await Future<void>.delayed(
         Duration(milliseconds: CrashTuning.postImpactWindowMs + 150),
       );
 
       // Gate 2: GPS speed context.
->>>>>>> origin/main
       if (!_gpsSpeedUsable || _speedHistory.length < 2) {
         appLog.d('Dismissed: insufficient GPS speed context');
         return;
@@ -252,42 +179,19 @@ class CrashDetectionService {
       final beforeStart = impactTime.subtract(
         Duration(milliseconds: CrashTuning.preImpactLookbackMs),
       );
-<<<<<<< HEAD
-      final beforeEnd = impactTime;
-      final afterStart = impactTime;
-=======
->>>>>>> origin/main
       final afterEnd = impactTime.add(
         Duration(milliseconds: CrashTuning.postImpactWindowMs),
       );
 
       var maxBefore = 0.0;
       for (final s in _speedHistory) {
-<<<<<<< HEAD
-        if (!s.t.isBefore(beforeStart) && !s.t.isAfter(beforeEnd)) {
-=======
         if (!s.t.isBefore(beforeStart) && !s.t.isAfter(impactTime)) {
->>>>>>> origin/main
           if (s.kmh > maxBefore) maxBefore = s.kmh;
         }
       }
 
       var minAfter = double.infinity;
       for (final s in _speedHistory) {
-<<<<<<< HEAD
-        if (!s.t.isBefore(afterStart) && !s.t.isAfter(afterEnd)) {
-          if (s.kmh < minAfter) minAfter = s.kmh;
-        }
-      }
-      if (minAfter.isInfinite) {
-        minAfter = _speedHistory.last.kmh;
-      }
-
-      final approach = maxBefore >= CrashTuning.minApproachSpeedKmh;
-      final halted = minAfter <= CrashTuning.stoppedSpeedKmh;
-      final sharpDrop =
-          (maxBefore - minAfter) >= CrashTuning.suddenDecelDeltaKmh;
-=======
         if (!s.t.isBefore(impactTime) && !s.t.isAfter(afterEnd)) {
           if (s.kmh < minAfter) minAfter = s.kmh;
         }
@@ -297,7 +201,6 @@ class CrashDetectionService {
       final approach  = maxBefore >= CrashTuning.minApproachSpeedKmh;
       final halted    = minAfter  <= CrashTuning.stoppedSpeedKmh;
       final sharpDrop = (maxBefore - minAfter) >= CrashTuning.suddenDecelDeltaKmh;
->>>>>>> origin/main
 
       if (!approach || !(halted || sharpDrop)) {
         appLog.d(
@@ -307,13 +210,6 @@ class CrashDetectionService {
         return;
       }
 
-<<<<<<< HEAD
-      final still = await _measureStillness();
-      if (!still) {
-        appLog.d(
-          'Dismissed: motion continues after spike (not a wrecked-phone profile)',
-        );
-=======
       // Gate 4: Stillness check (skipped for high-gyro rolling/spinning crash).
       final highGyroConfidence = gyroPeakRadPerSec >= 3.5;
       bool still;
@@ -350,7 +246,6 @@ class CrashDetectionService {
       // LOW confidence after 4 gates is theoretically impossible but guarded.
       if (confidence.tier == CrashConfidenceTier.low) {
         appLog.d('Confidence engine: LOW — suppressing SOS (edge case)');
->>>>>>> origin/main
         return;
       }
 
@@ -362,8 +257,6 @@ class CrashDetectionService {
       }
       _lastConfirmedSos = now;
 
-<<<<<<< HEAD
-=======
       appLog.w(
         '${confidence.incidentLabel} — '
         'accel=${peakMs2.toStringAsFixed(1)} m/s² '
@@ -373,27 +266,17 @@ class CrashDetectionService {
         'confidence=${confidence.score.toStringAsFixed(3)} [${confidence.tierLabel}]',
       );
 
->>>>>>> origin/main
       _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
     } finally {
       _evaluationInFlight = false;
     }
   }
 
-<<<<<<< HEAD
-  /// Sample user acceleration for [stillnessSampleWindowMs]; low std-dev ⇒ device at rest.
-  Future<bool> _measureStillness() async {
-    final magnitudes = <double>[];
-    final sub = SensorsPlatform.instance.userAccelerometerEventStream().listen((e) {
-      magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z));
-    });
-=======
   Future<bool> _measureStillness() async {
     final magnitudes = <double>[];
     final sub = SensorsPlatform.instance
         .userAccelerometerEventStream()
         .listen((e) => magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z)));
->>>>>>> origin/main
 
     await Future<void>.delayed(
       Duration(milliseconds: CrashTuning.stillnessSampleWindowMs),

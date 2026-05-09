@@ -5,10 +5,7 @@ import 'first_aid_repository.dart';
 class FirstAidStore {
   static Future<String> getVerifiedAdvice(String query) =>
       FirstAidRepository.instance.lookup(query);
-<<<<<<< HEAD
-=======
 
   static Future<List<String>> getSuggestions(String query) =>
       FirstAidRepository.instance.getSuggestions(query);
->>>>>>> origin/main
 }

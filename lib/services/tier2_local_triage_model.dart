@@ -2,11 +2,7 @@
 ///
 /// This intentionally sits between:
 /// - Tier 3: very simple keyword heuristic ([OfflineTriageClassifier])
-<<<<<<< HEAD
-/// - Tier 1: cloud LLM triage (server-side Gemini)
-=======
 /// - Tier 1: cloud LLM triage (server-side Gemma 4 27B via Supabase Edge Function)
->>>>>>> origin/main
 ///
 /// Tier-2 is designed to be replaceable by a small TFLite/ONNX model later while
 /// keeping the same output contract.

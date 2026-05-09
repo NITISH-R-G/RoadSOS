@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-<<<<<<< HEAD
-import 'permission_onboarding_screen.dart';
-
-const _kOnboardingDone = 'permissions_onboarding_v1_done';
-
-/// Shows [PermissionOnboardingScreen] once, then the main app.
-=======
 import '../services/gemma_model_manager.dart';
 import 'gemma_model_download_screen.dart';
 import 'permission_onboarding_screen.dart';
@@ -23,7 +16,6 @@ const _kModelPromptDone = 'model_download_prompt_v1_done';
 ///   • Skipped if the user chooses "Skip — use cloud AI only"
 ///
 /// After both phases (or skip), shows the main app.
->>>>>>> origin/main
 class OnboardingGate extends StatefulWidget {
   const OnboardingGate({super.key, required this.child});
 
@@ -34,12 +26,7 @@ class OnboardingGate extends StatefulWidget {
 }
 
 class _OnboardingGateState extends State<OnboardingGate> {
-<<<<<<< HEAD
-  bool? _loaded;
-  bool _showOnboarding = false;
-=======
   _GatePhase _phase = _GatePhase.loading;
->>>>>>> origin/main
 
   @override
   void initState() {
@@ -48,22 +35,6 @@ class _OnboardingGateState extends State<OnboardingGate> {
   }
 
   Future<void> _load() async {
-<<<<<<< HEAD
-    final p = await SharedPreferences.getInstance();
-    final done = p.getBool(_kOnboardingDone) ?? false;
-    if (!mounted) return;
-    setState(() {
-      _loaded = true;
-      _showOnboarding = !done;
-    });
-  }
-
-  Future<void> _completeOnboarding() async {
-    final p = await SharedPreferences.getInstance();
-    await p.setBool(_kOnboardingDone, true);
-    if (!mounted) return;
-    setState(() => _showOnboarding = false);
-=======
     final prefs = await SharedPreferences.getInstance();
     final permsDone = prefs.getBool(_kPermsDone) ?? false;
     final modelPromptDone = prefs.getBool(_kModelPromptDone) ?? false;
@@ -102,25 +73,10 @@ class _OnboardingGateState extends State<OnboardingGate> {
     await prefs.setBool(_kModelPromptDone, true);
     if (!mounted) return;
     setState(() => _phase = _GatePhase.app);
->>>>>>> origin/main
   }
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
-    if (_loaded != true) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (_showOnboarding) {
-      return PermissionOnboardingScreen(onComplete: _completeOnboarding);
-    }
-    return widget.child;
-  }
-}
-=======
     switch (_phase) {
       case _GatePhase.loading:
         return const Scaffold(
@@ -138,4 +94,3 @@ class _OnboardingGateState extends State<OnboardingGate> {
 }
 
 enum _GatePhase { loading, permissions, modelDownload, app }
->>>>>>> origin/main

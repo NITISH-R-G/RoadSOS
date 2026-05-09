@@ -1,17 +1,4 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-
-import '../services/first_aid_store.dart';
-
-class FirstAidScreen extends StatefulWidget {
-  const FirstAidScreen({super.key});
-
-  @override
-  State<FirstAidScreen> createState() => _FirstAidScreenState();
-}
-
-class _FirstAidScreenState extends State<FirstAidScreen> {
-=======
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,16 +12,10 @@ class FirstAidScreen extends ConsumerStatefulWidget {
 }
 
 class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
->>>>>>> origin/main
   final TextEditingController _textController = TextEditingController();
   bool _isLoading = false;
   String _result = '';
   String? _error;
-<<<<<<< HEAD
-
-  @override
-  void dispose() {
-=======
   List<String> _suggestions = [];
 
   @override
@@ -46,19 +27,10 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
   @override
   void dispose() {
     _textController.removeListener(_onTextChanged);
->>>>>>> origin/main
     _textController.dispose();
     super.dispose();
   }
 
-<<<<<<< HEAD
-  String _normalize(String raw) {
-    // Corpus results are plain text with simple markdown-like markers.
-    return raw.replaceAll('**', '').trim();
-  }
-
-  Future<void> _lookupFirstAid(String query) async {
-=======
   void _onTextChanged() async {
     final query = _textController.text;
     if (query.length < 2) {
@@ -79,25 +51,17 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
   Future<void> _lookupFirstAid(String query) async {
     if (query.trim().isEmpty) return;
     
->>>>>>> origin/main
     setState(() {
       _isLoading = true;
       _result = '';
       _error = null;
-<<<<<<< HEAD
-=======
       _suggestions = []; // Clear suggestions on submit
->>>>>>> origin/main
     });
 
     try {
       final res = await FirstAidStore.getVerifiedAdvice(query);
       setState(() {
-<<<<<<< HEAD
-        _result = _normalize(res);
-=======
         _result = res;
->>>>>>> origin/main
       });
     } catch (e) {
       setState(() {
@@ -112,11 +76,8 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
     }
   }
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> origin/main
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -141,35 +102,21 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                     controller: _textController,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-<<<<<<< HEAD
-                      hintText: 'Describe the situation...',
-                      hintStyle: const TextStyle(color: Colors.white38),
-                      filled: true,
-                      fillColor: const Color(0xFF1A1A2E),
-=======
                       hintText: 'Describe injury...',
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
                       fillColor: const Color(0xFF1A1A2E),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
->>>>>>> origin/main
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
                       ),
                     ),
-<<<<<<< HEAD
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Submit button
-=======
                     onSubmitted: (val) => _lookupFirstAid(val),
                   ),
                 ),
 
                 const SizedBox(width: 8),
->>>>>>> origin/main
                 IconButton(
                   onPressed: () {
                     _lookupFirstAid(_textController.text);
@@ -178,19 +125,13 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                   style: IconButton.styleFrom(
                     backgroundColor: Colors.red,
                     padding: const EdgeInsets.all(12),
-<<<<<<< HEAD
-=======
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
->>>>>>> origin/main
                   ),
                 ),
               ],
             ),
-<<<<<<< HEAD
-            const SizedBox(height: 16),
-=======
 
             // Suggestions List
             if (_suggestions.isNotEmpty)
@@ -223,29 +164,19 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
               ),
 
             const SizedBox(height: 12),
->>>>>>> origin/main
 
             // Loading
             if (_isLoading)
               const Center(
-<<<<<<< HEAD
-                child: CircularProgressIndicator(color: Colors.red),
-=======
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 32),
                   child: CircularProgressIndicator(color: Colors.red),
                 ),
->>>>>>> origin/main
               ),
 
             if (_error != null && !_isLoading)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-<<<<<<< HEAD
-                child: Text(
-                  _error!,
-                  style: const TextStyle(color: Colors.redAccent),
-=======
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -265,7 +196,6 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                       ),
                     ],
                   ),
->>>>>>> origin/main
                 ),
               ),
 
@@ -274,22 +204,13 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                 child: Container(
                   width: double.infinity,
                   margin: const EdgeInsets.only(top: 12),
-<<<<<<< HEAD
-                  padding: const EdgeInsets.all(14),
-=======
                   padding: const EdgeInsets.all(16),
->>>>>>> origin/main
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A1A2E),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
                   ),
                   child: SingleChildScrollView(
-<<<<<<< HEAD
-                    child: SelectableText(
-                      _result,
-                      style: const TextStyle(color: Colors.white70, height: 1.35),
-=======
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -321,37 +242,17 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                           ),
                         ),
                       ],
->>>>>>> origin/main
                     ),
                   ),
                 ),
               ),
 
-<<<<<<< HEAD
-            // Empty state
-=======
->>>>>>> origin/main
             if (_result.isEmpty && _error == null && !_isLoading)
               Expanded(
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-<<<<<<< HEAD
-                      const Icon(Icons.health_and_safety,
-                          size: 80, color: Colors.red),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Describe the emergency situation\nto get instant first aid guidance',
-                        style: TextStyle(color: Colors.white54, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'e.g. "CPR", "bleeding wound", "broken bone", "burns"',
-                        style: TextStyle(color: Colors.white30, fontSize: 13),
-                        textAlign: TextAlign.center,
-=======
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
@@ -388,7 +289,6 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                           _buildChip('Brain Injury'),
                           _buildChip('Sprains'),
                         ],
->>>>>>> origin/main
                       ),
                     ],
                   ),
@@ -399,8 +299,6 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
       ),
     );
   }
-<<<<<<< HEAD
-=======
 
   Widget _buildChip(String label) {
     return ActionChip(
@@ -412,5 +310,4 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
   }
->>>>>>> origin/main
 }

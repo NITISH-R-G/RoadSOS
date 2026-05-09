@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:flutter_map_animations/flutter_map_animations.dart';
-import '../config/map_tile_config.dart';
-import '../services/emergency_orchestrator.dart';
-import '../services/map_tile_cache.dart';
-=======
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -16,7 +5,6 @@ import 'package:flutter_map_animations/flutter_map_animations.dart';
 import '../config/map_tile_config.dart';
 import '../logging/app_log.dart';
 import '../services/emergency_orchestrator.dart';
->>>>>>> origin/main
 import '../models/facility.dart';
 
 /// A robust, offline-capable Map widget for RoadSOS.
@@ -42,20 +30,6 @@ class RoadSosMap extends StatefulWidget {
 
 class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
   late final AnimatedMapController _mapController;
-<<<<<<< HEAD
-  late final TileProvider _tileProvider = _makeTileProvider();
-
-  TileProvider _makeTileProvider() {
-    if (kIsWeb || !fmtcMapCacheReady) {
-      return NetworkTileProvider();
-    }
-    return FMTCTileProvider(
-      stores: {kFmtcRoadsosOsmStore: BrowseStoreStrategy.readUpdateCreate},
-      loadingStrategy: BrowseLoadingStrategy.cacheFirst,
-    );
-  }
-
-=======
   // NOTE (SOS reliability): keep the SOS map on network tiles only.
   // Offline caching is handled by `OfflineMapScreen` + FMTC. In the SOS
   // surface, using the cache provider can hide network/tile failures behind
@@ -82,15 +56,11 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
 
   // Cache tile provider intentionally not used in SOS map.
 
->>>>>>> origin/main
   @override
   void initState() {
     super.initState();
     _mapController = AnimatedMapController(vsync: this);
-<<<<<<< HEAD
-=======
     _mountedAt = DateTime.now();
->>>>>>> origin/main
   }
 
   @override
@@ -131,36 +101,25 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-<<<<<<< HEAD
-=======
           Container(color: Colors.black),
->>>>>>> origin/main
           FlutterMap(
             mapController: _mapController.mapController,
             options: MapOptions(
               initialCenter: userLoc ?? const LatLng(20.5937, 78.9629),
               initialZoom: userLoc != null ? 15 : 4.5,
-<<<<<<< HEAD
-=======
               minZoom: 2.5,
               maxZoom: 18,
->>>>>>> origin/main
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               ),
             ),
             children: [
               TileLayer(
-<<<<<<< HEAD
-=======
                 key: ValueKey('tiles_${_tileLayerNonce}_${MapTileConfig.effectiveUrlTemplate}'),
->>>>>>> origin/main
                 urlTemplate: MapTileConfig.effectiveUrlTemplate,
                 subdomains: MapTileConfig.effectiveSubdomains,
                 userAgentPackageName: 'com.roadsos.app',
                 tileProvider: _tileProvider,
-<<<<<<< HEAD
-=======
                 fallbackUrl: _fallbackUrl,
                 errorTileCallback: (tile, error, stackTrace) {
                   // Avoid log spam; still record enough to debug.
@@ -174,7 +133,6 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                   }
                   if (mounted && _tileErrorCount == 1) setState(() {});
                 },
->>>>>>> origin/main
               ),
               MarkerLayer(
                 markers: [
@@ -246,8 +204,6 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
               ],
             ),
           ),
-<<<<<<< HEAD
-=======
 
           // Fail-safe overlay: never allow a silent grey map.
           if (!_templateLooksValid || _tileErrorCount > 0)
@@ -319,7 +275,6 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
                 },
               ),
             ),
->>>>>>> origin/main
         ],
       ),
     );

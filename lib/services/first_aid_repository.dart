@@ -80,8 +80,6 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
     return _lookupFts(q);
   }
 
-<<<<<<< HEAD
-=======
   /// Returns a list of titles for autocomplete suggestions.
   Future<List<String>> getSuggestions(String query) async {
     await ensureInitialized();
@@ -100,7 +98,6 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
     return suggestions;
   }
 
->>>>>>> origin/main
   String _lookupTokenScore(String query) {
     final tokens = _tokenize(query);
     if (tokens.isEmpty) {

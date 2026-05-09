@@ -1,23 +1,14 @@
-<<<<<<< HEAD
-import 'dart:math' show min;
-
-import 'package:flutter/material.dart';
-=======
 import 'dart:convert';
 import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
->>>>>>> origin/main
 import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../logging/app_log.dart';
 import '../services/ai_triage_service.dart';
-<<<<<<< HEAD
-=======
 import '../services/driving_mode_service.dart';
->>>>>>> origin/main
 import '../services/emergency_orchestrator.dart';
 import '../services/proactive_monitor_service.dart';
 import 'crisis_companion_overlay.dart';
@@ -28,18 +19,11 @@ import 'map_widget.dart';
 import 'medical_card_screen.dart';
 import 'mesh_chat_screen.dart';
 import 'mesh_radar.dart';
-<<<<<<< HEAD
-import 'responder_dashboard.dart';
-import 'safe_walk_overlay.dart';
-import 'settings_screen.dart';
-import 'vehicle_rescue_screen.dart';
-=======
 import 'offline_map_screen.dart';
 import 'profile_editor_screen.dart';
 import 'responder_dashboard.dart';
 import 'safe_walk_overlay.dart';
 import 'settings_screen.dart';
->>>>>>> origin/main
 import 'sos_activity_log_screen.dart';
 import 'sos_countdown_widget.dart';
 import 'sos_side_effect_observer.dart';
@@ -47,14 +31,10 @@ import 'status_indicator.dart';
 import 'triage_result_card.dart';
 import 'vital_scan_screen.dart';
 
-<<<<<<< HEAD
-/// Main shell: idle = single giant SOS (panic-first); other phases show honest dispatch status.
-=======
 /// Main shell — panic-first design with a discoverable bottom navigation bar.
 ///
 /// Idle:     3-tab NavigationBar — SOS | Safety Tools | My Profile
 /// Active:   Full-screen emergency UI (countdown → GPS lock → dispatch → live)
->>>>>>> origin/main
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -64,15 +44,6 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with TickerProviderStateMixin {
-<<<<<<< HEAD
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkInitialPermissions();
-=======
   int _tab = 0;
 
   late AnimationController _pulseController;
@@ -86,7 +57,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void initState() {
     super.initState();
     appLog.d('DashboardScreen init');
->>>>>>> origin/main
 
     _pulseController = AnimationController(
       vsync: this,
@@ -108,213 +78,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     super.dispose();
   }
 
-<<<<<<< HEAD
-  Future<void> _checkInitialPermissions() async {
-    appLog.d('Checking safety permissions');
-  }
-
-  void _openEmergencyToolsSheet(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      backgroundColor: scheme.surfaceContainerHighest,
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.paddingOf(ctx).bottom + 16,
-              top: 8,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.sosIdleToolsTitle,
-                    style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: scheme.onSurface,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  const SizedBox(height: 180, child: MeshRadar()),
-                  const SizedBox(height: 24),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      StatusIndicatorBar(),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    alignment: WrapAlignment.start,
-                    children: [
-                      _sheetAction(
-                        ctx,
-                        Icons.camera_enhance,
-                        l10n.actionScene,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const IncidentReportingScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.qr_code,
-                        l10n.actionMedicalId,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const MedicalCardScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.health_and_safety,
-                        l10n.actionResponder,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const ResponderDashboard()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.directions_walk,
-                        l10n.actionSafeWalk,
-                        () => _showSafeWalkDialog(ctx),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.health_and_safety_outlined,
-                        l10n.actionFirstAid,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const FirstAidScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.monitor_heart,
-                        l10n.actionVitalScan,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const VitalScanScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.forum,
-                        l10n.actionMeshChat,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const MeshChatScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                        ctx,
-                        Icons.fact_check_outlined,
-                        'Activity log',
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
-                        ),
-                      ),
-                      _sheetAction(
-                      ctx,
-                      Icons.car_crash,
-                      'Vehicle Rescue',
-                      () => Navigator.push(
-                      ctx,
-                      MaterialPageRoute(
-                      builder: (_) => const VehicleRescueScreen(),
-                    ),
-                  ),
-                ),
-                      _sheetAction(
-                        ctx,
-                        Icons.settings,
-                        l10n.actionSettings,
-                        () => Navigator.push(
-                          ctx,
-                          MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _sheetAction(
-    BuildContext context,
-    IconData icon,
-    String label,
-    VoidCallback onTap,
-  ) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: scheme.primary, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: scheme.onSurface.withValues(alpha: 0.92),
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-=======
   // ─────────────────────────────────────────────────────────────────────────
   // Build
   // ─────────────────────────────────────────────────────────────────────────
->>>>>>> origin/main
 
   @override
   Widget build(BuildContext context) {
     final sosState = ref.watch(emergencyOrchestratorProvider);
     final scheme = Theme.of(context).colorScheme;
     final idle = sosState.phase == SOSPhase.idle;
-<<<<<<< HEAD
-
-    return Scaffold(
-      backgroundColor: idle ? Colors.black : scheme.surface,
-      appBar: idle ? null : _buildEmergencyAppBar(context),
-      body: Stack(
-        children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            child: KeyedSubtree(
-              key: ValueKey<SOSPhase>(sosState.phase),
-              child: _buildBody(context, sosState),
-            ),
-=======
     final drivingMode = ref.watch(drivingModeProvider);
 
     // Emergency active → full-screen (no nav bar, no distractions).
@@ -352,19 +124,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               _toolsTab(context),
               _profileTab(context),
             ],
->>>>>>> origin/main
           ),
           const CrisisCompanionOverlay(),
           const SafeWalkOverlay(),
           const SOSSideEffectObserver(),
         ],
       ),
-<<<<<<< HEAD
-    );
-  }
-
-  PreferredSizeWidget _buildEmergencyAppBar(BuildContext context) {
-=======
       bottomNavigationBar: _navBar(context),
     );
   }
@@ -411,16 +176,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   PreferredSizeWidget _emergencyAppBar(BuildContext context) {
->>>>>>> origin/main
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
     return AppBar(
-<<<<<<< HEAD
-      backgroundColor: scheme.surface.withValues(alpha: 0.94),
-=======
       backgroundColor: scheme.surface.withAlpha(240),
->>>>>>> origin/main
       elevation: 0,
       scrolledUnderElevation: 2,
       title: Row(
@@ -430,15 +190,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           Text(
             l10n.dashboardTitle,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-<<<<<<< HEAD
-                  fontWeight: FontWeight.w900,
-                  color: scheme.onSurface,
-                ),
-=======
               fontWeight: FontWeight.w900,
               color: scheme.onSurface,
             ),
->>>>>>> origin/main
           ),
         ],
       ),
@@ -448,13 +202,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           icon: const Icon(Icons.fact_check_outlined),
           onPressed: () => Navigator.push(
             context,
-<<<<<<< HEAD
-            MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
-          ),
-        ),
-        const StatusIndicatorBar(),
-        const SizedBox(width: 16),
-=======
             MaterialPageRoute<void>(
               builder: (_) => const SosActivityLogScreen(),
             ),
@@ -462,33 +209,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ),
         const StatusIndicatorBar(),
         const SizedBox(width: 12),
->>>>>>> origin/main
       ],
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildBody(BuildContext context, SOSState sosState) {
-    switch (sosState.phase) {
-      case SOSPhase.idle:
-        return _buildPanicIdleView(context);
-      case SOSPhase.countdown:
-        return _buildCountdownView(context, sosState);
-      case SOSPhase.gpsLocking:
-      case SOSPhase.triaging:
-        return _buildPipelineProgressView(context, sosState);
-      case SOSPhase.dispatching:
-        return _buildDispatchingView(context, sosState);
-      case SOSPhase.active:
-        return _buildActiveSessionView(context, sosState);
-      default:
-        return _buildActiveSessionView(context, sosState);
-    }
-  }
-
-  Widget _buildPanicIdleView(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-=======
   // ─────────────────────────────────────────────────────────────────────────
   // Bottom navigation bar
   // ─────────────────────────────────────────────────────────────────────────
@@ -530,23 +254,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Widget _sosTab(BuildContext context, DrivingMode drivingMode) {
     final l10n = AppLocalizations.of(context)!;
     final isDriving = drivingMode == DrivingMode.driving;
->>>>>>> origin/main
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalH = constraints.maxHeight;
-<<<<<<< HEAD
-        final btnH = totalH * 0.8;
-=======
         final bannerH = isDriving ? 36.0 : 0.0;
         final btnH = (totalH - bannerH) * 0.78;
->>>>>>> origin/main
         final titleSize = min(96.0, btnH * 0.14);
 
         return Column(
           children: [
-<<<<<<< HEAD
-=======
             // Driving mode banner
             if (isDriving)
               Container(
@@ -571,25 +288,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               ),
 
             // SOS button — takes up most of the screen
->>>>>>> origin/main
             Expanded(
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-<<<<<<< HEAD
-                    onTap: () =>
-                        ref.read(emergencyOrchestratorProvider.notifier).triggerSOS(),
-                    child: AnimatedBuilder(
-                      animation: _pulseAnimation,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: _pulseAnimation.value,
-                          child: child,
-                        );
-                      },
-=======
                     onTap: () => ref
                         .read(emergencyOrchestratorProvider.notifier)
                         .triggerSOS(),
@@ -597,7 +301,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     // This delegates the transformation to the rendering engine and prevents costly widget rebuilds on every frame.
                     child: ScaleTransition(
                       scale: _pulseAnimation,
->>>>>>> origin/main
                       child: SizedBox(
                         height: btnH,
                         width: double.infinity,
@@ -608,22 +311,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                               gradient: const LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-<<<<<<< HEAD
-                                colors: [
-                                  Color(0xFFFF453A),
-                                  Color(0xFFB00020),
-                                ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF453A).withValues(alpha: 0.42),
-=======
                                 colors: [Color(0xFFFF453A), Color(0xFFB00020)],
                               ),
                               boxShadow: [
                                 BoxShadow(
                                   color: const Color(0xFFFF453A).withAlpha(107),
->>>>>>> origin/main
                                   blurRadius: 40,
                                   spreadRadius: 2,
                                 ),
@@ -644,14 +336,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 ),
                                 const SizedBox(height: 12),
                                 Padding(
-<<<<<<< HEAD
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    l10n.sosButtonSub,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.94),
-=======
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
                                   ),
@@ -660,7 +344,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       color: Color(0xF0FFFFFF),
->>>>>>> origin/main
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -676,56 +359,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 ),
               ),
             ),
-<<<<<<< HEAD
-            SafeArea(
-              minimum: const EdgeInsets.only(bottom: 12),
-              child: TextButton(
-                onPressed: () => _openEmergencyToolsSheet(context),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white.withValues(alpha: 0.88),
-                  minimumSize: const Size(120, 52),
-                ),
-                child: Text(
-                  l10n.sosIdleTools,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-                _buildActionItem(
-                  icon: Icons.health_and_safety, 
-                  label: 'RESPONDER', 
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResponderDashboard()))
-                ),
-                _buildActionItem(
-                  icon: Icons.directions_walk, 
-                  label: 'SAFE-WALK', 
-                  onTap: () => ref.read(proactiveMonitorProvider.notifier).startSafeWalk('Home', const Duration(minutes: 15))
-                ),
-                _buildActionItem(
-                  icon: Icons.monitor_heart, 
-                  label: 'VITAL SCAN', 
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VitalScanScreen()))
-                ),
-                _buildActionItem(
-                  icon: Icons.forum, 
-                  label: 'MESH CHAT', 
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MeshChatScreen()))
-                ),
-                _buildActionItem(
-                  icon: Icons.car_crash,
-                  label: 'RESCUE',
-                  onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const VehicleRescueScreen()))
-                ),
-                _buildActionItem(
-                  icon: Icons.settings, 
-                  label: 'SETTINGS', 
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))
-                ),
-              ],
-=======
 
             // Discovery hint
             SafeArea(
@@ -738,7 +371,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   fontSize: 13,
                 ),
               ),
->>>>>>> origin/main
             ),
           ],
         );
@@ -746,102 +378,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
   }
 
-<<<<<<< HEAD
-  Future<void> _showSafeWalkDialog(BuildContext context) async {
-    final destCtrl = TextEditingController();
-    var minutes = 30;
-    final monitor = ref.read(proactiveMonitorProvider);
-
-    if (monitor.isMonitoring) {
-      // Quick stop
-      ref.read(proactiveMonitorProvider.notifier).endSafeWalk();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Safe Walk ended.')),
-        );
-      }
-      return;
-    }
-
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.paddingOf(ctx).bottom + 16,
-              top: 8,
-            ),
-            child: StatefulBuilder(
-              builder: (ctx, setModal) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Safe Walk',
-                      style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: destCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Destination (optional)',
-                        hintText: 'e.g., Home, Hostel, Station',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Text('ETA minutes:'),
-                        const SizedBox(width: 12),
-                        DropdownButton<int>(
-                          value: minutes,
-                          items: const [10, 15, 20, 30, 45, 60]
-                              .map((m) => DropdownMenuItem(value: m, child: Text('$m')))
-                              .toList(),
-                          onChanged: (v) => setModal(() => minutes = v ?? 30),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'If you miss check-in after ETA, RoadSOS will escalate to SOS after a 60s grace window.',
-                      style: Theme.of(ctx).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 52,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          ref.read(proactiveMonitorProvider.notifier).startSafeWalk(
-                                destCtrl.text.trim().isEmpty ? 'your destination' : destCtrl.text.trim(),
-                                Duration(minutes: minutes),
-                              );
-                          Navigator.pop(ctx);
-                        },
-                        icon: const Icon(Icons.directions_walk),
-                        label: const Text('START SAFE WALK'),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCountdownView(BuildContext context, SOSState state) {
-    final l10n = AppLocalizations.of(context)!;
-
-=======
   // ─────────────────────────────────────────────────────────────────────────
   // Tab 1 — Safety Tools (all features, always visible)
   // ─────────────────────────────────────────────────────────────────────────
@@ -1160,33 +696,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   Widget _countdownView(BuildContext context, SOSState state) {
     final l10n = AppLocalizations.of(context)!;
->>>>>>> origin/main
     return Center(
       child: SOSCountdownWidget(
         secondsRemaining: state.countdownSeconds,
         warningText: l10n.sosDispatchWarning,
         cancelLabel: l10n.cancelSos,
         secondsLabel: l10n.secondsLabel,
-<<<<<<< HEAD
-        onCancel: () => ref.read(emergencyOrchestratorProvider.notifier).cancelSos(),
-=======
         onCancel: () =>
             ref.read(emergencyOrchestratorProvider.notifier).cancelSos(),
->>>>>>> origin/main
       ),
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildPipelineProgressView(BuildContext context, SOSState state) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-
-=======
   Widget _pipelineProgressView(BuildContext context, SOSState state) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
->>>>>>> origin/main
     final headline = state.phase == SOSPhase.gpsLocking
         ? l10n.orchestratorAcquiringLocation
         : l10n.orchestratorAiBrief;
@@ -1197,30 +721,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-<<<<<<< HEAD
-            CircularProgressIndicator(
-              strokeWidth: 5,
-              color: scheme.primary,
-            ),
-=======
             CircularProgressIndicator(strokeWidth: 5, color: scheme.primary),
->>>>>>> origin/main
             const SizedBox(height: 28),
             Text(
               headline,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-<<<<<<< HEAD
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                    height: 1.35,
-                  ),
-=======
                 fontWeight: FontWeight.w700,
                 color: scheme.onSurface,
                 height: 1.35,
               ),
->>>>>>> origin/main
             ),
           ],
         ),
@@ -1228,11 +738,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildDispatchingView(BuildContext context, SOSState state) {
-=======
   Widget _dispatchingView(BuildContext context, SOSState state) {
->>>>>>> origin/main
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
 
@@ -1245,15 +751,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             Text(
               l10n.orchestratorDispatching,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-<<<<<<< HEAD
-                    fontWeight: FontWeight.w800,
-                    color: scheme.onSurface,
-                  ),
-=======
                 fontWeight: FontWeight.w800,
                 color: scheme.onSurface,
               ),
->>>>>>> origin/main
             ),
             const SizedBox(height: 16),
             DispatchStatusPanel(channels: state.dispatchChannels),
@@ -1274,11 +774,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildActiveSessionView(BuildContext context, SOSState state) {
-=======
   Widget _activeSessionView(BuildContext context, SOSState state) {
->>>>>>> origin/main
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -1291,13 +787,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               OutlinedButton.icon(
                 onPressed: () => Navigator.push(
                   context,
-<<<<<<< HEAD
-                  MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
-=======
                   MaterialPageRoute<void>(
                     builder: (_) => const SosActivityLogScreen(),
                   ),
->>>>>>> origin/main
                 ),
                 icon: const Icon(Icons.history_edu_outlined),
                 label: const Text('Full activity log & insurer note'),
@@ -1307,21 +799,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             if (state.triageResult != null)
               TriageResultCard(result: state.triageResult!),
             const SizedBox(height: 16),
-<<<<<<< HEAD
-            SizedBox(
-              height: 300,
-              child: RoadSosMap(state: state),
-            ),
-=======
             SizedBox(height: 300, child: RoadSosMap(state: state)),
->>>>>>> origin/main
           ],
         ),
       ),
     );
   }
-<<<<<<< HEAD
-=======
 
   // ─────────────────────────────────────────────────────────────────────────
   // Safe Walk dialog
@@ -1477,5 +960,4 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ),
     );
   }
->>>>>>> origin/main
 }

@@ -1,26 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-<<<<<<< HEAD
-=======
 /// Manually-entered vital signs for bystander triage assistance.
 ///
 /// SOURCE IS ALWAYS 'manual' — these are numbers a bystander reads/estimates
 /// and enters. This is NOT camera-based rPPG or wearable data.
 /// It exists to help bystanders communicate vitals to phone dispatchers.
->>>>>>> origin/main
 class VitalSigns {
   final int bpm;
   final int respiratoryRate;
   final double bloodOxygen;
   final String interpretation;
   final DateTime recordedAtUtc;
-<<<<<<< HEAD
-  final String source; // 'manual'
-=======
 
   /// Always 'manual' — values entered by a bystander, not from a sensor.
   final String source;
->>>>>>> origin/main
 
   VitalSigns({
     required this.bpm,
@@ -32,12 +25,6 @@ class VitalSigns {
   });
 }
 
-<<<<<<< HEAD
-class VitalSignsService extends StateNotifier<VitalSigns?> {
-  VitalSignsService() : super(null);
-
-  void setManual({
-=======
 /// Bystander vital signs logger.
 /// Stores manually-entered pulse, respiration, and SpO2 readings.
 ///
@@ -50,16 +37,11 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
   /// Records manually-entered vital sign observations.
   /// All three parameters must be provided by the bystander directly.
   void recordManual({
->>>>>>> origin/main
     required int bpm,
     required int respiratoryRate,
     required double bloodOxygen,
   }) {
-<<<<<<< HEAD
-    final interpretation = _interpret(
-=======
     final interpretation = _interpretForDispatch(
->>>>>>> origin/main
       bpm: bpm,
       respiratoryRate: respiratoryRate,
       bloodOxygen: bloodOxygen,
@@ -74,11 +56,6 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
     );
   }
 
-<<<<<<< HEAD
-  void clear() => state = null;
-
-  String _interpret({
-=======
   /// Produces a dispatcher-ready summary for relay to 108/112 operators.
   String? get dispatcherSummary {
     if (state == null) return null;
@@ -99,30 +76,11 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
   void clear() => state = null;
 
   String _interpretForDispatch({
->>>>>>> origin/main
     required int bpm,
     required int respiratoryRate,
     required double bloodOxygen,
   }) {
     final flags = <String>[];
-<<<<<<< HEAD
-    if (bpm >= 120) flags.add('very fast pulse');
-    if (bpm <= 45) flags.add('very slow pulse');
-    if (respiratoryRate >= 24) flags.add('rapid breathing');
-    if (respiratoryRate <= 8) flags.add('slow breathing');
-    if (bloodOxygen < 90) flags.add('low oxygen');
-    if (bloodOxygen >= 90 && bloodOxygen < 94) flags.add('borderline oxygen');
-
-    if (flags.isEmpty) return 'No immediate red flags detected from entered vitals.';
-    return 'Flagged: ${flags.join(', ')}. If unconscious, breathing abnormal, or bleeding heavily: treat as high severity and call EMS.';
-  }
-
-  // No custom dispose behavior.
-}
-
-final vitalSignsProvider = StateNotifierProvider.autoDispose<VitalSignsService, VitalSigns?>((ref) {
-  return VitalSignsService();
-=======
     if (bpm >= 120) flags.add('tachycardia (very fast pulse)');
     if (bpm <= 45) flags.add('bradycardia (very slow pulse)');
     if (respiratoryRate >= 24) flags.add('tachypnoea (rapid breathing)');
@@ -144,5 +102,4 @@ typedef VitalSignsService = VitalSignsLogger;
 final vitalSignsProvider =
     StateNotifierProvider.autoDispose<VitalSignsLogger, VitalSigns?>((ref) {
   return VitalSignsLogger();
->>>>>>> origin/main
 });

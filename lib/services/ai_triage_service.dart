@@ -1,28 +1,18 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
-<<<<<<< HEAD
-=======
 import 'package:flutter_dotenv/flutter_dotenv.dart';
->>>>>>> origin/main
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../logging/app_log.dart';
-<<<<<<< HEAD
-import 'first_aid_store.dart';
-=======
 import 'camera_triage_service.dart';
 import 'connectivity_service.dart';
 import 'first_aid_store.dart';
 import 'gemma_local_service.dart';
->>>>>>> origin/main
 import 'offline_triage_classifier.dart';
 import 'tier2_local_triage_model.dart';
 
 /// How triage was produced.
-<<<<<<< HEAD
-enum TriageSource { geminiEdge, localTier2, offlineClassifier, webDemo }
-=======
 enum TriageSource {
   /// Cloud: Gemma 4 27B via Supabase Edge Function (highest quality)
   gemma4Cloud,
@@ -42,14 +32,10 @@ enum TriageSource {
   /// Web demo mode
   webDemo,
 }
->>>>>>> origin/main
 
 /// Model / pipeline state for UI.
 enum ModelState { unloaded, ready, error, degraded }
 
-<<<<<<< HEAD
-/// Triage result from cloud LLM or lightweight offline classifier.
-=======
 /// Triage result from any tier in the Gemma 4 inference stack.
 ///
 /// Phase 3 additions:
@@ -57,7 +43,6 @@ enum ModelState { unloaded, ready, error, degraded }
 ///   [validationFlags]  — rule codes fired by [TriageValidationAgent].
 ///   [wasOverridden]    — true if any rule-based override changed the AI output.
 ///   [validationNotes]  — human-readable explanation of each override (shown in UI).
->>>>>>> origin/main
 class TriageResult {
   final String functionCall;
   final String location;
@@ -68,8 +53,6 @@ class TriageResult {
   final String? thinkingTrace;
   final bool isDegradedMode;
   final TriageSource source;
-<<<<<<< HEAD
-=======
   final bool visionUsed;
 
   // ── Phase 3: Zero-hallucination fields ───────────────────────────────────
@@ -87,7 +70,6 @@ class TriageResult {
 
   /// Human-readable notes for each override — shown in [AiExplainabilityView].
   final List<String> validationNotes;
->>>>>>> origin/main
 
   const TriageResult({
     required this.functionCall,
@@ -99,15 +81,12 @@ class TriageResult {
     this.thinkingTrace,
     this.isDegradedMode = false,
     this.source = TriageSource.offlineClassifier,
-<<<<<<< HEAD
-=======
     this.visionUsed = false,
     // Phase 3 fields — default to unvalidated state so existing call-sites compile.
     this.confidence = 0.70,
     this.validationFlags = const [],
     this.wasOverridden = false,
     this.validationNotes = const [],
->>>>>>> origin/main
   });
 
   Map<String, dynamic> toJson() => {
@@ -122,16 +101,6 @@ class TriageResult {
         'thinking_trace': thinkingTrace,
         'degraded_mode': isDegradedMode,
         'source': source.name,
-<<<<<<< HEAD
-      };
-}
-
-/// AI Triage: **cloud-first** (Gemini Flash) with **tiny offline classifier** fallback.
-/// Full on-device LLM / GGUF is intentionally not used (OOM on low-RAM devices).
-class AiTriageService {
-  static const _classifier = OfflineTriageClassifier();
-  static const _tier2 = Tier2LocalTriageModel();
-=======
         'vision_used': visionUsed,
         'confidence': confidence,
         'validation_flags': validationFlags,
@@ -191,7 +160,6 @@ class AiTriageService {
   static const _tier3 = Tier2LocalTriageModel();
   late final GemmaLocalService _gemmaLocal;
   late final ConnectivityService _connectivity;
->>>>>>> origin/main
 
   ModelState _state = ModelState.unloaded;
   String? _lastError;
@@ -199,9 +167,6 @@ class AiTriageService {
   ModelState get state => _state;
   String? get lastError => _lastError;
 
-<<<<<<< HEAD
-  /// Resolves API key. No multi-GB model assets on disk.
-=======
   AiTriageService(this._gemmaLocal, this._connectivity);
 
   bool get _connectivityAwareTriage {
@@ -209,7 +174,6 @@ class AiTriageService {
     return v == null || v.isEmpty || v == 'true' || v == '1';
   }
 
->>>>>>> origin/main
   Future<void> initializeModel() async {
     _state = ModelState.unloaded;
     if (kIsWeb) {
@@ -217,12 +181,6 @@ class AiTriageService {
       _lastError = 'Web: triage uses offline tiers only.';
       return;
     }
-<<<<<<< HEAD
-    // Cloud triage is server-side via Supabase Edge Function. Client never holds GEMINI keys.
-    _state = ModelState.ready;
-    _lastError = null;
-    appLog.d('[AiTriageService] Triage ready. Cloud: Edge Function. Offline: tier2 + classifier.');
-=======
     _state = ModelState.ready;
     _lastError = null;
     appLog.i(
@@ -234,7 +192,6 @@ class AiTriageService {
       '  Connectivity-aware: $_connectivityAwareTriage',
     );
     unawaited(_gemmaLocal.initialize());
->>>>>>> origin/main
   }
 
   Future<TriageResult> triageEmergency({
@@ -243,52 +200,12 @@ class AiTriageService {
     required int accelerometerSeverityHint,
     String languageCode = 'en',
   }) async {
-<<<<<<< HEAD
-    // Tier 3 (always available): simple keyword classifier.
-    final tier3 = await _buildClassifierTriage(
-      transcript: audioTranscript,
-      location: locationString,
-      severityHint: accelerometerSeverityHint,
-      languageCode: languageCode,
-    );
-
-    if (kIsWeb) {
-      return tier3;
-    }
-
-    // Tier 2 (always available): slightly richer local model.
-    final tier2 = await _buildTier2Triage(
-      transcript: audioTranscript,
-      location: locationString,
-      severityHint: accelerometerSeverityHint,
-      languageCode: languageCode,
-    );
-
-    try {
-      // Tier 1: server-side Gemini via Supabase Edge Function (strict timeout).
-      final cloud = await _callGeminiViaEdge(
-=======
     if (kIsWeb) {
       return _buildClassifierTriage(
->>>>>>> origin/main
         transcript: audioTranscript,
         location: locationString,
         severityHint: accelerometerSeverityHint,
         languageCode: languageCode,
-<<<<<<< HEAD
-      ).timeout(const Duration(seconds: 3));
-      return cloud;
-    } catch (e, st) {
-      appLog.d(
-        '[AiTriageService] Cloud triage unavailable; falling back to local tiers',
-        error: e,
-        stackTrace: st,
-      );
-      _lastError = 'Cloud triage unavailable: $e';
-      // Prefer tier2 over tier3.
-      return tier2;
-    }
-=======
       );
     }
 
@@ -343,7 +260,6 @@ class AiTriageService {
       severityHint: accelerometerSeverityHint,
       languageCode: languageCode,
     );
->>>>>>> origin/main
   }
 
   Future<TriageResult> performTriage({
@@ -368,9 +284,6 @@ class AiTriageService {
     );
   }
 
-<<<<<<< HEAD
-  Future<TriageResult> _callGeminiViaEdge({
-=======
   // ── Bystander vision path ────────────────────────────────────────────────
 
   Future<TriageResult> triageWithScenePhoto({
@@ -480,90 +393,11 @@ class AiTriageService {
   // ── Tier 2: On-device Gemma 4 E4B ────────────────────────────────────────
 
   Future<TriageResult?> _callGemma4OnDevice({
->>>>>>> origin/main
     required String transcript,
     required String location,
     required int severityHint,
     required String languageCode,
   }) async {
-<<<<<<< HEAD
-    // Cloud triage is done server-side. Requires Supabase SDK init + anon session.
-    try {
-      final client = Supabase.instance.client;
-      final res = await client.functions.invoke(
-        'triage-gemini',
-        body: <String, dynamic>{
-          'schema': 'roadsos.triage.v1',
-          'transcript': transcript,
-          'location': location,
-          'severity_hint': severityHint,
-          'language_code': languageCode,
-        },
-      );
-
-      // Supabase functions invoke returns dynamic JSON in [data].
-      final data = res.data;
-      if (data is! Map) {
-        throw Exception('Edge triage returned non-object');
-      }
-      final payload = Map<String, dynamic>.from(data);
-
-      final severity =
-          (payload['severity_level'] as num?)?.toInt().clamp(1, 5) ?? 4;
-      final rawServices = payload['required_services'];
-      final services = <String>{'ambulance'};
-      if (rawServices is List) {
-        for (final e in rawServices) {
-          if (e is String && e.isNotEmpty) {
-            final normalized = e.toLowerCase().replaceAll(' ', '_');
-            if (_allowedServices.contains(normalized)) {
-              services.add(normalized);
-            }
-          }
-        }
-      }
-      final fromCloud = (payload['first_aid_focus'] as String?)?.trim();
-      final fallbackQuery = _classifier
-          .classify(transcript: transcript, severityHint: severityHint)
-          .firstAidQuery;
-      final aidQuery =
-          (fromCloud != null && fromCloud.isNotEmpty) ? fromCloud : fallbackQuery;
-      final thinking = payload['thinking_summary'] as String?;
-
-      final verifiedAdvice = await FirstAidStore.getVerifiedAdvice(aidQuery);
-
-      return TriageResult(
-        functionCall: 'trigger_sos',
-        location: location,
-        severityLevel: severity,
-        requiredServices: services.toList(),
-        firstAidQuery: verifiedAdvice,
-        compressedPayload:
-            _buildCompressedPayload(location, severity, services.toList()),
-        thinkingTrace: thinking,
-        isDegradedMode: false,
-        source: TriageSource.geminiEdge,
-      );
-    } catch (e, st) {
-      appLog.w('Edge triage failed', error: e, stackTrace: st);
-      rethrow;
-    }
-  }
-
-  // Note: direct Gemini HTTP parsing remains in [gemini_http.dart] for non-triage flows.
-
-  static const Set<String> _allowedServices = {
-    'ambulance',
-    'police',
-    'fire_department',
-    'rescue',
-    'towing',
-    'puncture_shop',
-    'showroom',
-  };
-
-  // JSON extraction is handled server-side for triage; client receives clean JSON payload.
-=======
     final result = await _gemmaLocal.triageOffline(
       transcript: transcript,
       location: location,
@@ -629,7 +463,6 @@ class AiTriageService {
   }
 
   // ── Tier 4: Keyword classifier (always available, last resort) ────────────
->>>>>>> origin/main
 
   Future<TriageResult> _buildClassifierTriage({
     required String transcript,
@@ -637,14 +470,7 @@ class AiTriageService {
     required int severityHint,
     required String languageCode,
   }) async {
-<<<<<<< HEAD
-    final c = _classifier.classify(
-      transcript: transcript,
-      severityHint: severityHint,
-    );
-=======
     final c = _classifier.classify(transcript: transcript, severityHint: severityHint);
->>>>>>> origin/main
     final severity = c.severityLevel;
     final services = c.requiredServices;
     final verified = await FirstAidStore.getVerifiedAdvice(c.firstAidQuery);
@@ -657,50 +483,17 @@ class AiTriageService {
       firstAidQuery: verified,
       compressedPayload: _buildCompressedPayload(location, severity, services),
       thinkingTrace: languageCode == 'hi'
-<<<<<<< HEAD
-          ? 'ऑफ़लाइन वर्गीकरण — क्लाउड उपलब्ध नहीं।'
-          : 'Offline keyword classifier (no cloud LLM on device).',
-=======
           ? 'ऑफ़लाइन कीवर्ड वर्गीकरण (Gemma 4 उपलब्ध नहीं)।'
           : 'Offline keyword classifier (Gemma 4 unavailable — no network).',
->>>>>>> origin/main
       isDegradedMode: true,
       source: TriageSource.offlineClassifier,
     );
   }
 
-<<<<<<< HEAD
-  Future<TriageResult> _buildTier2Triage({
-    required String transcript,
-    required String location,
-    required int severityHint,
-    required String languageCode,
-  }) async {
-    final c = _tier2.classify(
-      transcript: transcript,
-      severityHint: severityHint,
-    );
-    final verified = await FirstAidStore.getVerifiedAdvice(c.firstAidQuery);
-    return TriageResult(
-      functionCall: 'trigger_sos',
-      location: location,
-      severityLevel: c.severityLevel.clamp(1, 5),
-      requiredServices: c.requiredServices,
-      firstAidQuery: verified,
-      compressedPayload: _buildCompressedPayload(location, c.severityLevel, c.requiredServices),
-      thinkingTrace: languageCode == 'hi'
-          ? 'स्थानीय मॉडल — नेटवर्क उपलब्ध नहीं।'
-          : 'Local tier-2 triage model (offline).',
-      isDegradedMode: true,
-      source: TriageSource.localTier2,
-    );
-  }
-=======
   static const Set<String> _allowedServices = {
     'ambulance', 'police', 'fire_department', 'rescue',
     'towing', 'puncture_shop', 'showroom',
   };
->>>>>>> origin/main
 
   String _buildCompressedPayload(
     String location,
@@ -709,24 +502,6 @@ class AiTriageService {
   ) {
     final svcCodes = services.map((s) {
       switch (s) {
-<<<<<<< HEAD
-        case 'ambulance':
-          return 'AMB';
-        case 'police':
-          return 'POL';
-        case 'fire_department':
-          return 'FIR';
-        case 'rescue':
-          return 'RES';
-        case 'towing':
-          return 'TOW';
-        case 'puncture_shop':
-          return 'PUN';
-        case 'showroom':
-          return 'SHR';
-        default:
-          return 'UNK';
-=======
         case 'ambulance':       return 'AMB';
         case 'police':          return 'POL';
         case 'fire_department': return 'FIR';
@@ -735,7 +510,6 @@ class AiTriageService {
         case 'puncture_shop':   return 'PUN';
         case 'showroom':        return 'SHR';
         default:                return 'UNK';
->>>>>>> origin/main
       }
     }).join(',');
 
@@ -746,11 +520,7 @@ class AiTriageService {
 }
 
 final aiTriageServiceProvider = Provider<AiTriageService>((ref) {
-<<<<<<< HEAD
-  return AiTriageService();
-=======
   final gemmaLocal = ref.read(gemmaLocalServiceProvider);
   final connectivity = ref.read(connectivityServiceProvider);
   return AiTriageService(gemmaLocal, connectivity);
->>>>>>> origin/main
 });

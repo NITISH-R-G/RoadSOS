@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roadsos/l10n/app_localizations.dart';
-<<<<<<< HEAD
-import '../services/ai_triage_service.dart';
-
-=======
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/ai_triage_service.dart';
@@ -21,7 +17,6 @@ import '../services/ai_triage_service.dart';
 /// The user always has manual control: the "Call 112" button is visible
 /// regardless of whether automated dispatch succeeded, satisfying the
 /// Phase 10 requirement that a manual override is always available.
->>>>>>> origin/main
 class AiExplainabilityView extends ConsumerWidget {
   final TriageResult triage;
 
@@ -30,60 +25,18 @@ class AiExplainabilityView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-<<<<<<< HEAD
-=======
     final scheme = Theme.of(context).colorScheme;
->>>>>>> origin/main
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-<<<<<<< HEAD
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.30),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-        ),
-=======
         color: scheme.surfaceContainerHighest.withAlpha(77),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: scheme.primary.withAlpha(51)),
->>>>>>> origin/main
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-<<<<<<< HEAD
-          Row(
-            children: [
-              Icon(Icons.psychology,
-                  color: Theme.of(context).colorScheme.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                l10n.aiThinkingTraceTitle,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      letterSpacing: 1.2,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-              ),
-            ],
-          ),
-          const Divider(height: 24),
-          Text(
-            triage.thinkingTrace ?? '…',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'monospace',
-                  height: 1.5,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.12),
-=======
 
           // ── Header ────────────────────────────────────────────────────────
           Row(
@@ -196,18 +149,12 @@ class AiExplainabilityView extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.blue.withAlpha(31),
->>>>>>> origin/main
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               triage.source == TriageSource.offlineClassifier
-<<<<<<< HEAD
-                  ? 'From curated first-aid library (offline)'
-                  : 'First-aid text sourced from curated library',
-=======
                   ? 'First-aid: curated offline library (WHO/ILCOR aligned)'
                   : 'First-aid: RAG from curated library (WHO/ILCOR aligned)',
->>>>>>> origin/main
               style: const TextStyle(
                 color: Colors.blueAccent,
                 fontSize: 10,
@@ -215,8 +162,6 @@ class AiExplainabilityView extends ConsumerWidget {
               ),
             ),
           ),
-<<<<<<< HEAD
-=======
 
           const SizedBox(height: 14),
 
@@ -317,14 +262,11 @@ class _ConfidenceBadge extends StatelessWidget {
               color: color,
             ),
           ),
->>>>>>> origin/main
         ],
       ),
     );
   }
 }
-<<<<<<< HEAD
-=======
 
 class _InfoRow extends StatelessWidget {
   final IconData icon;
@@ -416,4 +358,3 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
->>>>>>> origin/main
