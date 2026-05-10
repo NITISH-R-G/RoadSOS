@@ -52,19 +52,19 @@ class SosActivityRecord {
   }
 
   Map<String, dynamic> toJson() => {
-        'incident_id': incidentId,
-        'completed_at': completedAtUtc.toIso8601String(),
-        'latitude': latitude,
-        'longitude': longitude,
-        'accuracy_m': accuracyM,
-        'location_source': locationSource,
-        'triage_severity': triageSeverity,
-        'triage_source': triageSourceName,
-        'required_services': requiredServices,
-        'channels': channels.map((e) => e.toJson()).toList(),
-        'sync_status': syncStatusLine,
-        'is_bystander': isBystander,
-      };
+    'incident_id': incidentId,
+    'completed_at': completedAtUtc.toIso8601String(),
+    'latitude': latitude,
+    'longitude': longitude,
+    'accuracy_m': accuracyM,
+    'location_source': locationSource,
+    'triage_severity': triageSeverity,
+    'triage_source': triageSourceName,
+    'required_services': requiredServices,
+    'channels': channels.map((e) => e.toJson()).toList(),
+    'sync_status': syncStatusLine,
+    'is_bystander': isBystander,
+  };
 
   String formattedGpsIndia() =>
       '${latitude.toStringAsFixed(6)}, ${longitude.toStringAsFixed(6)} '

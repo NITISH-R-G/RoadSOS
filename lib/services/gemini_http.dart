@@ -23,18 +23,11 @@ Future<String> generateGeminiFlashText({
         ],
       },
     ],
-    'generationConfig': {
-      'temperature': 0.3,
-      'maxOutputTokens': 256,
-    },
+    'generationConfig': {'temperature': 0.3, 'maxOutputTokens': 256},
   });
 
   final response = await http
-      .post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      )
+      .post(uri, headers: {'Content-Type': 'application/json'}, body: body)
       .timeout(timeout);
 
   if (response.statusCode != 200) {

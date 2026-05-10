@@ -54,3 +54,5 @@ app.*.map.json
 /android/app/release
 # Local developer secrets (root only; committed template is assets/.env)
 /.env
+*.pid
+*.log

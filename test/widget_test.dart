@@ -7,7 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('dotenv loads strings used by RuntimeConfig / bootstrap', () {
     dotenv.loadFromString(
-      envString: 'SUPABASE_URL=https://example.supabase.co\nSUPABASE_ANON_KEY=test_anon',
+      envString:
+          'SUPABASE_URL=https://example.supabase.co\nSUPABASE_ANON_KEY=test_anon',
     );
     expect(dotenv.env['SUPABASE_URL'], contains('supabase'));
     expect(dotenv.env['SUPABASE_ANON_KEY'], 'test_anon');

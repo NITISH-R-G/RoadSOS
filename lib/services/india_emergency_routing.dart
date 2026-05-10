@@ -105,11 +105,7 @@ IndiaEmergencyRoute? _resolveByCoarseBoxes(double lat, double lng) {
 }
 
 class _Centroid {
-  const _Centroid(
-    this.code,
-    this.name,
-    this.point,
-  );
+  const _Centroid(this.code, this.name, this.point);
 
   final String code;
   final String name;
@@ -149,7 +145,11 @@ final List<_Centroid> _centroids = [
   _Centroid('IN-WB', 'West Bengal', LatLng(22.99, 87.68)),
   _Centroid('IN-AN', 'Andaman and Nicobar Islands', LatLng(11.74, 92.66)),
   _Centroid('IN-CH', 'Chandigarh', LatLng(30.73, 76.78)),
-  _Centroid('IN-DN', 'Dadra and Nagar Haveli and Daman and Diu', LatLng(20.27, 73.02)),
+  _Centroid(
+    'IN-DN',
+    'Dadra and Nagar Haveli and Daman and Diu',
+    LatLng(20.27, 73.02),
+  ),
   _Centroid('IN-DL', 'Delhi', LatLng(28.61, 77.20)),
   _Centroid('IN-JK', 'Jammu and Kashmir', LatLng(33.77, 76.57)),
   _Centroid('IN-LA', 'Ladakh', LatLng(34.15, 77.58)),
