@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -59,7 +61,10 @@ class VoiceAssistantService {
   /// Called when driving mode is active at SOS trigger — the user cannot
   /// look at the screen, so the device announces what is happening and how
   /// to cancel. The message is spoken in the app's current locale.
-  Future<void> speakHandsFreeCountdown(int totalSeconds, String locationHint) async {
+  Future<void> speakHandsFreeCountdown(
+    int totalSeconds,
+    String locationHint,
+  ) async {
     final msg = _localizedCountdownMessage(totalSeconds, locationHint);
     await _tts.setSpeechRate(0.52);
     await speak(msg);
@@ -113,12 +118,18 @@ class VoiceAssistantService {
 
   String _serviceLabel(String service) {
     switch (service) {
-      case 'ambulance':       return 'ambulance';
-      case 'police':          return 'police';
-      case 'fire_department': return 'fire department';
-      case 'rescue':          return 'rescue team';
-      case 'towing':          return 'towing service';
-      default:                return service;
+      case 'ambulance':
+        return 'ambulance';
+      case 'police':
+        return 'police';
+      case 'fire_department':
+        return 'fire department';
+      case 'rescue':
+        return 'rescue team';
+      case 'towing':
+        return 'towing service';
+      default:
+        return service;
     }
   }
 
@@ -138,19 +149,35 @@ class VoiceAssistantService {
     if (!available) return false;
 
     _isListening = true;
-    var cancelled = false;
+    final completer = Completer<bool>();
 
     await _stt.listen(
       onResult: (result) {
         final words = result.recognizedWords.toLowerCase();
-        if (_matchesCancel(words)) cancelled = true;
+        if (_matchesCancel(words)) {
+          if (!completer.isCompleted) {
+            // ⚡ Bolt Optimization: Complete immediately on match and stop STT.
+            // This avoids waiting for the full timeout when the command is already recognized,
+            // releasing the microphone faster and improving responsiveness.
+            _stt.stop();
+            completer.complete(true);
+          }
+        }
       },
       listenFor: listenFor,
     );
 
-    await Future<void>.delayed(listenFor + const Duration(milliseconds: 200));
-    _isListening = false;
-    return cancelled;
+    try {
+      final cancelled = await completer.future.timeout(
+        listenFor + const Duration(milliseconds: 200),
+      );
+      _isListening = false;
+      return cancelled;
+    } catch (_) {
+      // Timeout reached without matching the keyword
+      _isListening = false;
+      return false;
+    }
   }
 
   bool _matchesCancel(String words) {
@@ -189,21 +216,32 @@ class VoiceAssistantService {
     final available = await _stt.initialize();
     if (available) {
       _isListening = true;
-      var confirmed = false;
+      final completer = Completer<bool>();
 
       await _stt.listen(
         onResult: (result) {
           final words = result.recognizedWords.toLowerCase();
           if (_matchesConfirm(words)) {
-            confirmed = true;
+            if (!completer.isCompleted) {
+              // ⚡ Bolt Optimization: Complete immediately on match and stop STT.
+              _stt.stop();
+              completer.complete(true);
+            }
           }
         },
         listenFor: const Duration(seconds: 5),
       );
 
-      await Future<void>.delayed(const Duration(seconds: 5));
-      _isListening = false;
-      return confirmed;
+      try {
+        final confirmed = await completer.future.timeout(
+          const Duration(seconds: 5, milliseconds: 200),
+        );
+        _isListening = false;
+        return confirmed;
+      } catch (_) {
+        _isListening = false;
+        return false;
+      }
     }
     return false;
   }
@@ -228,7 +266,9 @@ class VoiceAssistantService {
       case 'bn':
         return words.contains('হ্যাঁ') || words.contains('haan');
       case 'mr':
-        return words.contains('हो') || words.contains('ho') || words.contains('barob');
+        return words.contains('हो') ||
+            words.contains('ho') ||
+            words.contains('barob');
       default:
         return false;
     }
