@@ -1,6 +1,6 @@
-/// Offline vehicle rescue data.
-/// All data is hardcoded — works with ZERO internet.
-/// Covers dangers, extraction steps, and first aid per vehicle type.
+// Offline vehicle rescue data.
+// All data is hardcoded — works with ZERO internet.
+// Covers dangers, extraction steps, and first aid per vehicle type.
 
 class VehicleRescueData {
   final String vehicleType;
@@ -40,7 +40,6 @@ class RescueStep {
 // ALL OFFLINE RESCUE DATA
 // ─────────────────────────────────────────────
 const Map<String, VehicleRescueData> kVehicleRescueDatabase = {
-
   'car': VehicleRescueData(
     vehicleType: 'Car / Sedan / Hatchback',
     icon: '🚗',
@@ -56,40 +55,47 @@ const Map<String, VehicleRescueData> kVehicleRescueDatabase = {
       RescueStep(
         stepNumber: 1,
         title: 'Make the scene safe',
-        detail: 'Turn off the engine if accessible. Turn on hazard lights. Place objects 50m behind to warn traffic.',
+        detail:
+            'Turn off the engine if accessible. Turn on hazard lights. Place objects 50m behind to warn traffic.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 2,
         title: 'Check if victim is conscious',
-        detail: 'Tap shoulder and shout "Can you hear me?". If no response, call 108 immediately. Do NOT shake them.',
+        detail:
+            'Tap shoulder and shout "Can you hear me?". If no response, call 108 immediately. Do NOT shake them.',
       ),
       RescueStep(
         stepNumber: 3,
         title: 'Do NOT move the victim yet',
-        detail: 'If victim is breathing and not in immediate danger (no fire/flood), keep them still. Moving can worsen spinal injuries.',
+        detail:
+            'If victim is breathing and not in immediate danger (no fire/flood), keep them still. Moving can worsen spinal injuries.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 4,
         title: 'Open the door safely',
-        detail: 'Pull door handle and simultaneously push door outward with shoulder. For jammed doors, try rear doors first.',
+        detail:
+            'Pull door handle and simultaneously push door outward with shoulder. For jammed doors, try rear doors first.',
       ),
       RescueStep(
         stepNumber: 5,
         title: 'Support the neck and head',
-        detail: 'Place both hands on either side of victim\'s head. Keep head aligned with spine at ALL times. Ask someone else to help.',
+        detail:
+            'Place both hands on either side of victim\'s head. Keep head aligned with spine at ALL times. Ask someone else to help.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 6,
         title: 'Slide victim out horizontally',
-        detail: 'One person holds head, another grips under armpits. Move in one smooth motion. Never twist the spine.',
+        detail:
+            'One person holds head, another grips under armpits. Move in one smooth motion. Never twist the spine.',
       ),
       RescueStep(
         stepNumber: 7,
         title: 'Place in recovery position',
-        detail: 'If breathing, place on their side (recovery position) to prevent choking. Keep monitoring until ambulance arrives.',
+        detail:
+            'If breathing, place on their side (recovery position) to prevent choking. Keep monitoring until ambulance arrives.',
       ),
     ],
     firstAidTips: [
@@ -116,34 +122,40 @@ const Map<String, VehicleRescueData> kVehicleRescueDatabase = {
       RescueStep(
         stepNumber: 1,
         title: 'Approach from the SIDE only',
-        detail: 'Never approach from front (engine fire) or rear (cargo). Come from driver\'s side door angle.',
+        detail:
+            'Never approach from front (engine fire) or rear (cargo). Come from driver\'s side door angle.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 2,
         title: 'Secure the truck',
-        detail: 'If safe, apply handbrake and place wheel chocks (stones/wood) under tires to prevent rolling.',
+        detail:
+            'If safe, apply handbrake and place wheel chocks (stones/wood) under tires to prevent rolling.',
       ),
       RescueStep(
         stepNumber: 3,
         title: 'Climb up carefully',
-        detail: 'Use the built-in steps/handles on the cab. Don\'t pull on door handles to climb — they may break.',
+        detail:
+            'Use the built-in steps/handles on the cab. Don\'t pull on door handles to climb — they may break.',
       ),
       RescueStep(
         stepNumber: 4,
         title: 'Check driver consciousness',
-        detail: 'Tap and call out. Driver may be trapped by steering wheel. Do NOT force them out.',
+        detail:
+            'Tap and call out. Driver may be trapped by steering wheel. Do NOT force them out.',
       ),
       RescueStep(
         stepNumber: 5,
         title: 'Extraction needs 3+ people',
-        detail: 'One holds head/neck, two support body. Lower driver down cab steps slowly. Never drop.',
+        detail:
+            'One holds head/neck, two support body. Lower driver down cab steps slowly. Never drop.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 6,
         title: 'Move victim 50m away',
-        detail: 'Trucks carry large fuel loads. Move victim far from vehicle in case of fire.',
+        detail:
+            'Trucks carry large fuel loads. Move victim far from vehicle in case of fire.',
         isCritical: true,
       ),
     ],
@@ -170,34 +182,40 @@ const Map<String, VehicleRescueData> kVehicleRescueDatabase = {
       RescueStep(
         stepNumber: 1,
         title: 'Move the bike away first',
-        detail: 'The bike is the fire risk. Push it at least 10m away from the victim before helping.',
+        detail:
+            'The bike is the fire risk. Push it at least 10m away from the victim before helping.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 2,
         title: 'NEVER remove the helmet',
-        detail: 'Even if victim asks. Helmet removal can cause fatal spinal damage. Only doctors should remove it.',
+        detail:
+            'Even if victim asks. Helmet removal can cause fatal spinal damage. Only doctors should remove it.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 3,
         title: 'Check breathing through visor',
-        detail: 'Open the visor to check breathing. If vomiting, hold helmet steady and gently tilt to side.',
+        detail:
+            'Open the visor to check breathing. If vomiting, hold helmet steady and gently tilt to side.',
       ),
       RescueStep(
         stepNumber: 4,
         title: 'Check for road rash',
-        detail: 'Large skin abrasions from skidding. Cover with clean cloth — don\'t clean with water yet.',
+        detail:
+            'Large skin abrasions from skidding. Cover with clean cloth — don\'t clean with water yet.',
       ),
       RescueStep(
         stepNumber: 5,
         title: 'Keep rider still and flat',
-        detail: 'Riders are often thrown and land awkwardly. Assume spinal injury. Keep them flat until help arrives.',
+        detail:
+            'Riders are often thrown and land awkwardly. Assume spinal injury. Keep them flat until help arrives.',
       ),
       RescueStep(
         stepNumber: 6,
         title: 'Keep them warm',
-        detail: 'Shock causes rapid body cooling. Cover with jacket/blanket. Keep talking to them.',
+        detail:
+            'Shock causes rapid body cooling. Cover with jacket/blanket. Keep talking to them.',
       ),
     ],
     firstAidTips: [
@@ -224,29 +242,34 @@ const Map<String, VehicleRescueData> kVehicleRescueDatabase = {
       RescueStep(
         stepNumber: 1,
         title: 'DO NOT touch orange cables',
-        detail: 'Orange cables carry high voltage. If you see orange wires exposed — do NOT touch the car at all.',
+        detail:
+            'Orange cables carry high voltage. If you see orange wires exposed — do NOT touch the car at all.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 2,
         title: 'Turn off the car',
-        detail: 'If safe, reach in and press power button. Look for emergency cut-off switch (usually near door sill — bright red/orange).',
+        detail:
+            'If safe, reach in and press power button. Look for emergency cut-off switch (usually near door sill — bright red/orange).',
       ),
       RescueStep(
         stepNumber: 3,
         title: 'Check for battery damage',
-        detail: 'If battery area (under floor) is visibly damaged or smoking — treat as fire emergency. Move victim 30m away.',
+        detail:
+            'If battery area (under floor) is visibly damaged or smoking — treat as fire emergency. Move victim 30m away.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 4,
         title: 'Extraction same as regular car',
-        detail: 'Once confirmed safe (no exposed cables, no smoke), extraction steps are same as regular car. Support neck, slide out.',
+        detail:
+            'Once confirmed safe (no exposed cables, no smoke), extraction steps are same as regular car. Support neck, slide out.',
       ),
       RescueStep(
         stepNumber: 5,
         title: 'If battery catches fire — RUN',
-        detail: 'EV battery fires cannot be put out with normal extinguishers. Move everyone 50m away and call fire brigade 101.',
+        detail:
+            'EV battery fires cannot be put out with normal extinguishers. Move everyone 50m away and call fire brigade 101.',
         isCritical: true,
       ),
     ],
@@ -273,29 +296,34 @@ const Map<String, VehicleRescueData> kVehicleRescueDatabase = {
       RescueStep(
         stepNumber: 1,
         title: 'Assess from outside first',
-        detail: 'Count visible victims. Check for fire/smoke. Don\'t rush in — a second casualty helps no one.',
+        detail:
+            'Count visible victims. Check for fire/smoke. Don\'t rush in — a second casualty helps no one.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 2,
         title: 'Check for CNG cylinders',
-        detail: 'CNG buses have cylindrical tanks on roof or rear. If hissing sound heard — evacuate everyone 100m away immediately.',
+        detail:
+            'CNG buses have cylindrical tanks on roof or rear. If hissing sound heard — evacuate everyone 100m away immediately.',
         isCritical: true,
       ),
       RescueStep(
         stepNumber: 3,
         title: 'Use emergency exits',
-        detail: 'Red handles at rear door and roof hatch. Push/pull to open. Don\'t wait for front door if jammed.',
+        detail:
+            'Red handles at rear door and roof hatch. Push/pull to open. Don\'t wait for front door if jammed.',
       ),
       RescueStep(
         stepNumber: 4,
         title: 'Triage victims — most critical first',
-        detail: 'Walking wounded can help themselves. Focus on unconscious or heavily bleeding victims first.',
+        detail:
+            'Walking wounded can help themselves. Focus on unconscious or heavily bleeding victims first.',
       ),
       RescueStep(
         stepNumber: 5,
         title: 'Form human chain for extraction',
-        detail: 'Line up bystanders to pass victims out of windows/exits. One person stabilizes head, others support body.',
+        detail:
+            'Line up bystanders to pass victims out of windows/exits. One person stabilizes head, others support body.',
       ),
     ],
     firstAidTips: [
@@ -321,22 +349,26 @@ const Map<String, VehicleRescueData> kVehicleRescueDatabase = {
       RescueStep(
         stepNumber: 1,
         title: 'Stabilize the auto first',
-        detail: 'Autos tip over easily. Push gently to check stability before leaning in. Ask bystanders to hold it steady.',
+        detail:
+            'Autos tip over easily. Push gently to check stability before leaning in. Ask bystanders to hold it steady.',
       ),
       RescueStep(
         stepNumber: 2,
         title: 'Check all three sides',
-        detail: 'Passengers in autos are often thrown sideways. Check all around the vehicle, not just inside.',
+        detail:
+            'Passengers in autos are often thrown sideways. Check all around the vehicle, not just inside.',
       ),
       RescueStep(
         stepNumber: 3,
         title: 'Driver extraction',
-        detail: 'Driver seat is exposed. Support driver\'s head from behind while helper pulls from front.',
+        detail:
+            'Driver seat is exposed. Support driver\'s head from behind while helper pulls from front.',
       ),
       RescueStep(
         stepNumber: 4,
         title: 'Passenger extraction',
-        detail: 'Open side means easy access. Support neck, slide passenger out sideways onto flat ground.',
+        detail:
+            'Open side means easy access. Support neck, slide passenger out sideways onto flat ground.',
       ),
     ],
     firstAidTips: [
@@ -355,10 +387,10 @@ VehicleRescueData? getRescueData(String vehicleKey) {
 
 // All vehicle types as list for selection UI
 final List<Map<String, String>> kVehicleTypes = [
-  {'key': 'car',     'label': 'Car / Sedan',    'icon': '🚗'},
-  {'key': 'bike',    'label': 'Bike / Scooter', 'icon': '🏍️'},
-  {'key': 'truck',   'label': 'Truck / Lorry',  'icon': '🚛'},
-  {'key': 'bus',     'label': 'Bus',             'icon': '🚌'},
-  {'key': 'ev_car',  'label': 'Electric Car',   'icon': '⚡'},
-  {'key': 'auto',    'label': 'Auto Rickshaw',  'icon': '🛺'},
+  {'key': 'car', 'label': 'Car / Sedan', 'icon': '🚗'},
+  {'key': 'bike', 'label': 'Bike / Scooter', 'icon': '🏍️'},
+  {'key': 'truck', 'label': 'Truck / Lorry', 'icon': '🚛'},
+  {'key': 'bus', 'label': 'Bus', 'icon': '🚌'},
+  {'key': 'ev_car', 'label': 'Electric Car', 'icon': '⚡'},
+  {'key': 'auto', 'label': 'Auto Rickshaw', 'icon': '🛺'},
 ];
