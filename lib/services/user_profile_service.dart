@@ -76,7 +76,7 @@ class UserProfileService extends StateNotifier<UserProfile> {
     _profileSubscription?.cancel();
     
     // Watch for profile changes in the local DB
-    _profileSubscription = appDb.watch('SELECT * FROM profiles WHERE user_id = ?', [user.id]).listen((results) {
+    _profileSubscription = appDb.watch('SELECT * FROM profiles WHERE user_id = ?', parameters: [user.id]).listen((results) {
       if (results.isNotEmpty) {
         state = UserProfile.fromMap(results.first);
       } else {

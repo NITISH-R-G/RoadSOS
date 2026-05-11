@@ -732,5 +732,5 @@ final voiceAssistantServiceProvider = Provider<VoiceAssistantService>((ref) {
 });
 
 final userProfileServiceProvider = Provider<UserProfileService>((ref) {
-  return UserProfileService();
+  return UserProfileService(ref);
 });

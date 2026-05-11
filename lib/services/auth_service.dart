@@ -13,7 +13,7 @@ class AuthService extends StateNotifier<User?> {
 
   void _listenToAuthChanges() {
     _client.auth.onAuthStateChange.listen((data) {
-      state = data.user;
+      state = data.session?.user;
     });
   }
 
