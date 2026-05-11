@@ -94,5 +94,5 @@ class DrivingModeService extends StateNotifier<DrivingMode> {
 /// autoDispose would kill GPS tracking whenever the dashboard rebuilds.
 final drivingModeProvider =
     StateNotifierProvider<DrivingModeService, DrivingMode>((ref) {
-  return DrivingModeService();
-});
+      return DrivingModeService();
+    });

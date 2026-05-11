@@ -17,7 +17,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
   bool _extendedRetention = false;
 
   Future<void> _accept() async {
-    await PrivacyConsentService.recordConsent(extendedCloudRetention: _extendedRetention);
+    await PrivacyConsentService.recordConsent(
+      extendedCloudRetention: _extendedRetention,
+    );
     widget.onAccepted();
   }
 
@@ -33,7 +35,11 @@ class _ConsentScreenState extends State<ConsentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.privacy_tip_outlined, size: 48, color: Colors.blueAccent),
+              const Icon(
+                Icons.privacy_tip_outlined,
+                size: 48,
+                color: Colors.blueAccent,
+              ),
               const SizedBox(height: 24),
               Text(
                 l10n.consentTitle,
@@ -48,20 +54,27 @@ class _ConsentScreenState extends State<ConsentScreen> {
                 child: SingleChildScrollView(
                   child: Text(
                     l10n.consentSummary,
-                    style: const TextStyle(color: Colors.white70, height: 1.45, fontSize: 15),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      height: 1.45,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
               CheckboxListTile(
                 value: _extendedRetention,
-                onChanged: (v) => setState(() => _extendedRetention = v ?? false),
+                onChanged: (v) =>
+                    setState(() => _extendedRetention = v ?? false),
                 title: Text(
                   l10n.consentExtendedRetentionLabel,
                   style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
                 tileColor: Colors.white.withValues(alpha: 0.05),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               const SizedBox(height: 16),
               OutlinedButton(
