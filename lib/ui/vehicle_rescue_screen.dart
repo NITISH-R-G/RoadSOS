@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'vehicle_rescue_data.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 
 /// VehicleRescueScreen
 /// 
@@ -301,8 +302,8 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
               ),
             ),
             if (isEV)
-              const Padding(
-                padding: EdgeInsets.only(top: 4),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   l10n.highVoltageWarning,
                   style: const TextStyle(color: Colors.yellow, fontSize: 9, letterSpacing: 1),

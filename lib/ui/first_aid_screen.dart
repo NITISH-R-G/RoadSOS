@@ -301,11 +301,6 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
       ),
     );
   }
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildChip(String label) {
     return ActionChip(

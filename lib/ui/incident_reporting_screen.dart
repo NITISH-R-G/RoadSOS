@@ -555,17 +555,4 @@ class _IncidentReportingScreenState
       ),
     );
   }
-    style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.withValues(alpha: 0.3),
-                  foregroundColor: Colors.green,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

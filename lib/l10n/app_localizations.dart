@@ -627,6 +627,1380 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep incident summaries beyond 90 days when synced to Supabase (overrides default purge).'**
   String get settingsExtendedRetentionSubtitle;
+
+  /// No description provided for @navSos.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS'**
+  String get navSos;
+
+  /// No description provided for @navSafetyTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety Tools'**
+  String get navSafetyTools;
+
+  /// No description provided for @navProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'My Profile'**
+  String get navProfile;
+
+  /// No description provided for @drivingModeBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'DRIVING MODE — Crash detection armed'**
+  String get drivingModeBanner;
+
+  /// No description provided for @safetyToolsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'All safety features are in \"Safety Tools\" below'**
+  String get safetyToolsHint;
+
+  /// No description provided for @sectionEmergencyResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'EMERGENCY RESPONSE'**
+  String get sectionEmergencyResponse;
+
+  /// No description provided for @sectionHealthSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'HEALTH & SAFETY'**
+  String get sectionHealthSafety;
+
+  /// No description provided for @sectionRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'RECORDS'**
+  String get sectionRecords;
+
+  /// No description provided for @sectionMyInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'MY INFORMATION'**
+  String get sectionMyInformation;
+
+  /// No description provided for @sectionSettingsPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'SETTINGS & PRIVACY'**
+  String get sectionSettingsPrivacy;
+
+  /// No description provided for @actionSafeWalkSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-SOS if you don\'t check in at destination'**
+  String get actionSafeWalkSub;
+
+  /// No description provided for @actionCaptureScene.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture Scene'**
+  String get actionCaptureScene;
+
+  /// No description provided for @actionCaptureSceneSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Document crash with AI-powered photo analysis'**
+  String get actionCaptureSceneSub;
+
+  /// No description provided for @actionResponderSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Live map with nearby SOS signals'**
+  String get actionResponderSub;
+
+  /// No description provided for @actionFirstAidSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Step-by-step emergency instructions'**
+  String get actionFirstAidSub;
+
+  /// No description provided for @actionVitalScanSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Check heart rate & oxygen saturation'**
+  String get actionVitalScanSub;
+
+  /// No description provided for @actionMedicalIdSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Show responders your blood type, allergies, contacts'**
+  String get actionMedicalIdSub;
+
+  /// No description provided for @actionMeshChatSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Bluetooth messaging — no signal needed'**
+  String get actionMeshChatSub;
+
+  /// No description provided for @actionOfflineMapsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Download maps for no-signal areas'**
+  String get actionOfflineMapsSub;
+
+  /// No description provided for @actionActivityLogSub.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS, triage, SMS — for police & insurer records'**
+  String get actionActivityLogSub;
+
+  /// No description provided for @actionEditProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get actionEditProfile;
+
+  /// No description provided for @actionEditProfileSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, blood type, emergency contacts'**
+  String get actionEditProfileSub;
+
+  /// No description provided for @actionMedicalIdCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical ID Card'**
+  String get actionMedicalIdCard;
+
+  /// No description provided for @actionMedicalIdCardSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick-access health info for emergency responders'**
+  String get actionMedicalIdCardSub;
+
+  /// No description provided for @actionAllSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'All Settings'**
+  String get actionAllSettings;
+
+  /// No description provided for @actionAllSettingsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Language, offline maps, notifications, privacy'**
+  String get actionAllSettingsSub;
+
+  /// No description provided for @actionActivityLogFullSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Full SOS history for insurance & police records'**
+  String get actionActivityLogFullSub;
+
+  /// No description provided for @rescueGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescue Guide'**
+  String get rescueGuideTitle;
+
+  /// No description provided for @vehicleRescueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Rescue'**
+  String get vehicleRescueTitle;
+
+  /// No description provided for @rescueOfflineBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'OFFLINE'**
+  String get rescueOfflineBadge;
+
+  /// No description provided for @vehicleRescueBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'VEHICLE RESCUE GUIDE'**
+  String get vehicleRescueBannerTitle;
+
+  /// No description provided for @vehicleRescueBannerSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the type of vehicle involved in the accident to get instant rescue instructions.'**
+  String get vehicleRescueBannerSub;
+
+  /// No description provided for @plateNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PLATE NUMBER (optional)'**
+  String get plateNumberLabel;
+
+  /// No description provided for @plateNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'TN 11 AB 1234'**
+  String get plateNumberHint;
+
+  /// No description provided for @selectVehicleType.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT VEHICLE TYPE'**
+  String get selectVehicleType;
+
+  /// No description provided for @rescueOfflineTip.
+  ///
+  /// In en, this message translates to:
+  /// **'All rescue instructions work offline — no internet needed.'**
+  String get rescueOfflineTip;
+
+  /// No description provided for @highVoltageWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'HIGH VOLTAGE'**
+  String get highVoltageWarning;
+
+  /// No description provided for @rescueDangersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️  DANGERS — READ FIRST'**
+  String get rescueDangersTitle;
+
+  /// No description provided for @rescueExtractionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'👐  EXTRACTION STEPS'**
+  String get rescueExtractionTitle;
+
+  /// No description provided for @rescueFirstAidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🩺  WHILE WAITING FOR AMBULANCE'**
+  String get rescueFirstAidTitle;
+
+  /// No description provided for @rescueCriticalBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'CRITICAL'**
+  String get rescueCriticalBadge;
+
+  /// No description provided for @dialerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not launch dialer. Please call 108 manually.'**
+  String get dialerError;
+
+  /// No description provided for @callAmbulanceButton.
+  ///
+  /// In en, this message translates to:
+  /// **'CALL AMBULANCE — 108'**
+  String get callAmbulanceButton;
+
+  /// No description provided for @editMedicalIdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'EDIT MEDICAL ID'**
+  String get editMedicalIdTitle;
+
+  /// No description provided for @profileUpdatedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Profile Updated'**
+  String get profileUpdatedSnack;
+
+  /// No description provided for @fieldFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get fieldFullName;
+
+  /// No description provided for @fieldBloodType.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Type'**
+  String get fieldBloodType;
+
+  /// No description provided for @fieldAllergies.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergies'**
+  String get fieldAllergies;
+
+  /// No description provided for @fieldMedications.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Medications'**
+  String get fieldMedications;
+
+  /// No description provided for @fieldConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronic Conditions'**
+  String get fieldConditions;
+
+  /// No description provided for @sectionEmergencyContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'EMERGENCY CONTACTS'**
+  String get sectionEmergencyContacts;
+
+  /// No description provided for @fieldPrimaryContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary Contact'**
+  String get fieldPrimaryContact;
+
+  /// No description provided for @fieldAdditionalContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Contact {index}'**
+  String fieldAdditionalContact(int index);
+
+  /// No description provided for @addContactButton.
+  ///
+  /// In en, this message translates to:
+  /// **'ADD CONTACT'**
+  String get addContactButton;
+
+  /// No description provided for @medicalIdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'EMERGENCY MEDICAL ID'**
+  String get medicalIdTitle;
+
+  /// No description provided for @scanForSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'SCAN FOR MEDICAL SUMMARY'**
+  String get scanForSummary;
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'NOT SET'**
+  String get notSet;
+
+  /// No description provided for @medicalCardTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: Keep this screen open for responders. For lock-screen wallpaper export, use your device screenshot tools.'**
+  String get medicalCardTip;
+
+  /// No description provided for @firstAidGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🩺 First Aid Guide'**
+  String get firstAidGuideTitle;
+
+  /// No description provided for @describeInjuryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe injury...'**
+  String get describeInjuryHint;
+
+  /// No description provided for @firstAidError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load first-aid guidance on this device.'**
+  String get firstAidError;
+
+  /// No description provided for @verifiedSolutionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified Medical Solutions'**
+  String get verifiedSolutionsTitle;
+
+  /// No description provided for @aiInjuryIdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Injury Identification'**
+  String get aiInjuryIdTitle;
+
+  /// No description provided for @typeInjuryPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Type an injury to get\nexact, verified first aid solutions.'**
+  String get typeInjuryPrompt;
+
+  /// No description provided for @chipSevereBleeding.
+  ///
+  /// In en, this message translates to:
+  /// **'Severe Bleeding'**
+  String get chipSevereBleeding;
+
+  /// No description provided for @chipMuscleTear.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Tear'**
+  String get chipMuscleTear;
+
+  /// No description provided for @chipBrainInjury.
+  ///
+  /// In en, this message translates to:
+  /// **'Brain Injury'**
+  String get chipBrainInjury;
+
+  /// No description provided for @chipSprains.
+  ///
+  /// In en, this message translates to:
+  /// **'Sprains'**
+  String get chipSprains;
+
+  /// No description provided for @multimodalDigitalTwin.
+  ///
+  /// In en, this message translates to:
+  /// **'MULTIMODAL: DIGITAL TWIN'**
+  String get multimodalDigitalTwin;
+
+  /// No description provided for @aiInterviewNuance.
+  ///
+  /// In en, this message translates to:
+  /// **'AI INTERVIEW: SITUATIONAL NUANCE'**
+  String get aiInterviewNuance;
+
+  /// No description provided for @actionGuidanceNextSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTION GUIDANCE: NEXT STEPS'**
+  String get actionGuidanceNextSteps;
+
+  /// No description provided for @situationBriefLive.
+  ///
+  /// In en, this message translates to:
+  /// **'SITUATION BRIEF (LIVE)'**
+  String get situationBriefLive;
+
+  /// No description provided for @sceneAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'SCENE ATTACHED'**
+  String get sceneAttached;
+
+  /// No description provided for @captureAttachPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'CAPTURE / ATTACH PHOTO'**
+  String get captureAttachPhoto;
+
+  /// No description provided for @photoAttachedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo attached to this report (not auto-analyzed in this build).'**
+  String get photoAttachedNote;
+
+  /// No description provided for @scenePhotoError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not capture a scene photo on this device.'**
+  String get scenePhotoError;
+
+  /// No description provided for @scenePhotoAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'Scene photo attached.'**
+  String get scenePhotoAttached;
+
+  /// No description provided for @questionProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Question Progress:'**
+  String get questionProgress;
+
+  /// No description provided for @describeIncidentPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Please describe the incident'**
+  String get describeIncidentPrompt;
+
+  /// No description provided for @speakOrTypeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Speak or type…'**
+  String get speakOrTypeHint;
+
+  /// No description provided for @interviewCompleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Interview complete. All critical information collected.'**
+  String get interviewCompleteMessage;
+
+  /// No description provided for @actionStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🎯 Action Steps'**
+  String get actionStepsTitle;
+
+  /// No description provided for @reportNewIncidentButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Report New Incident'**
+  String get reportNewIncidentButton;
+
+  /// No description provided for @sceneCollision.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Collision'**
+  String get sceneCollision;
+
+  /// No description provided for @scenePedestrian.
+  ///
+  /// In en, this message translates to:
+  /// **'Pedestrian Hit'**
+  String get scenePedestrian;
+
+  /// No description provided for @sceneRollover.
+  ///
+  /// In en, this message translates to:
+  /// **'Rollover'**
+  String get sceneRollover;
+
+  /// No description provided for @sceneFire.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire Hazard'**
+  String get sceneFire;
+
+  /// No description provided for @sceneUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get sceneUnknown;
+
+  /// No description provided for @activityLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity log'**
+  String get activityLogTitle;
+
+  /// No description provided for @activityLogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS, triage, SMS/mesh/cloud steps — for insurance or police records'**
+  String get activityLogSubtitle;
+
+  /// No description provided for @reviewPermissionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review permissions'**
+  String get reviewPermissionsTitle;
+
+  /// No description provided for @reviewPermissionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the setup walkthrough again'**
+  String get reviewPermissionsSubtitle;
+
+  /// No description provided for @backgroundVolumeSosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background volume SOS'**
+  String get backgroundVolumeSosTitle;
+
+  /// No description provided for @backgroundVolumeSosSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Accessibility and enable RoadSOS for lock-screen gesture (3× up + 3× down)'**
+  String get backgroundVolumeSosSubtitle;
+
+  /// No description provided for @nearbySosFirebaseError.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby SOS needs Firebase setup (google-services.json / FirebaseOptions). Toggle turned off.'**
+  String get nearbySosFirebaseError;
+
+  /// No description provided for @rescue_car_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Car / Sedan / Hatchback'**
+  String get rescue_car_type;
+
+  /// No description provided for @rescue_car_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard 4-wheel passenger vehicle'**
+  String get rescue_car_desc;
+
+  /// No description provided for @rescue_car_danger_1.
+  ///
+  /// In en, this message translates to:
+  /// **'⛽ Fuel tank is at the REAR — keep flames away from back of car'**
+  String get rescue_car_danger_1;
+
+  /// No description provided for @rescue_car_danger_2.
+  ///
+  /// In en, this message translates to:
+  /// **'💥 Airbags may still deploy even after crash — don\'t lean into cabin'**
+  String get rescue_car_danger_2;
+
+  /// No description provided for @rescue_car_danger_3.
+  ///
+  /// In en, this message translates to:
+  /// **'🔋 12V battery under hood — avoid touching terminals'**
+  String get rescue_car_danger_3;
+
+  /// No description provided for @rescue_car_danger_4.
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 Engine fire risk — if smoke seen, move victim 30m away immediately'**
+  String get rescue_car_danger_4;
+
+  /// No description provided for @rescue_car_step_1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Make the scene safe'**
+  String get rescue_car_step_1_title;
+
+  /// No description provided for @rescue_car_step_1_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off the engine if accessible. Turn on hazard lights. Place objects 50m behind to warn traffic.'**
+  String get rescue_car_step_1_detail;
+
+  /// No description provided for @rescue_car_step_2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Check if victim is conscious'**
+  String get rescue_car_step_2_title;
+
+  /// No description provided for @rescue_car_step_2_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap shoulder and shout \"Can you hear me?\". If no response, call 108 immediately. Do NOT shake them.'**
+  String get rescue_car_step_2_detail;
+
+  /// No description provided for @rescue_car_step_3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Do NOT move the victim yet'**
+  String get rescue_car_step_3_title;
+
+  /// No description provided for @rescue_car_step_3_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'If victim is breathing and not in immediate danger (no fire/flood), keep them still. Moving can worsen spinal injuries.'**
+  String get rescue_car_step_3_detail;
+
+  /// No description provided for @rescue_car_step_4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the door safely'**
+  String get rescue_car_step_4_title;
+
+  /// No description provided for @rescue_car_step_4_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull door handle and simultaneously push door outward with shoulder. For jammed doors, try rear doors first.'**
+  String get rescue_car_step_4_detail;
+
+  /// No description provided for @rescue_car_step_5_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Support the neck and head'**
+  String get rescue_car_step_5_title;
+
+  /// No description provided for @rescue_car_step_5_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Place both hands on either side of victim\'s head. Keep head aligned with spine at ALL times. Ask someone else to help.'**
+  String get rescue_car_step_5_detail;
+
+  /// No description provided for @rescue_car_step_6_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide victim out horizontally'**
+  String get rescue_car_step_6_title;
+
+  /// No description provided for @rescue_car_step_6_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'One person holds head, another grips under armpits. Move in one smooth motion. Never twist the spine.'**
+  String get rescue_car_step_6_detail;
+
+  /// No description provided for @rescue_car_step_7_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Place in recovery position'**
+  String get rescue_car_step_7_title;
+
+  /// No description provided for @rescue_car_step_7_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'If breathing, place on their side (recovery position) to prevent choking. Keep monitoring until ambulance arrives.'**
+  String get rescue_car_step_7_detail;
+
+  /// No description provided for @rescue_car_firstaid_1.
+  ///
+  /// In en, this message translates to:
+  /// **'🩸 For bleeding: apply firm pressure with cloth. Don\'t remove it.'**
+  String get rescue_car_firstaid_1;
+
+  /// No description provided for @rescue_car_firstaid_2.
+  ///
+  /// In en, this message translates to:
+  /// **'🫁 If not breathing: begin CPR — 30 chest compressions + 2 breaths.'**
+  String get rescue_car_firstaid_2;
+
+  /// No description provided for @rescue_car_firstaid_3.
+  ///
+  /// In en, this message translates to:
+  /// **'🦴 If you suspect broken bones: do NOT straighten them.'**
+  String get rescue_car_firstaid_3;
+
+  /// No description provided for @rescue_car_firstaid_4.
+  ///
+  /// In en, this message translates to:
+  /// **'🚨 Keep talking to the victim — keep them conscious and calm.'**
+  String get rescue_car_firstaid_4;
+
+  /// No description provided for @fuel_petrol_diesel.
+  ///
+  /// In en, this message translates to:
+  /// **'Petrol / Diesel'**
+  String get fuel_petrol_diesel;
+
+  /// No description provided for @fuel_diesel.
+  ///
+  /// In en, this message translates to:
+  /// **'Diesel'**
+  String get fuel_diesel;
+
+  /// No description provided for @fuel_petrol.
+  ///
+  /// In en, this message translates to:
+  /// **'Petrol'**
+  String get fuel_petrol;
+
+  /// No description provided for @fuel_electric.
+  ///
+  /// In en, this message translates to:
+  /// **'Electric / Battery'**
+  String get fuel_electric;
+
+  /// No description provided for @fuel_diesel_cng.
+  ///
+  /// In en, this message translates to:
+  /// **'Diesel / CNG'**
+  String get fuel_diesel_cng;
+
+  /// No description provided for @fuel_multi.
+  ///
+  /// In en, this message translates to:
+  /// **'CNG / Petrol / Electric'**
+  String get fuel_multi;
+
+  /// No description provided for @rescue_truck_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Truck / Lorry / Heavy Vehicle'**
+  String get rescue_truck_type;
+
+  /// No description provided for @rescue_truck_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy goods vehicle, high cab, large fuel tanks'**
+  String get rescue_truck_desc;
+
+  /// No description provided for @rescue_truck_danger_1.
+  ///
+  /// In en, this message translates to:
+  /// **'⛽ LARGE diesel tanks on both sides — fire risk is HIGH'**
+  String get rescue_truck_danger_1;
+
+  /// No description provided for @rescue_truck_danger_2.
+  ///
+  /// In en, this message translates to:
+  /// **'⚡ 24V electrical system — more dangerous than regular cars'**
+  String get rescue_truck_danger_2;
+
+  /// No description provided for @rescue_truck_danger_3.
+  ///
+  /// In en, this message translates to:
+  /// **'🏋️ Cab is very high — falling risk when extracting driver'**
+  String get rescue_truck_danger_3;
+
+  /// No description provided for @rescue_truck_danger_4.
+  ///
+  /// In en, this message translates to:
+  /// **'📦 Cargo may shift and fall — approach from the side carefully'**
+  String get rescue_truck_danger_4;
+
+  /// No description provided for @rescue_truck_danger_5.
+  ///
+  /// In en, this message translates to:
+  /// **'🔧 Air brakes may release suddenly — stay clear of wheels'**
+  String get rescue_truck_danger_5;
+
+  /// No description provided for @rescue_truck_step_1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Approach from the SIDE only'**
+  String get rescue_truck_step_1_title;
+
+  /// No description provided for @rescue_truck_step_1_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Never approach from front (engine fire) or rear (cargo). Come from driver\'s side door angle.'**
+  String get rescue_truck_step_1_detail;
+
+  /// No description provided for @rescue_truck_step_2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure the truck'**
+  String get rescue_truck_step_2_title;
+
+  /// No description provided for @rescue_truck_step_2_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'If safe, apply handbrake and place wheel chocks (stones/wood) under tires to prevent rolling.'**
+  String get rescue_truck_step_2_detail;
+
+  /// No description provided for @rescue_truck_step_3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Climb up carefully'**
+  String get rescue_truck_step_3_title;
+
+  /// No description provided for @rescue_truck_step_3_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the built-in steps/handles on the cab. Don\'t pull on door handles to climb — they may break.'**
+  String get rescue_truck_step_3_detail;
+
+  /// No description provided for @rescue_truck_step_4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Check driver consciousness'**
+  String get rescue_truck_step_4_title;
+
+  /// No description provided for @rescue_truck_step_4_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap and call out. Driver may be trapped by steering wheel. Do NOT force them out.'**
+  String get rescue_truck_step_4_detail;
+
+  /// No description provided for @rescue_truck_step_5_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Extraction needs 3+ people'**
+  String get rescue_truck_step_5_title;
+
+  /// No description provided for @rescue_truck_step_5_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'One holds head/neck, two support body. Lower driver down cab steps slowly. Never drop.'**
+  String get rescue_truck_step_5_detail;
+
+  /// No description provided for @rescue_truck_step_6_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Move victim 50m away'**
+  String get rescue_truck_step_6_title;
+
+  /// No description provided for @rescue_truck_step_6_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Trucks carry large fuel loads. Move victim far from vehicle in case of fire.'**
+  String get rescue_truck_step_6_detail;
+
+  /// No description provided for @rescue_truck_firstaid_1.
+  ///
+  /// In en, this message translates to:
+  /// **'🚨 Call 108 AND fire brigade (101) — truck fires spread fast.'**
+  String get rescue_truck_firstaid_1;
+
+  /// No description provided for @rescue_truck_firstaid_2.
+  ///
+  /// In en, this message translates to:
+  /// **'🩸 Truck drivers often hit steering wheel — check chest for injury.'**
+  String get rescue_truck_firstaid_2;
+
+  /// No description provided for @rescue_truck_firstaid_3.
+  ///
+  /// In en, this message translates to:
+  /// **'👁️ Check for head injuries — helmet-less impact with windshield is common.'**
+  String get rescue_truck_firstaid_3;
+
+  /// No description provided for @rescue_truck_firstaid_4.
+  ///
+  /// In en, this message translates to:
+  /// **'🦺 If cargo has hazmat symbols, stay back and call 112.'**
+  String get rescue_truck_firstaid_4;
+
+  /// No description provided for @rescue_bike_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Motorcycle / Bike / Scooter'**
+  String get rescue_bike_type;
+
+  /// No description provided for @rescue_bike_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-wheeler, rider likely thrown from vehicle'**
+  String get rescue_bike_desc;
+
+  /// No description provided for @rescue_bike_danger_1.
+  ///
+  /// In en, this message translates to:
+  /// **'⛽ Small fuel tank near engine — can ignite easily'**
+  String get rescue_bike_danger_1;
+
+  /// No description provided for @rescue_bike_danger_2.
+  ///
+  /// In en, this message translates to:
+  /// **'🪖 DO NOT remove helmet — may cause spinal damage'**
+  String get rescue_bike_danger_2;
+
+  /// No description provided for @rescue_bike_danger_3.
+  ///
+  /// In en, this message translates to:
+  /// **'🛣️ Rider likely skidded — check for road rash injuries'**
+  String get rescue_bike_danger_3;
+
+  /// No description provided for @rescue_bike_danger_4.
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 Hot exhaust pipe — avoid touching, can cause burns'**
+  String get rescue_bike_danger_4;
+
+  /// No description provided for @rescue_bike_step_1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the bike away first'**
+  String get rescue_bike_step_1_title;
+
+  /// No description provided for @rescue_bike_step_1_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'The bike is the fire risk. Push it at least 10m away from the victim before helping.'**
+  String get rescue_bike_step_1_detail;
+
+  /// No description provided for @rescue_bike_step_2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'NEVER remove the helmet'**
+  String get rescue_bike_step_2_title;
+
+  /// No description provided for @rescue_bike_step_2_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Even if victim asks. Helmet removal can cause fatal spinal damage. Only doctors should remove it.'**
+  String get rescue_bike_step_2_detail;
+
+  /// No description provided for @rescue_bike_step_3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Check breathing through visor'**
+  String get rescue_bike_step_3_title;
+
+  /// No description provided for @rescue_bike_step_3_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the visor to check breathing. If vomiting, hold helmet steady and gently tilt to side.'**
+  String get rescue_bike_step_3_detail;
+
+  /// No description provided for @rescue_bike_step_4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for road rash'**
+  String get rescue_bike_step_4_title;
+
+  /// No description provided for @rescue_bike_step_4_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Large skin abrasions from skidding. Cover with clean cloth — don\'t clean with water yet.'**
+  String get rescue_bike_step_4_detail;
+
+  /// No description provided for @rescue_bike_step_5_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep rider still and flat'**
+  String get rescue_bike_step_5_title;
+
+  /// No description provided for @rescue_bike_step_5_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Riders are often thrown and land awkwardly. Assume spinal injury. Keep them flat until help arrives.'**
+  String get rescue_bike_step_5_detail;
+
+  /// No description provided for @rescue_bike_step_6_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep them warm'**
+  String get rescue_bike_step_6_title;
+
+  /// No description provided for @rescue_bike_step_6_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Shock causes rapid body cooling. Cover with jacket/blanket. Keep talking to them.'**
+  String get rescue_bike_step_6_detail;
+
+  /// No description provided for @rescue_bike_firstaid_1.
+  ///
+  /// In en, this message translates to:
+  /// **'🪖 NEVER remove helmet — this is the most important rule for bike accidents.'**
+  String get rescue_bike_firstaid_1;
+
+  /// No description provided for @rescue_bike_firstaid_2.
+  ///
+  /// In en, this message translates to:
+  /// **'🦴 Assume broken limbs — don\'t try to straighten or move them.'**
+  String get rescue_bike_firstaid_2;
+
+  /// No description provided for @rescue_bike_firstaid_3.
+  ///
+  /// In en, this message translates to:
+  /// **'😮 Shock is common — keep victim lying down, legs slightly elevated.'**
+  String get rescue_bike_firstaid_3;
+
+  /// No description provided for @rescue_bike_firstaid_4.
+  ///
+  /// In en, this message translates to:
+  /// **'🩸 Road rash bleeds a lot but is rarely life-threatening — focus on head/spine.'**
+  String get rescue_bike_firstaid_4;
+
+  /// No description provided for @rescue_ev_car_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Electric Vehicle (EV Car)'**
+  String get rescue_ev_car_type;
+
+  /// No description provided for @rescue_ev_car_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery-powered car — special electrical hazards'**
+  String get rescue_ev_car_desc;
+
+  /// No description provided for @rescue_ev_car_danger_1.
+  ///
+  /// In en, this message translates to:
+  /// **'⚡ HIGH VOLTAGE battery (400-800V) — can be LETHAL if touched'**
+  String get rescue_ev_car_danger_1;
+
+  /// No description provided for @rescue_ev_car_danger_2.
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 Lithium battery fires burn at 1000°C and CANNOT be extinguished easily'**
+  String get rescue_ev_car_danger_2;
+
+  /// No description provided for @rescue_ev_car_danger_3.
+  ///
+  /// In en, this message translates to:
+  /// **'🌊 If EV is in water — stay away, electric shock risk is EXTREME'**
+  String get rescue_ev_car_danger_3;
+
+  /// No description provided for @rescue_ev_car_danger_4.
+  ///
+  /// In en, this message translates to:
+  /// **'💨 Battery fires release toxic gases — stay upwind'**
+  String get rescue_ev_car_danger_4;
+
+  /// No description provided for @rescue_ev_car_danger_5.
+  ///
+  /// In en, this message translates to:
+  /// **'🔄 Car may still be \"on\" even if silent — EVs make no engine noise'**
+  String get rescue_ev_car_danger_5;
+
+  /// No description provided for @rescue_ev_car_step_1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'DO NOT touch orange cables'**
+  String get rescue_ev_car_step_1_title;
+
+  /// No description provided for @rescue_ev_car_step_1_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange cables carry high voltage. If you see orange wires exposed — do NOT touch the car at all.'**
+  String get rescue_ev_car_step_1_detail;
+
+  /// No description provided for @rescue_ev_car_step_2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off the car'**
+  String get rescue_ev_car_step_2_title;
+
+  /// No description provided for @rescue_ev_car_step_2_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'If safe, reach in and press power button. Look for emergency cut-off switch (usually near door sill — bright red/orange).'**
+  String get rescue_ev_car_step_2_detail;
+
+  /// No description provided for @rescue_ev_car_step_3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for battery damage'**
+  String get rescue_ev_car_step_3_title;
+
+  /// No description provided for @rescue_ev_car_step_3_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'If battery area (under floor) is visibly damaged or smoking — treat as fire emergency. Move victim 30m away.'**
+  String get rescue_ev_car_step_3_detail;
+
+  /// No description provided for @rescue_ev_car_step_4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Extraction same as regular car'**
+  String get rescue_ev_car_step_4_title;
+
+  /// No description provided for @rescue_ev_car_step_4_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Once confirmed safe (no exposed cables, no smoke), extraction steps are same as regular car. Support neck, slide out.'**
+  String get rescue_ev_car_step_4_detail;
+
+  /// No description provided for @rescue_ev_car_step_5_title.
+  ///
+  /// In en, this message translates to:
+  /// **'If battery catches fire — RUN'**
+  String get rescue_ev_car_step_5_title;
+
+  /// No description provided for @rescue_ev_car_step_5_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'EV battery fires cannot be put out with normal extinguishers. Move everyone 50m away and call fire brigade 101.'**
+  String get rescue_ev_car_step_5_detail;
+
+  /// No description provided for @rescue_ev_car_firstaid_1.
+  ///
+  /// In en, this message translates to:
+  /// **'⚡ If victim received electric shock: do not touch them until power is confirmed off.'**
+  String get rescue_ev_car_firstaid_1;
+
+  /// No description provided for @rescue_ev_car_firstaid_2.
+  ///
+  /// In en, this message translates to:
+  /// **'👁️ Electric shock victims may have internal burns not visible outside.'**
+  String get rescue_ev_car_firstaid_2;
+
+  /// No description provided for @rescue_ev_car_firstaid_3.
+  ///
+  /// In en, this message translates to:
+  /// **'🫁 Toxic battery fumes — move victim upwind, fresh air is critical.'**
+  String get rescue_ev_car_firstaid_3;
+
+  /// No description provided for @rescue_ev_car_firstaid_4.
+  ///
+  /// In en, this message translates to:
+  /// **'🚒 Always call fire brigade for EV accidents — even if no visible fire yet.'**
+  String get rescue_ev_car_firstaid_4;
+
+  /// No description provided for @rescue_bus_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Bus / Minibus'**
+  String get rescue_bus_type;
+
+  /// No description provided for @rescue_bus_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Large passenger vehicle, multiple victims likely'**
+  String get rescue_bus_desc;
+
+  /// No description provided for @rescue_bus_danger_1.
+  ///
+  /// In en, this message translates to:
+  /// **'👥 Multiple casualties — prioritize who needs help most (triage)'**
+  String get rescue_bus_danger_1;
+
+  /// No description provided for @rescue_bus_danger_2.
+  ///
+  /// In en, this message translates to:
+  /// **'⛽ Large fuel tank — fire risk is HIGH'**
+  String get rescue_bus_danger_2;
+
+  /// No description provided for @rescue_bus_danger_3.
+  ///
+  /// In en, this message translates to:
+  /// **'💨 CNG buses have gas cylinders — EXPLOSION RISK if ruptured'**
+  String get rescue_bus_danger_3;
+
+  /// No description provided for @rescue_bus_danger_4.
+  ///
+  /// In en, this message translates to:
+  /// **'🚪 Emergency exits at rear and roof — know how to use them'**
+  String get rescue_bus_danger_4;
+
+  /// No description provided for @rescue_bus_step_1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Assess from outside first'**
+  String get rescue_bus_step_1_title;
+
+  /// No description provided for @rescue_bus_step_1_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Count visible victims. Check for fire/smoke. Don\'t rush in — a second casualty helps no one.'**
+  String get rescue_bus_step_1_detail;
+
+  /// No description provided for @rescue_bus_step_2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for CNG cylinders'**
+  String get rescue_bus_step_2_title;
+
+  /// No description provided for @rescue_bus_step_2_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'CNG buses have cylindrical tanks on roof or rear. If hissing sound heard — evacuate everyone 100m away immediately.'**
+  String get rescue_bus_step_2_detail;
+
+  /// No description provided for @rescue_bus_step_3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Use emergency exits'**
+  String get rescue_bus_step_3_title;
+
+  /// No description provided for @rescue_bus_step_3_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Red handles at rear door and roof hatch. Push/pull to open. Don\'t wait for front door if jammed.'**
+  String get rescue_bus_step_3_detail;
+
+  /// No description provided for @rescue_bus_step_4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Triage victims — most critical first'**
+  String get rescue_bus_step_4_title;
+
+  /// No description provided for @rescue_bus_step_4_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Walking wounded can help themselves. Focus on unconscious or heavily bleeding victims first.'**
+  String get rescue_bus_step_4_detail;
+
+  /// No description provided for @rescue_bus_step_5_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Form human chain for extraction'**
+  String get rescue_bus_step_5_title;
+
+  /// No description provided for @rescue_bus_step_5_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Line up bystanders to pass victims out of windows/exits. One person stabilizes head, others support body.'**
+  String get rescue_bus_step_5_detail;
+
+  /// No description provided for @rescue_bus_firstaid_1.
+  ///
+  /// In en, this message translates to:
+  /// **'📞 Call 108 AND 100 — multiple casualties need multiple ambulances.'**
+  String get rescue_bus_firstaid_1;
+
+  /// No description provided for @rescue_bus_firstaid_2.
+  ///
+  /// In en, this message translates to:
+  /// **'🏃 Get able-bodied passengers out first — they can then help others.'**
+  String get rescue_bus_firstaid_2;
+
+  /// No description provided for @rescue_bus_firstaid_3.
+  ///
+  /// In en, this message translates to:
+  /// **'🔴 Triage: Red = critical (help first), Yellow = serious, Green = walking.'**
+  String get rescue_bus_firstaid_3;
+
+  /// No description provided for @rescue_bus_firstaid_4.
+  ///
+  /// In en, this message translates to:
+  /// **'💨 If CNG leak suspected — NO flames, NO phones near the vehicle.'**
+  String get rescue_bus_firstaid_4;
+
+  /// No description provided for @rescue_auto_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Rickshaw / Tuk-Tuk'**
+  String get rescue_auto_type;
+
+  /// No description provided for @rescue_auto_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'3-wheeler, open sides, common in Indian roads'**
+  String get rescue_auto_desc;
+
+  /// No description provided for @rescue_auto_danger_1.
+  ///
+  /// In en, this message translates to:
+  /// **'💨 CNG autos — check for hissing gas leak sounds'**
+  String get rescue_auto_danger_1;
+
+  /// No description provided for @rescue_auto_danger_2.
+  ///
+  /// In en, this message translates to:
+  /// **'🔓 Open sides mean passengers are often thrown out'**
+  String get rescue_auto_danger_2;
+
+  /// No description provided for @rescue_auto_danger_3.
+  ///
+  /// In en, this message translates to:
+  /// **'⚖️ Autos tip over easily — approach carefully, may be unstable'**
+  String get rescue_auto_danger_3;
+
+  /// No description provided for @rescue_auto_danger_4.
+  ///
+  /// In en, this message translates to:
+  /// **'🔧 Small vehicle = less protection = more severe injuries'**
+  String get rescue_auto_danger_4;
+
+  /// No description provided for @rescue_auto_step_1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Stabilize the auto first'**
+  String get rescue_auto_step_1_title;
+
+  /// No description provided for @rescue_auto_step_1_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Autos tip over easily. Push gently to check stability before leaning in. Ask bystanders to hold it steady.'**
+  String get rescue_auto_step_1_detail;
+
+  /// No description provided for @rescue_auto_step_2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Check all three sides'**
+  String get rescue_auto_step_2_title;
+
+  /// No description provided for @rescue_auto_step_2_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Passengers in autos are often thrown sideways. Check all around the vehicle, not just inside.'**
+  String get rescue_auto_step_2_detail;
+
+  /// No description provided for @rescue_auto_step_3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver extraction'**
+  String get rescue_auto_step_3_title;
+
+  /// No description provided for @rescue_auto_step_3_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver seat is exposed. Support driver\'s head from behind while helper pulls from front.'**
+  String get rescue_auto_step_3_detail;
+
+  /// No description provided for @rescue_auto_step_4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Passenger extraction'**
+  String get rescue_auto_step_4_title;
+
+  /// No description provided for @rescue_auto_step_4_detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Open side means easy access. Support neck, slide passenger out sideways onto flat ground.'**
+  String get rescue_auto_step_4_detail;
+
+  /// No description provided for @rescue_auto_firstaid_1.
+  ///
+  /// In en, this message translates to:
+  /// **'🛺 Auto passengers have no seatbelts — expect to find them thrown from vehicle.'**
+  String get rescue_auto_firstaid_1;
+
+  /// No description provided for @rescue_auto_firstaid_2.
+  ///
+  /// In en, this message translates to:
+  /// **'🔍 Search radius of 5m around auto for thrown passengers.'**
+  String get rescue_auto_firstaid_2;
+
+  /// No description provided for @rescue_auto_firstaid_3.
+  ///
+  /// In en, this message translates to:
+  /// **'🩹 Road rash from open sides is common — cover wounds with clean cloth.'**
+  String get rescue_auto_firstaid_3;
+
+  /// No description provided for @rescue_auto_firstaid_4.
+  ///
+  /// In en, this message translates to:
+  /// **'😮 Shock sets in fast in small vehicle accidents — keep victims warm and calm.'**
+  String get rescue_auto_firstaid_4;
 }
 
 class _AppLocalizationsDelegate

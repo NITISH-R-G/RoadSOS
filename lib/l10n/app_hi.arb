@@ -153,5 +153,12 @@
   "plateNumberLabel": "प्लेट नंबर (वैकल्पिक)",
   "plateNumberHint": "जैसे MH 01 AA 1111",
   "selectVehicleType": "वाहन प्रकार चुनें",
-  "safetyCriticalBypass": "सुरक्षा महत्वपूर्ण: डेटा बाईपास सक्रिय"
+  "safetyCriticalBypass": "सुरक्षा महत्वपूर्ण: डेटा बाईपास सक्रिय",
+  "activityLogTitle": "Activity log",
+  "activityLogSubtitle": "GPS, triage, SMS/mesh/cloud steps — for insurance or police records",
+  "reviewPermissionsTitle": "Review permissions",
+  "reviewPermissionsSubtitle": "Open the setup walkthrough again",
+  "backgroundVolumeSosTitle": "Background volume SOS",
+  "backgroundVolumeSosSubtitle": "Open Accessibility and enable RoadSOS for lock-screen gesture (3× up + 3× down)",
+  "nearbySosFirebaseError": "Nearby SOS needs Firebase setup (google-services.json / FirebaseOptions). Toggle turned off."
 }

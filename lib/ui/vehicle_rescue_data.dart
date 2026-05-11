@@ -358,9 +358,3 @@ List<Map<String, String>> getLocalizedVehicleTypes(AppLocalizations l10n) {
     {'key': 'auto',    'label': l10n.rescue_auto_type,   'icon': '🛺'},
   ];
 }
-  {'key': 'bike',    'label': 'Bike / Scooter', 'icon': '🏍️'},
-  {'key': 'truck',   'label': 'Truck / Lorry',  'icon': '🚛'},
-  {'key': 'bus',     'label': 'Bus',             'icon': '🚌'},
-  {'key': 'ev_car',  'label': 'Electric Car',   'icon': '⚡'},
-  {'key': 'auto',    'label': 'Auto Rickshaw',  'icon': '🛺'},
-];

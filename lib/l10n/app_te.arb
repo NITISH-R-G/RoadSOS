@@ -153,6 +153,12 @@
   "plateNumberLabel": "PLATE NUMBER (optional)",
   "plateNumberHint": "e.g. MH 01 AA 1111",
   "selectVehicleType": "SELECT VEHICLE TYPE",
-  "safetyCriticalBypass": "SAFETY CRITICAL: DATA BYPASS ACTIVE"
-: "ఆఫ్‌లైన్ నియమాలు."
+  "safetyCriticalBypass": "SAFETY CRITICAL: DATA BYPASS ACTIVE",
+  "activityLogTitle": "Activity log",
+  "activityLogSubtitle": "GPS, triage, SMS/mesh/cloud steps — for insurance or police records",
+  "reviewPermissionsTitle": "Review permissions",
+  "reviewPermissionsSubtitle": "Open the setup walkthrough again",
+  "backgroundVolumeSosTitle": "Background volume SOS",
+  "backgroundVolumeSosSubtitle": "Open Accessibility and enable RoadSOS for lock-screen gesture (3× up + 3× down)",
+  "nearbySosFirebaseError": "Nearby SOS needs Firebase setup (google-services.json / FirebaseOptions). Toggle turned off."
 }
