@@ -63,7 +63,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _onNearbySosChanged(bool value) async {
+  Future<void> _onNearbySosChanged(bool value, AppLocalizations l10n) async {
     if (value) {
       final seen = await NearbySosPreferences.goodSamaritanSeen();
       if (!seen && mounted) {
@@ -79,10 +79,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (!ok && mounted) {
       setState(() => _nearbySos = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Nearby SOS needs Firebase setup (google-services.json / FirebaseOptions). Toggle turned off.',
-          ),
+        SnackBar(
+          content: Text(l10n.nearbySosFirebaseError),
         ),
       );
     }
@@ -143,8 +141,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _tile(
             context,
             Icons.fact_check_outlined,
-            'Activity log',
-            'GPS, triage, SMS/mesh/cloud steps — for insurance or police records',
+            l10n.activityLogTitle,
+            l10n.activityLogSubtitle,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
@@ -163,8 +161,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _tile(
             context,
             Icons.app_shortcut,
-            'Review permissions',
-            'Open the setup walkthrough again',
+            l10n.reviewPermissionsTitle,
+            l10n.reviewPermissionsSubtitle,
             onTap: () => Navigator.push<void>(
               context,
               MaterialPageRoute<void>(
@@ -190,8 +188,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _tile(
               context,
               Icons.hearing_disabled_outlined,
-              'Background volume SOS',
-              'Open Accessibility and enable RoadSOS for lock-screen gesture (3× up + 3× down)',
+              l10n.backgroundVolumeSosTitle,
+              l10n.backgroundVolumeSosSubtitle,
               onTap: () => ref.read(hardwareTriggerServiceProvider).openAndroidAccessibilitySettings(),
             ),
           ],
@@ -199,7 +197,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _sectionHeader(context, l10n.nearbySosSectionTitle),
           SwitchListTile(
             value: _nearbySos,
-            onChanged: _onNearbySosChanged,
+            onChanged: (val) => _onNearbySosChanged(val, l10n),
             secondary: const Icon(Icons.notifications_active, color: Colors.white70),
             title: Text(l10n.nearbySosToggleTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             subtitle: Text(l10n.nearbySosToggleSubtitle, style: const TextStyle(color: Colors.white38, fontSize: 12)),

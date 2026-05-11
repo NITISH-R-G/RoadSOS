@@ -218,6 +218,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _navBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return NavigationBar(
       selectedIndex: _tab,
       onDestinationSelected: (i) => setState(() => _tab = i),
@@ -227,21 +228,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       elevation: 8,
       indicatorColor: _kRed.withAlpha(38),
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      destinations: const [
+      destinations: [
         NavigationDestination(
-          icon: Icon(Icons.emergency_outlined, color: Colors.white54),
-          selectedIcon: Icon(Icons.emergency, color: _kRed),
-          label: 'SOS',
+          icon: const Icon(Icons.emergency_outlined, color: Colors.white54),
+          selectedIcon: const Icon(Icons.emergency, color: _kRed),
+          label: l10n.navSos,
         ),
         NavigationDestination(
-          icon: Icon(Icons.apps_outlined, color: Colors.white54),
-          selectedIcon: Icon(Icons.apps, color: _kRed),
-          label: 'Safety Tools',
+          icon: const Icon(Icons.apps_outlined, color: Colors.white54),
+          selectedIcon: const Icon(Icons.apps, color: _kRed),
+          label: l10n.navSafetyTools,
         ),
         NavigationDestination(
-          icon: Icon(Icons.person_outline, color: Colors.white54),
-          selectedIcon: Icon(Icons.person, color: _kRed),
-          label: 'My Profile',
+          icon: const Icon(Icons.person_outline, color: Colors.white54),
+          selectedIcon: const Icon(Icons.person, color: _kRed),
+          label: l10n.navProfile,
         ),
       ],
     );
@@ -269,14 +270,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               Container(
                 height: 36,
                 color: const Color(0xFFFF9500),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.directions_car, color: Colors.black, size: 16),
-                    SizedBox(width: 6),
+                    const Icon(Icons.directions_car, color: Colors.black, size: 16),
+                    const SizedBox(width: 6),
                     Text(
-                      'DRIVING MODE — Crash detection armed',
-                      style: TextStyle(
+                      l10n.drivingModeBanner,
+                      style: const TextStyle(
                         color: Colors.black,
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
@@ -364,7 +365,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             SafeArea(
               minimum: const EdgeInsets.only(bottom: 8),
               child: Text(
-                'All safety features are in "Safety Tools" below',
+                l10n.safetyToolsHint,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white.withAlpha(80),
@@ -383,6 +384,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _toolsTab(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
@@ -399,22 +401,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         const SizedBox(height: 16),
 
         // ── Emergency Response ──────────────────────────────────────────
-        _sectionLabel('EMERGENCY RESPONSE'),
+        _sectionLabel(l10n.sectionEmergencyResponse),
         const SizedBox(height: 8),
         _toolCard(
           context,
           icon: Icons.directions_walk,
           color: const Color(0xFF00B8A0),
-          title: 'Safe Walk',
-          subtitle: 'Auto-SOS if you don\'t check in at destination',
+          title: l10n.actionSafeWalk,
+          subtitle: l10n.actionSafeWalkSub,
           onTap: () => _showSafeWalkDialog(context),
         ),
         _toolCard(
           context,
           icon: Icons.camera_enhance,
           color: const Color(0xFFF59220),
-          title: 'Capture Scene',
-          subtitle: 'Document crash with AI-powered photo analysis',
+          title: l10n.actionCaptureScene,
+          subtitle: l10n.actionCaptureSceneSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(
@@ -426,8 +428,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           context,
           icon: Icons.health_and_safety,
           color: const Color(0xFF4CAF50),
-          title: 'Responder View',
-          subtitle: 'Live map with nearby SOS signals',
+          title: l10n.actionResponder,
+          subtitle: l10n.actionResponderSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const ResponderDashboard()),
@@ -437,14 +439,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         const SizedBox(height: 20),
 
         // ── Health & Safety ─────────────────────────────────────────────
-        _sectionLabel('HEALTH & SAFETY'),
+        _sectionLabel(l10n.sectionHealthSafety),
         const SizedBox(height: 8),
         _toolCard(
           context,
           icon: Icons.health_and_safety_outlined,
           color: const Color(0xFF4CAF50),
-          title: 'First Aid Guide',
-          subtitle: 'Step-by-step emergency instructions',
+          title: l10n.actionFirstAid,
+          subtitle: l10n.actionFirstAidSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const FirstAidScreen()),
@@ -454,8 +456,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           context,
           icon: Icons.monitor_heart,
           color: const Color(0xFFE8281A),
-          title: 'Vital Scan',
-          subtitle: 'Check heart rate & oxygen saturation',
+          title: l10n.actionVitalScan,
+          subtitle: l10n.actionVitalScanSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const VitalScanScreen()),
@@ -465,8 +467,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           context,
           icon: Icons.qr_code,
           color: const Color(0xFF2196F3),
-          title: 'Medical ID',
-          subtitle: 'Show responders your blood type, allergies, contacts',
+          title: l10n.actionMedicalId,
+          subtitle: l10n.actionMedicalIdSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const MedicalCardScreen()),
@@ -476,14 +478,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         const SizedBox(height: 20),
 
         // ── Connectivity ────────────────────────────────────────────────
-        _sectionLabel('CONNECTIVITY'),
+        _sectionLabel(l10n.sectionConnectivity),
         const SizedBox(height: 8),
         _toolCard(
           context,
           icon: Icons.forum,
           color: const Color(0xFF9C27B0),
-          title: 'Mesh Chat',
-          subtitle: 'Offline Bluetooth messaging — no signal needed',
+          title: l10n.actionMeshChat,
+          subtitle: l10n.actionMeshChatSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const MeshChatScreen()),
@@ -493,8 +495,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           context,
           icon: Icons.map_outlined,
           color: const Color(0xFF00B8A0),
-          title: 'Offline Maps',
-          subtitle: 'Download maps for no-signal areas',
+          title: l10n.actionOfflineMaps,
+          subtitle: l10n.actionOfflineMapsSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const OfflineMapScreen()),
@@ -504,14 +506,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         const SizedBox(height: 20),
 
         // ── Records ─────────────────────────────────────────────────────
-        _sectionLabel('RECORDS'),
+        _sectionLabel(l10n.sectionRecords),
         const SizedBox(height: 8),
         _toolCard(
           context,
           icon: Icons.fact_check_outlined,
           color: Colors.white70,
-          title: 'Activity Log',
-          subtitle: 'GPS, triage, SMS — for police & insurer records',
+          title: l10n.actionActivityLog,
+          subtitle: l10n.actionActivityLogSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(
@@ -528,17 +530,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _profileTab(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        _sectionLabel('MY INFORMATION'),
+        _sectionLabel(l10n.sectionMyInformation),
         const SizedBox(height: 8),
         _toolCard(
           context,
           icon: Icons.person,
           color: const Color(0xFF2196F3),
-          title: 'Edit Profile',
-          subtitle: 'Name, blood type, emergency contacts',
+          title: l10n.actionEditProfile,
+          subtitle: l10n.actionEditProfileSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(
@@ -550,8 +553,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           context,
           icon: Icons.qr_code,
           color: const Color(0xFF00B8A0),
-          title: 'Medical ID Card',
-          subtitle: 'Quick-access health info for emergency responders',
+          title: l10n.actionMedicalIdCard,
+          subtitle: l10n.actionMedicalIdCardSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const MedicalCardScreen()),
@@ -559,14 +562,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ),
 
         const SizedBox(height: 20),
-        _sectionLabel('SETTINGS & PRIVACY'),
+        _sectionLabel(l10n.sectionSettingsPrivacy),
         const SizedBox(height: 8),
         _toolCard(
           context,
           icon: Icons.settings,
           color: Colors.white70,
-          title: 'All Settings',
-          subtitle: 'Language, offline maps, notifications, privacy',
+          title: l10n.actionAllSettings,
+          subtitle: l10n.actionAllSettingsSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
@@ -576,8 +579,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           context,
           icon: Icons.history,
           color: Colors.white54,
-          title: 'Activity Log',
-          subtitle: 'Full SOS history for insurance & police records',
+          title: l10n.actionActivityLog,
+          subtitle: l10n.actionActivityLogFullSub,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(

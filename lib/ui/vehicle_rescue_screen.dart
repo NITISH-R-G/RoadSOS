@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'vehicle_rescue_data.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 
 /// VehicleRescueScreen
 /// 
@@ -60,6 +61,7 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -70,7 +72,7 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
           onPressed: _showingRescueSteps ? _goBack : () => Navigator.pop(context),
         ),
         title: Text(
-          _showingRescueSteps ? 'Rescue Guide' : 'Vehicle Rescue',
+          _showingRescueSteps ? l10n.rescueGuideTitle : l10n.vehicleRescueTitle,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w900,
@@ -82,15 +84,15 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.15),
+              color: Colors.green.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.green.withOpacity(0.4)),
+              border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.offline_bolt, color: Colors.green, size: 14),
-                SizedBox(width: 4),
-                Text('OFFLINE', style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
+                const Icon(Icons.offline_bolt, color: Colors.green, size: 14),
+                const SizedBox(width: 4),
+                Text(l10n.rescueOfflineBadge, style: const TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -99,8 +101,8 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: _showingRescueSteps && _selectedVehicleKey != null
-            ? _buildRescueStepsView(_selectedVehicleKey!)
-            : _buildVehicleSelectionView(),
+            ? _buildRescueStepsView(context, _selectedVehicleKey!)
+            : _buildVehicleSelectionView(context),
       ),
     );
   }
@@ -108,7 +110,8 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
   // ─────────────────────────────────────────────
   // VIEW 1: VEHICLE SELECTION
   // ─────────────────────────────────────────────
-  Widget _buildVehicleSelectionView() {
+  Widget _buildVehicleSelectionView(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -120,23 +123,23 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.red.shade900.withOpacity(0.6), Colors.black],
+                colors: [Colors.red.shade900.withValues(alpha: 0.6), Colors.black],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.red.withOpacity(0.3)),
+              border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.car_crash, color: Colors.red, size: 22),
-                    SizedBox(width: 10),
+                    const Icon(Icons.car_crash, color: Colors.red, size: 22),
+                    const SizedBox(width: 10),
                     Text(
-                      'VEHICLE RESCUE GUIDE',
-                      style: TextStyle(
+                      l10n.vehicleRescueBannerTitle,
+                      style: const TextStyle(
                         color: Colors.red,
                         fontWeight: FontWeight.w900,
                         fontSize: 14,
@@ -145,10 +148,10 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
-                  'Select the type of vehicle involved in the accident to get instant rescue instructions.',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  l10n.vehicleRescueBannerSub,
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ],
             ),
@@ -157,9 +160,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
           const SizedBox(height: 24),
 
           // Plate number input
-          const Text(
-            'PLATE NUMBER (optional)',
-            style: TextStyle(
+          Text(
+            l10n.plateNumberLabel,
+            style: const TextStyle(
               color: Colors.white54,
               fontSize: 11,
               fontWeight: FontWeight.bold,
@@ -169,7 +172,7 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.white12),
             ),
@@ -182,10 +185,10 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                 letterSpacing: 4,
               ),
               textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(
-                hintText: 'TN 11 AB 1234',
-                hintStyle: TextStyle(color: Colors.white24, letterSpacing: 2),
-                prefixIcon: Icon(Icons.badge, color: Colors.white38),
+              decoration: InputDecoration(
+                hintText: l10n.plateNumberHint,
+                hintStyle: const TextStyle(color: Colors.white24, letterSpacing: 2),
+                prefixIcon: const Icon(Icons.badge, color: Colors.white38),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.all(16),
               ),
@@ -204,9 +207,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
           const SizedBox(height: 28),
 
           // Vehicle type selection
-          const Text(
-            'SELECT VEHICLE TYPE',
-            style: TextStyle(
+          Text(
+            l10n.selectVehicleType,
+            style: const TextStyle(
               color: Colors.white54,
               fontSize: 11,
               fontWeight: FontWeight.bold,
@@ -223,8 +226,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
             childAspectRatio: 1.4,
-            children: kVehicleTypes.map((v) {
+            children: getLocalizedVehicleTypes(l10n).map((v) {
               return _buildVehicleCard(
+                context,
                 key: v['key']!,
                 label: v['label']!,
                 icon: v['icon']!,
@@ -238,18 +242,18 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.08),
+              color: Colors.amber.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.withOpacity(0.2)),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.tips_and_updates, color: Colors.amber, size: 18),
-                SizedBox(width: 10),
+                const Icon(Icons.tips_and_updates, color: Colors.amber, size: 18),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'All rescue instructions work offline — no internet needed.',
-                    style: TextStyle(color: Colors.amber, fontSize: 12),
+                    l10n.rescueOfflineTip,
+                    style: const TextStyle(color: Colors.amber, fontSize: 12),
                   ),
                 ),
               ],
@@ -261,11 +265,13 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
   }
 
   // ── Single vehicle card ──
-  Widget _buildVehicleCard({
+  Widget _buildVehicleCard(
+    BuildContext context, {
     required String key,
     required String label,
     required String icon,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final isEV = key == 'ev_car';
 
     return GestureDetector(
@@ -275,10 +281,10 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isEV ? Colors.yellow.withOpacity(0.4) : Colors.white12,
+            color: isEV ? Colors.yellow.withValues(alpha: 0.4) : Colors.white12,
           ),
         ),
         child: Column(
@@ -296,11 +302,11 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
               ),
             ),
             if (isEV)
-              const Padding(
-                padding: EdgeInsets.only(top: 4),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  'HIGH VOLTAGE',
-                  style: TextStyle(color: Colors.yellow, fontSize: 9, letterSpacing: 1),
+                  l10n.highVoltageWarning,
+                  style: const TextStyle(color: Colors.yellow, fontSize: 9, letterSpacing: 1),
                 ),
               ),
           ],
@@ -312,8 +318,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
   // ─────────────────────────────────────────────
   // VIEW 2: RESCUE STEPS
   // ─────────────────────────────────────────────
-  Widget _buildRescueStepsView(String vehicleKey) {
-    final data = kVehicleRescueDatabase[vehicleKey];
+  Widget _buildRescueStepsView(BuildContext context, String vehicleKey) {
+    final l10n = AppLocalizations.of(context)!;
+    final data = getLocalizedVehicleRescueDatabase(l10n)[vehicleKey];
     if (data == null) return const SizedBox();
 
     return SingleChildScrollView(
@@ -326,25 +333,25 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
           const SizedBox(height: 16),
 
           // Dangers section
-          _buildSectionTitle('⚠️  DANGERS — READ FIRST', Colors.red),
+          _buildSectionTitle(l10n.rescueDangersTitle, Colors.red),
           const SizedBox(height: 8),
           _buildDangersCard(data.dangers),
           const SizedBox(height: 20),
 
           // Extraction steps
-          _buildSectionTitle('👐  EXTRACTION STEPS', Colors.orange),
+          _buildSectionTitle(l10n.rescueExtractionTitle, Colors.orange),
           const SizedBox(height: 8),
-          ...data.extractionSteps.map((step) => _buildStepCard(step)),
+          ...data.extractionSteps.map((step) => _buildStepCard(context, step)),
           const SizedBox(height: 20),
 
           // First aid tips
-          _buildSectionTitle('🩺  WHILE WAITING FOR AMBULANCE', Colors.blue),
+          _buildSectionTitle(l10n.rescueFirstAidTitle, Colors.blue),
           const SizedBox(height: 8),
           _buildFirstAidCard(data.firstAidTips),
           const SizedBox(height: 20),
 
           // Emergency call button
-          _buildEmergencyCallButton(),
+          _buildEmergencyCallButton(context),
           const SizedBox(height: 20),
         ],
       ),
@@ -356,7 +363,7 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white12),
       ),
@@ -385,7 +392,7 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.15),
+                    color: Colors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -420,9 +427,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.08),
+        color: Colors.red.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withOpacity(0.25)),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,18 +447,19 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
   }
 
   // ── Single step card ──
-  Widget _buildStepCard(RescueStep step) {
+  Widget _buildStepCard(BuildContext context, RescueStep step) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: step.isCritical
-            ? Colors.red.withOpacity(0.08)
-            : Colors.white.withOpacity(0.04),
+            ? Colors.red.withValues(alpha: 0.08)
+            : Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: step.isCritical
-              ? Colors.red.withOpacity(0.3)
+              ? Colors.red.withValues(alpha: 0.3)
               : Colors.white12,
         ),
       ),
@@ -464,8 +472,8 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             height: 32,
             decoration: BoxDecoration(
               color: step.isCritical
-                  ? Colors.red.withOpacity(0.2)
-                  : Colors.white.withOpacity(0.1),
+                  ? Colors.red.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -500,12 +508,12 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.2),
+                          color: Colors.red.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
-                          'CRITICAL',
-                          style: TextStyle(color: Colors.red, fontSize: 9, fontWeight: FontWeight.bold),
+                        child: Text(
+                          l10n.rescueCriticalBadge,
+                          style: const TextStyle(color: Colors.red, fontSize: 9, fontWeight: FontWeight.bold),
                         ),
                       ),
                   ],
@@ -529,9 +537,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.07),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+        color: Colors.blue.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,7 +557,8 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
   }
 
   // ── Emergency call button ──
-  Widget _buildEmergencyCallButton() {
+  Widget _buildEmergencyCallButton(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
@@ -558,10 +567,11 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri);
           } else {
-            if (mounted) {
+            if (mounted && context.mounted) {
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Could not launch dialer. Please call 108 manually.'),
+                SnackBar(
+                  content: Text(l10n.dialerError),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -569,9 +579,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
           }
         },
         icon: const Icon(Icons.call, size: 20),
-        label: const Text(
-          'CALL AMBULANCE — 108',
-          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
+        label: Text(
+          l10n.callAmbulanceButton,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,

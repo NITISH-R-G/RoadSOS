@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../services/first_aid_store.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 
 class FirstAidScreen extends ConsumerStatefulWidget {
   const FirstAidScreen({super.key});
@@ -51,6 +51,8 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
   Future<void> _lookupFirstAid(String query) async {
     if (query.trim().isEmpty) return;
     
+    final l10n = AppLocalizations.of(context)!;
+    
     setState(() {
       _isLoading = true;
       _result = '';
@@ -65,7 +67,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'Could not load first-aid guidance on this device.';
+        _error = l10n.firstAidError;
       });
     } finally {
       if (mounted) {
@@ -76,17 +78,17 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A1A),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0A1A),
-        title: const Text(
-          '🩺 First Aid Guide',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.firstAidGuideTitle,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -102,7 +104,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                     controller: _textController,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Describe injury...',
+                      hintText: l10n.describeInjuryHint,
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
                       fillColor: const Color(0xFF1A1A2E),
@@ -219,7 +221,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                             const Icon(Icons.medical_services_outlined, color: Colors.redAccent, size: 18),
                             const SizedBox(width: 8),
                             Text(
-                              'Verified Medical Solutions',
+                              l10n.verifiedSolutionsTitle,
                               style: TextStyle(
                                 color: Colors.redAccent.withValues(alpha: 0.8),
                                 fontWeight: FontWeight.bold,
@@ -263,9 +265,9 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                             size: 80, color: Colors.red),
                       ),
                       const SizedBox(height: 24),
-                      const Text(
-                        'AI Injury Identification',
-                        style: TextStyle(
+                      Text(
+                        l10n.aiInjuryIdTitle,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -273,9 +275,9 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 12),
-                      const Text(
-                        'Type an injury to get\nexact, verified first aid solutions.',
-                        style: TextStyle(color: Colors.white54, fontSize: 16),
+                      Text(
+                        l10n.typeInjuryPrompt,
+                        style: const TextStyle(color: Colors.white54, fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
@@ -284,10 +286,10 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                         runSpacing: 8,
                         alignment: WrapAlignment.center,
                         children: [
-                          _buildChip('Severe Bleeding'),
-                          _buildChip('Muscle Tear'),
-                          _buildChip('Brain Injury'),
-                          _buildChip('Sprains'),
+                          _buildChip(l10n.chipSevereBleeding),
+                          _buildChip(l10n.chipMuscleTear),
+                          _buildChip(l10n.chipBrainInjury),
+                          _buildChip(l10n.chipSprains),
                         ],
                       ),
                     ],
