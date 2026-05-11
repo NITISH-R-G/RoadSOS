@@ -66,16 +66,18 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
     
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Medical Profile Updated')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.profileUpdatedSnack)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('EDIT MEDICAL ID', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+        title: Text(l10n.editMedicalIdTitle, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(onPressed: _save, icon: const Icon(Icons.check, color: Colors.green)),
@@ -86,20 +88,20 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildField('Full Name', _nameController, Icons.person),
-            _buildField('Blood Type', _bloodController, Icons.bloodtype),
-            _buildField('Allergies', _allergiesController, Icons.warning),
-            _buildField('Current Medications', _medsController, Icons.medication),
-            _buildField('Chronic Conditions', _conditionsController, Icons.medical_information),
+            _buildField(l10n.fieldFullName, _nameController, Icons.person),
+            _buildField(l10n.fieldBloodType, _bloodController, Icons.bloodtype),
+            _buildField(l10n.fieldAllergies, _allergiesController, Icons.warning),
+            _buildField(l10n.fieldMedications, _medsController, Icons.medication),
+            _buildField(l10n.fieldConditions, _conditionsController, Icons.medical_information),
             
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'EMERGENCY CONTACTS',
-                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+                l10n.sectionEmergencyContacts,
+                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5),
               ),
             ),
-            _buildField('Primary Contact', _contactController, Icons.contact_phone),
+            _buildField(l10n.fieldPrimaryContact, _contactController, Icons.contact_phone),
             
             ..._additionalContactControllers.asMap().entries.map((entry) {
               final index = entry.key;
@@ -108,7 +110,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    Expanded(child: _buildField('Additional Contact ${index + 1}', controller, Icons.contact_phone, showLabel: false)),
+                    Expanded(child: _buildField(l10n.fieldAdditionalContact(index + 1), controller, Icons.contact_phone, showLabel: false)),
                     const SizedBox(width: 8),
                     IconButton(
                       onPressed: () => setState(() => _additionalContactControllers.removeAt(index)),
@@ -122,7 +124,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
             TextButton.icon(
               onPressed: () => setState(() => _additionalContactControllers.add(TextEditingController())),
               icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
-              label: const Text('ADD CONTACT', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+              label: Text(l10n.addContactButton, style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
             ),
 
             const SizedBox(height: 40),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../services/user_profile_service.dart';
 import 'profile_editor_screen.dart';
+import 'package:roadsos/l10n/app_localizations.dart';
 
 class MedicalCardScreen extends ConsumerWidget {
   const MedicalCardScreen({super.key});
@@ -10,6 +11,7 @@ class MedicalCardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider);
+    final l10n = AppLocalizations.of(context)!;
     
     // QR contains a short, offline-safe summary (no network dependency).
     final qrData =
@@ -18,7 +20,7 @@ class MedicalCardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('EMERGENCY MEDICAL ID', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+        title: Text(l10n.medicalIdTitle, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
@@ -48,25 +50,25 @@ class MedicalCardScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'SCAN FOR MEDICAL SUMMARY',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.white54),
+            Text(
+              l10n.scanForSummary,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.white54),
             ),
             
             const SizedBox(height: 48),
-            _buildInfoRow(Icons.person, 'FULL NAME', profile.fullName.isEmpty ? 'NOT SET' : profile.fullName),
+            _buildInfoRow(Icons.person, l10n.fieldFullName, profile.fullName.isEmpty ? l10n.notSet : profile.fullName),
             _buildDivider(),
-            _buildInfoRow(Icons.bloodtype, 'BLOOD TYPE', profile.bloodType),
+            _buildInfoRow(Icons.bloodtype, l10n.fieldBloodType, profile.bloodType),
             _buildDivider(),
-            _buildInfoRow(Icons.warning, 'ALLERGIES', profile.allergies),
+            _buildInfoRow(Icons.warning, l10n.fieldAllergies, profile.allergies),
             _buildDivider(),
-            _buildInfoRow(Icons.contact_phone, 'EMERGENCY CONTACT', profile.emergencyContact.isEmpty ? 'NOT SET' : profile.emergencyContact),
+            _buildInfoRow(Icons.contact_phone, l10n.fieldPrimaryContact, profile.emergencyContact.isEmpty ? l10n.notSet : profile.emergencyContact),
             
             const Spacer(),
-            const Text(
-              'Tip: Keep this screen open for responders. For lock-screen wallpaper export, use your device screenshot tools.',
+            Text(
+              l10n.medicalCardTip,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+              style: const TextStyle(color: Colors.white38, fontSize: 12),
             ),
           ],
         ),

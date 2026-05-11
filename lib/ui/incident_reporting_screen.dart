@@ -40,23 +40,23 @@ class _IncidentReportingScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader('MULTIMODAL: DIGITAL TWIN'),
+            _buildSectionHeader(l10n.multimodalDigitalTwin),
             const SizedBox(height: 12),
             _buildSceneCaptureCard(l10n),
             const SizedBox(height: 32),
-            _buildSectionHeader('AI INTERVIEW: SITUATIONAL NUANCE'),
+            _buildSectionHeader(l10n.aiInterviewNuance),
             const SizedBox(height: 12),
             _buildVoiceInterviewCard(assistantState, l10n),
             const SizedBox(height: 32),
             // Show guidance steps after interview is complete
             if (assistantState.showingGuidance && assistantState.guidanceSteps.isNotEmpty) ...[
-              _buildSectionHeader('ACTION GUIDANCE: NEXT STEPS'),
+              _buildSectionHeader(l10n.actionGuidanceNextSteps),
               const SizedBox(height: 12),
               _buildGuidanceCard(assistantState, l10n),
               const SizedBox(height: 32),
             ],
             if (assistantState.history.isNotEmpty) ...[
-              _buildSectionHeader('SITUATION BRIEF (LIVE)'),
+              _buildSectionHeader(l10n.situationBriefLive),
               const SizedBox(height: 12),
               _buildLiveBriefCard(assistantState),
             ],
@@ -105,7 +105,7 @@ class _IncidentReportingScreenState
               ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: _sceneCaptureBusy ? null : _captureScene,
+              onPressed: _sceneCaptureBusy ? null : () => _captureScene(l10n),
               icon: _sceneCaptureBusy
                   ? const SizedBox(
                       width: 18,
@@ -113,7 +113,7 @@ class _IncidentReportingScreenState
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Icon(_sceneImageBytes != null ? Icons.check : Icons.add_a_photo),
-              label: Text(_sceneImageBytes != null ? 'SCENE ATTACHED' : 'CAPTURE / ATTACH PHOTO'),
+              label: Text(_sceneImageBytes != null ? l10n.sceneAttached : l10n.captureAttachPhoto),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _sceneImageBytes != null ? Colors.green : Colors.blue,
               ),
@@ -122,7 +122,7 @@ class _IncidentReportingScreenState
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  'Photo attached to this report (not auto-analyzed in this build).',
+                  l10n.photoAttachedNote,
                   style: const TextStyle(
                       color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
@@ -134,7 +134,7 @@ class _IncidentReportingScreenState
     );
   }
 
-  Future<void> _captureScene() async {
+  Future<void> _captureScene(AppLocalizations l10n) async {
     setState(() => _sceneCaptureBusy = true);
     try {
       final file = await _picker.pickImage(
@@ -177,14 +177,14 @@ class _IncidentReportingScreenState
         if (!mounted) return;
         setState(() => _sceneCaptureBusy = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not capture a scene photo on this device.')),
+          SnackBar(content: Text(l10n.scenePhotoError)),
         );
       }
     }
 
     if (!kIsWeb && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Scene photo attached.')),
+        SnackBar(content: Text(l10n.scenePhotoAttached)),
       );
     }
   }
@@ -215,7 +215,7 @@ class _IncidentReportingScreenState
                   border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
                 ),
                 child: Text(
-                  'Scene: ${_getSceneLabel(assistant.sceneContext, lang)}',
+                  'Scene: ${_getSceneLabel(assistant.sceneContext, l10n)}',
                   style: const TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -228,7 +228,7 @@ class _IncidentReportingScreenState
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    lang == 'hi' ? 'प्रश्न प्रगति:' : 'Question Progress:',
+                    l10n.questionProgress,
                     style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
                   ),
                   Container(
@@ -248,9 +248,7 @@ class _IncidentReportingScreenState
           // Main question text
           Text(
             assistant.lastResponse.isEmpty
-                ? (lang == 'hi' 
-                    ? 'कृपया घटना का वर्णन करें'
-                    : 'Please describe the incident')
+                ? l10n.describeIncidentPrompt
                 : assistant.lastResponse,
             style: const TextStyle(fontSize: 15, color: Colors.white, height: 1.5),
             textAlign: TextAlign.center,
@@ -264,7 +262,7 @@ class _IncidentReportingScreenState
                   controller: _voiceInputController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: lang == 'hi' ? 'बोलें या टाइप करें…' : 'Speak or type…',
+                    hintText: l10n.speakOrTypeHint,
                     hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                     filled: true,
                     fillColor: Colors.black,
@@ -308,9 +306,7 @@ class _IncidentReportingScreenState
                   border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  lang == 'hi'
-                      ? '✓ साक्षात्कार पूर्ण। सभी महत्वपूर्ण जानकारी एकत्र की गई।'
-                      : '✓ Interview complete. All critical information collected.',
+                  l10n.interviewCompleteMessage,
                   style: const TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
@@ -321,24 +317,14 @@ class _IncidentReportingScreenState
     );
   }
 
-  String _getSceneLabel(String sceneContext, String lang) {
-    if (lang == 'hi') {
-      const labels = {
-        'vehicle_collision': 'वाहन टक्कर',
-        'pedestrian_hit': 'पैदल यात्री मारे गए',
-        'rollover': 'वाहन पलटना',
-        'fire_hazard': 'आग का खतरा',
-      };
-      return labels[sceneContext] ?? 'अज्ञात';
-    } else {
-      const labels = {
-        'vehicle_collision': 'Vehicle Collision',
-        'pedestrian_hit': 'Pedestrian Hit',
-        'rollover': 'Rollover',
-        'fire_hazard': 'Fire Hazard',
-      };
-      return labels[sceneContext] ?? 'Unknown';
-    }
+  String _getSceneLabel(String sceneContext, AppLocalizations l10n) {
+    final labels = {
+      'vehicle_collision': l10n.sceneCollision,
+      'pedestrian_hit': l10n.scenePedestrian,
+      'rollover': l10n.sceneRollover,
+      'fire_hazard': l10n.sceneFire,
+    };
+    return labels[sceneContext] ?? l10n.sceneUnknown;
   }
 
   int _getTotalQuestionsForScene(String sceneContext, String lang) {
@@ -361,7 +347,6 @@ class _IncidentReportingScreenState
   }
 
   Widget _buildGuidanceCard(AssistantState assistant, AppLocalizations l10n) {
-    final lang = ref.read(appLocaleProvider).languageCode;
     final steps = assistant.guidanceSteps;
     final completedCount = steps.where((s) => s.completed).length;
 
@@ -391,7 +376,7 @@ class _IncidentReportingScreenState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      lang == 'hi' ? '🎯 कार्रवाई चरण' : '🎯 Action Steps',
+                      l10n.actionStepsTitle,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
@@ -556,8 +541,21 @@ class _IncidentReportingScreenState
                 },
                 icon: const Icon(Icons.add_circle),
                 label: Text(
-                  lang == 'hi' ? 'नई घटना रिपोर्ट करें' : 'Report New Incident',
+                  l10n.reportNewIncidentButton,
                   style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.withValues(alpha: 0.3),
+                  foregroundColor: Colors.green,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+    style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green.withValues(alpha: 0.3),
