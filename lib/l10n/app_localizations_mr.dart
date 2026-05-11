@@ -347,7 +347,13 @@ class AppLocalizationsMr extends AppLocalizations {
       'Offline Bluetooth messaging — no signal needed';
 
   @override
+  String get actionOfflineMaps => 'Offline Maps';
+
+  @override
   String get actionOfflineMapsSub => 'Download maps for no-signal areas';
+
+  @override
+  String get actionActivityLog => 'Activity Log';
 
   @override
   String get actionActivityLogSub =>

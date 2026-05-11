@@ -361,8 +361,14 @@ class AppLocalizationsTa extends AppLocalizations {
       'இணையம் இல்லாத போது புளூடூத் மூலம் செய்தி அனுப்பவும்';
 
   @override
+  String get actionOfflineMaps => 'Offline Maps';
+
+  @override
   String get actionOfflineMapsSub =>
       'சிக்னல் இல்லாத இடங்களுக்கான வரைபடங்களைப் பதிவிறக்கவும்';
+
+  @override
+  String get actionActivityLog => 'Activity Log';
 
   @override
   String get actionActivityLogSub =>

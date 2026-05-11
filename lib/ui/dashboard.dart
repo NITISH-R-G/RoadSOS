@@ -218,6 +218,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _navBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return NavigationBar(
       selectedIndex: _tab,
       onDestinationSelected: (i) => setState(() => _tab = i),
@@ -269,11 +270,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               Container(
                 height: 36,
                 color: const Color(0xFFFF9500),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.directions_car, color: Colors.black, size: 16),
-                    SizedBox(width: 6),
+                    const Icon(Icons.directions_car, color: Colors.black, size: 16),
+                    const SizedBox(width: 6),
                     Text(
                       l10n.drivingModeBanner,
                       style: const TextStyle(
@@ -383,6 +384,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _toolsTab(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
@@ -528,6 +530,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _profileTab(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [

@@ -736,11 +736,23 @@ abstract class AppLocalizations {
   /// **'Offline Bluetooth messaging — no signal needed'**
   String get actionMeshChatSub;
 
+  /// No description provided for @actionOfflineMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Maps'**
+  String get actionOfflineMaps;
+
   /// No description provided for @actionOfflineMapsSub.
   ///
   /// In en, this message translates to:
   /// **'Download maps for no-signal areas'**
   String get actionOfflineMapsSub;
+
+  /// No description provided for @actionActivityLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Log'**
+  String get actionActivityLog;
 
   /// No description provided for @actionActivityLogSub.
   ///
