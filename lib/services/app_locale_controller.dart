@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:roadsos/logging/app_log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Locales aligned with India-first UI + flutter_tts engines (hi/ta/te/bn/mr).
@@ -29,11 +30,15 @@ class AppLocaleController extends StateNotifier<Locale> {
   }
 
   Future<void> loadSaved() async {
-    final prefs = await SharedPreferences.getInstance();
-    final code = prefs.getString(_prefsKey);
-    if (code != null &&
-        kSupportedAppLocales.any((l) => l.languageCode == code)) {
-      state = Locale(code);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final code = prefs.getString(_prefsKey);
+      if (code != null &&
+          kSupportedAppLocales.any((l) => l.languageCode == code)) {
+        state = Locale(code);
+      }
+    } catch (e, st) {
+      appLog.w('Failed to load saved locale: $e', error: e, stackTrace: st);
     }
   }
 
