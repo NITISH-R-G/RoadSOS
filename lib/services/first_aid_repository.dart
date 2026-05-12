@@ -9,6 +9,33 @@ import '../database/app_database.dart';
 /// on the **same** PowerSync database as the rest of the app (no separate sqflite DB).
 ///
 /// **Not a substitute for professional training or emergency services.** Always call local EMS.
+/// ⚡ Bolt Optimization:
+/// Parses raw JSON into strongly typed map to cache lowercased string keys
+/// and avoid memory allocations + dynamic map access inside inner loops
+/// like [getSuggestions] or [_lookupTokenScore].
+class _FirstAidEntry {
+  final String id;
+  final String title;
+  final String body;
+  final String tags;
+  final String source;
+
+  final String titleLower;
+  final String tagsLower;
+  final String searchHaystackLower;
+
+  _FirstAidEntry(Map<String, dynamic> json)
+      : id = json['id'] as String? ?? '',
+        title = json['title'] as String? ?? '',
+        body = json['body'] as String? ?? '',
+        tags = json['tags'] as String? ?? '',
+        source = json['source'] as String? ?? '',
+        titleLower = (json['title'] as String? ?? '').toLowerCase(),
+        tagsLower = (json['tags'] as String? ?? '').toLowerCase(),
+        searchHaystackLower =
+            '${json['title']} ${json['body']} ${json['tags']}'.toLowerCase();
+}
+
 class FirstAidRepository {
   FirstAidRepository._();
 
@@ -16,7 +43,7 @@ class FirstAidRepository {
 
   static const String assetPath = 'assets/first_aid/corpus.json';
 
-  List<Map<String, dynamic>>? _corpusRows;
+  List<_FirstAidEntry>? _corpusEntries;
   bool _ftsReady = false;
 
   static const String medicalDisclaimer =
@@ -26,10 +53,13 @@ class FirstAidRepository {
       'response where available — follow dispatcher instructions.';
 
   Future<void> ensureInitialized() async {
-    if (_corpusRows == null) {
+    if (_corpusEntries == null) {
       final raw = await rootBundle.loadString(assetPath);
       final decoded = jsonDecode(raw) as List<dynamic>;
-      _corpusRows = decoded.cast<Map<String, dynamic>>();
+      _corpusEntries = decoded
+          .cast<Map<String, dynamic>>()
+          .map((row) => _FirstAidEntry(row))
+          .toList();
     }
     if (kIsWeb || !isDatabaseInitialized || _ftsReady) {
       return;
@@ -47,18 +77,18 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
         await appDb.getAll('SELECT COUNT(*) AS c FROM first_aid_fts');
     final count = (countRows.first['c'] as num?)?.toInt() ?? 0;
 
-    if (count == 0 && _corpusRows!.isNotEmpty) {
-      for (final row in _corpusRows!) {
+    if (count == 0 && _corpusEntries!.isNotEmpty) {
+      for (final entry in _corpusEntries!) {
         await appDb.execute(
           '''
           INSERT INTO first_aid_fts (title, body, tags, source)
           VALUES (?, ?, ?, ?)
           ''',
           [
-            row['title'] as String? ?? '',
-            row['body'] as String? ?? '',
-            row['tags'] as String? ?? '',
-            row['source'] as String? ?? '',
+            entry.title,
+            entry.body,
+            entry.tags,
+            entry.source,
           ],
         );
       }
@@ -87,11 +117,9 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
     if (q.isEmpty) return [];
 
     final suggestions = <String>[];
-    for (final row in _corpusRows!) {
-      final title = row['title'] as String? ?? '';
-      final tags = row['tags'] as String? ?? '';
-      if (title.toLowerCase().contains(q) || tags.toLowerCase().contains(q)) {
-        suggestions.add(title);
+    for (final entry in _corpusEntries!) {
+      if (entry.titleLower.contains(q) || entry.tagsLower.contains(q)) {
+        suggestions.add(entry.title);
       }
       if (suggestions.length >= 6) break;
     }
@@ -105,17 +133,15 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
     }
 
     var bestScore = -1;
-    Map<String, dynamic>? best;
-    for (final row in _corpusRows!) {
-      final haystack =
-          '${row['title']} ${row['body']} ${row['tags']}'.toLowerCase();
+    _FirstAidEntry? best;
+    for (final entry in _corpusEntries!) {
       var score = 0;
       for (final t in tokens) {
-        if (haystack.contains(t)) score += 3;
+        if (entry.searchHaystackLower.contains(t)) score += 3;
       }
       if (score > bestScore) {
         bestScore = score;
-        best = row;
+        best = entry;
       }
     }
 
@@ -124,9 +150,9 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
     }
 
     return _formatResult(
-      title: best['title'] as String? ?? 'Topic',
-      body: best['body'] as String? ?? '',
-      source: best['source'] as String? ?? '',
+      title: best.title.isNotEmpty ? best.title : 'Topic',
+      body: best.body,
+      source: best.source,
     );
   }
 
@@ -186,18 +212,18 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
   }
 
   String _pickGeneralOrFirst() {
-    Map<String, dynamic>? row;
-    for (final r in _corpusRows!) {
-      if ((r['id'] as String?) == 'general-road-emergency-india') {
-        row = r;
+    _FirstAidEntry? entry;
+    for (final r in _corpusEntries!) {
+      if (r.id == 'general-road-emergency-india') {
+        entry = r;
         break;
       }
     }
-    row ??= _corpusRows!.first;
+    entry ??= _corpusEntries!.first;
     return _formatResult(
-      title: row['title'] as String? ?? '',
-      body: row['body'] as String? ?? '',
-      source: row['source'] as String? ?? '',
+      title: entry.title,
+      body: entry.body,
+      source: entry.source,
     );
   }
 
