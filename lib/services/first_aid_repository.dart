@@ -25,15 +25,15 @@ class _FirstAidEntry {
   final String searchHaystackLower;
 
   _FirstAidEntry(Map<String, dynamic> json)
-      : id = json['id'] as String? ?? '',
-        title = json['title'] as String? ?? '',
-        body = json['body'] as String? ?? '',
-        tags = json['tags'] as String? ?? '',
-        source = json['source'] as String? ?? '',
-        titleLower = (json['title'] as String? ?? '').toLowerCase(),
-        tagsLower = (json['tags'] as String? ?? '').toLowerCase(),
-        searchHaystackLower =
-            '${json['title']} ${json['body']} ${json['tags']}'.toLowerCase();
+    : id = json['id'] as String? ?? '',
+      title = json['title'] as String? ?? '',
+      body = json['body'] as String? ?? '',
+      tags = json['tags'] as String? ?? '',
+      source = json['source'] as String? ?? '',
+      titleLower = (json['title'] as String? ?? '').toLowerCase(),
+      tagsLower = (json['tags'] as String? ?? '').toLowerCase(),
+      searchHaystackLower = '${json['title']} ${json['body']} ${json['tags']}'
+          .toLowerCase();
 }
 
 class FirstAidRepository {
@@ -73,8 +73,9 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
 );
 ''');
 
-    final countRows =
-        await appDb.getAll('SELECT COUNT(*) AS c FROM first_aid_fts');
+    final countRows = await appDb.getAll(
+      'SELECT COUNT(*) AS c FROM first_aid_fts',
+    );
     final count = (countRows.first['c'] as num?)?.toInt() ?? 0;
 
     if (count == 0 && _corpusEntries!.isNotEmpty) {
@@ -84,12 +85,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
           INSERT INTO first_aid_fts (title, body, tags, source)
           VALUES (?, ?, ?, ?)
           ''',
-          [
-            entry.title,
-            entry.body,
-            entry.tags,
-            entry.source,
-          ],
+          [entry.title, entry.body, entry.tags, entry.source],
         );
       }
     }
