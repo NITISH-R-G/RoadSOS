@@ -55,5 +55,8 @@ app.*.map.json
 # Bolt / Jules workspace files
 .jules/
 
+# Graphify tool output (regenerable via `graphify update .`)
+graphify-out/
+
 # Local developer secrets (root only; committed template is assets/.env)
 /.env
