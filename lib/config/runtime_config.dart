@@ -25,9 +25,15 @@ class RuntimeConfig {
 
     if (!kReleaseMode) {
       try {
-        await dotenv.load(fileName: '.env');
-        appLog.i('Loaded local .env for development');
-      } catch (_) {}
+        // On web, flutter_dotenv reads via rootBundle (Flutter asset system).
+        // The .env must be listed in pubspec.yaml assets as 'assets/.env'.
+        // On native, it reads from the filesystem at the project root.
+        final envPath = kIsWeb ? 'assets/.env' : '.env';
+        await dotenv.load(fileName: envPath);
+        appLog.i('Loaded $envPath for development');
+      } catch (e) {
+        appLog.w('Could not load .env: $e');
+      }
     }
 
     // ── Backend / cloud ────────────────────────────────────────────────────

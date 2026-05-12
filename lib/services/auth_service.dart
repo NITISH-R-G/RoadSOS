@@ -2,17 +2,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../database/app_database.dart' show isSupabaseSdkInitialized;
 import '../logging/app_log.dart';
 
 class AuthService extends StateNotifier<User?> {
-  AuthService() : super(Supabase.instance.client.auth.currentUser) {
-    _listenToAuthChanges();
+  AuthService()
+      : super(
+          isSupabaseSdkInitialized
+              ? Supabase.instance.client.auth.currentUser
+              : null,
+        ) {
+    if (isSupabaseSdkInitialized) _listenToAuthChanges();
   }
 
-  final _client = Supabase.instance.client;
+  SupabaseClient? get _client =>
+      isSupabaseSdkInitialized ? Supabase.instance.client : null;
 
   void _listenToAuthChanges() {
-    _client.auth.onAuthStateChange.listen((data) {
+    _client?.auth.onAuthStateChange.listen((data) {
       state = data.session?.user;
     });
   }

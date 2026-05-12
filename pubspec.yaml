@@ -86,6 +86,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/.env
     - assets/env.template
     - assets/first_aid/corpus.json
     - assets/data/government_facilities_seed.json

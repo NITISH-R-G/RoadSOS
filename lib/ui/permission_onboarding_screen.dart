@@ -1,5 +1,5 @@
 import 'dart:io' show Platform;
-
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -114,7 +114,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
         await Permission.locationAlways.request();
         break;
       case _PermRequest.bluetooth:
-        if (Platform.isAndroid) {
+        if (!kIsWeb && Platform.isAndroid) {
           await Permission.bluetoothScan.request();
           await Permission.bluetoothConnect.request();
         } else {

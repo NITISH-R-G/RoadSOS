@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../database/app_database.dart' show isSupabaseSdkInitialized;
 import '../services/gemma_model_manager.dart';
 import 'gemma_model_download_screen.dart';
 import 'permission_onboarding_screen.dart';
@@ -40,19 +42,27 @@ class _OnboardingGateState extends State<OnboardingGate> {
     final prefs = await SharedPreferences.getInstance();
     final permsDone = prefs.getBool(_kPermsDone) ?? false;
     final modelPromptDone = prefs.getBool(_kModelPromptDone) ?? false;
-    final modelReady = await GemmaModelManager.isModelReady();
-    
-    // Check if the user is authenticated (non-anonymous)
-    final user = Supabase.instance.client.auth.currentUser;
-    final isAuth = user != null && user.appMetadata['provider'] != 'anonymous';
+    // On Web the model is never downloadable — skip that prompt.
+    final modelReady = kIsWeb ? true : await GemmaModelManager.isModelReady();
+
+    // Safely check Supabase auth — only if the SDK was actually initialized.
+    bool isAuth = false;
+    if (isSupabaseSdkInitialized) {
+      try {
+        final user = Supabase.instance.client.auth.currentUser;
+        isAuth = user != null && user.appMetadata['provider'] != 'anonymous';
+      } catch (_) {
+        isAuth = false;
+      }
+    }
 
     if (!mounted) return;
 
-    if (!isAuth && !permsDone) {
-      // If not auth and haven't done perms, start with perms or auth.
-      // We'll prioritize perms for basic functionality, then auth.
+    if (!isAuth && !permsDone && !kIsWeb) {
+      // On mobile: permissions first, then auth.
       setState(() => _phase = _GatePhase.permissions);
     } else if (!isAuth) {
+      // On Web: skip straight to auth (no native permission pages).
       setState(() => _phase = _GatePhase.auth);
     } else if (!modelPromptDone && !modelReady) {
       setState(() => _phase = _GatePhase.modelDownload);
@@ -66,8 +76,13 @@ class _OnboardingGateState extends State<OnboardingGate> {
     await prefs.setBool(_kPermsDone, true);
     if (!mounted) return;
 
-    final user = Supabase.instance.client.auth.currentUser;
-    final isAuth = user != null && user.appMetadata['provider'] != 'anonymous';
+    bool isAuth = false;
+    if (isSupabaseSdkInitialized) {
+      try {
+        final user = Supabase.instance.client.auth.currentUser;
+        isAuth = user != null && user.appMetadata['provider'] != 'anonymous';
+      } catch (_) {}
+    }
 
     if (!isAuth) {
       setState(() => _phase = _GatePhase.auth);
@@ -83,7 +98,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
   }
 
   Future<void> _checkModelPhase(SharedPreferences prefs) async {
-    final modelReady = await GemmaModelManager.isModelReady();
+    final modelReady = kIsWeb ? true : await GemmaModelManager.isModelReady();
     final modelPromptDone = prefs.getBool(_kModelPromptDone) ?? false;
 
     if (!mounted) return;

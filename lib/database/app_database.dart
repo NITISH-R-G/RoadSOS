@@ -16,7 +16,8 @@ bool get isSupabaseSdkInitialized => _supabaseSdkInitialized;
 /// Initializes Supabase and anonymous auth **at app launch** (before [initializeDatabase]).
 /// Requires [dotenv.load] first. Safe no-op when URL/key missing or on web.
 Future<void> bootstrapSupabaseAuth() async {
-  if (kIsWeb) return;
+  // Supabase SDK works on Web; only skip PowerSync-specific logic if needed.
+  // if (kIsWeb) return;
 
   final url = dotenv.env['SUPABASE_URL']?.trim() ?? '';
   final anonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
