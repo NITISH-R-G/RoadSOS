@@ -102,180 +102,198 @@ class _RoadSosMapState extends State<RoadSosMap> with TickerProviderStateMixin {
       child: Stack(
         children: [
           Container(color: Colors.black),
-          FlutterMap(
-            mapController: _mapController.mapController,
-            options: MapOptions(
-              initialCenter: userLoc ?? const LatLng(20.5937, 78.9629),
-              initialZoom: userLoc != null ? 15 : 4.5,
-              minZoom: 2.5,
-              maxZoom: 18,
-              interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-              ),
-            ),
-            children: [
-              TileLayer(
-                key: ValueKey('tiles_${_tileLayerNonce}_${MapTileConfig.effectiveUrlTemplate}'),
-                urlTemplate: MapTileConfig.effectiveUrlTemplate,
-                subdomains: MapTileConfig.effectiveSubdomains,
-                userAgentPackageName: 'com.roadsos.app',
-                tileProvider: _tileProvider,
-                fallbackUrl: _fallbackUrl,
-                errorTileCallback: (tile, error, stackTrace) {
-                  // Avoid log spam; still record enough to debug.
-                  _tileErrorCount += 1;
-                  if (_tileErrorCount <= 3 || _tileErrorCount % 20 == 0) {
-                    appLog.w(
-                      '[Map] Tile load error (#$_tileErrorCount) z=${tile.coordinates.z} x=${tile.coordinates.x} y=${tile.coordinates.y}',
-                      error: error,
-                      stackTrace: stackTrace,
-                    );
-                  }
-                  if (mounted && _tileErrorCount == 1) setState(() {});
-                },
-              ),
-              MarkerLayer(
-                markers: [
-                  // User Location Marker
-                  if (userLoc != null)
-                    Marker(
-                      point: userLoc,
-                      width: 40,
-                      height: 40,
-                      child: _buildUserMarker(),
-                    ),
-                  
-                  // Incident Markers
-                  ..._buildIncidentMarkers(),
-                  
-                  // Facility Markers (seeded + cloud-synced via PowerSync when configured)
-                  ..._buildFacilityMarkers(),
-                ],
-              ),
-            ],
-          ),
-          Positioned(
-            left: 8,
-            bottom: 8,
-            right: 56,
-            child: IgnorePointer(
-              child: Text(
-                MapTileConfig.attributionLabel,
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.white.withValues(alpha: 0.45),
-                  shadows: const [
-                    Shadow(color: Colors.black54, blurRadius: 4),
-                  ],
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-
-          // Map Overlay Controls
-          Positioned(
-            right: 12,
-            bottom: 12,
-            child: Column(
-              children: [
-                _MapButton(
-                  icon: Icons.my_location,
-                  onTap: () {
-                    if (widget.state.location != null) {
-                      _mapController.animateTo(
-                        dest: userLoc,
-                        zoom: 15,
-                      );
-                    }
-                  },
-                ),
-                const SizedBox(height: 8),
-                _MapButton(
-                  icon: Icons.add,
-                  onTap: () => _mapController.animatedZoomIn(),
-                ),
-                const SizedBox(height: 8),
-                _MapButton(
-                  icon: Icons.remove,
-                  onTap: () => _mapController.animatedZoomOut(),
-                ),
-              ],
-            ),
-          ),
+          _buildFlutterMap(userLoc),
+          _buildAttributionLabel(),
+          _buildMapControls(userLoc),
 
           // Fail-safe overlay: never allow a silent grey map.
           if (!_templateLooksValid || _tileErrorCount > 0)
-            Positioned(
-              left: 12,
-              top: 12,
-              right: 12,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.78),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      color: _templateLooksValid ? Colors.amber : Colors.redAccent,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        !_templateLooksValid
-                            ? 'Map tiles misconfigured (missing {z}/{x}/{y}).'
-                            : 'Map tiles failed to load. Check internet / tile provider.\n'
-                              'Template: ${MapTileConfig.effectiveUrlTemplate}',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.25),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _tileErrorCount = 0;
-                          _tileLayerNonce += 1; // forces TileLayer rebuild
-                        });
-                      },
-                      child: const Text('RETRY'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            _buildErrorOverlay(),
 
           // If no tile errors are reported but the map still appears blank,
           // show a timed hint so users aren't left with a silent grey box.
           if (_templateLooksValid && _tileErrorCount == 0)
-            Positioned(
-              left: 12,
-              bottom: 46,
-              child: Builder(
-                builder: (context) {
-                  final seconds = DateTime.now().difference(_mountedAt).inSeconds;
-                  if (seconds < 6) return const SizedBox.shrink();
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white10),
-                    ),
-                    child: const Text(
-                      'Map still loading… If this stays blank, check internet or switch networks.',
-                      style: TextStyle(color: Colors.white70, fontSize: 11),
-                    ),
-                  );
-                },
+            _buildLoadingHint(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFlutterMap(LatLng? userLoc) {
+    return FlutterMap(
+      mapController: _mapController.mapController,
+      options: MapOptions(
+        initialCenter: userLoc ?? const LatLng(20.5937, 78.9629),
+        initialZoom: userLoc != null ? 15 : 4.5,
+        minZoom: 2.5,
+        maxZoom: 18,
+        interactionOptions: const InteractionOptions(
+          flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+        ),
+      ),
+      children: [
+        TileLayer(
+          key: ValueKey('tiles_${_tileLayerNonce}_${MapTileConfig.effectiveUrlTemplate}'),
+          urlTemplate: MapTileConfig.effectiveUrlTemplate,
+          subdomains: MapTileConfig.effectiveSubdomains,
+          userAgentPackageName: 'com.roadsos.app',
+          tileProvider: _tileProvider,
+          fallbackUrl: _fallbackUrl,
+          errorTileCallback: (tile, error, stackTrace) {
+            // Avoid log spam; still record enough to debug.
+            _tileErrorCount += 1;
+            if (_tileErrorCount <= 3 || _tileErrorCount % 20 == 0) {
+              appLog.w(
+                '[Map] Tile load error (#$_tileErrorCount) z=${tile.coordinates.z} x=${tile.coordinates.x} y=${tile.coordinates.y}',
+                error: error,
+                stackTrace: stackTrace,
+              );
+            }
+            if (mounted && _tileErrorCount == 1) setState(() {});
+          },
+        ),
+        MarkerLayer(
+          markers: [
+            // User Location Marker
+            if (userLoc != null)
+              Marker(
+                point: userLoc,
+                width: 40,
+                height: 40,
+                child: _buildUserMarker(),
+              ),
+
+            // Incident Markers
+            ..._buildIncidentMarkers(),
+
+            // Facility Markers (seeded + cloud-synced via PowerSync when configured)
+            ..._buildFacilityMarkers(),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAttributionLabel() {
+    return Positioned(
+      left: 8,
+      bottom: 8,
+      right: 56,
+      child: IgnorePointer(
+        child: Text(
+          MapTileConfig.attributionLabel,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.white.withValues(alpha: 0.45),
+            shadows: const [
+              Shadow(color: Colors.black54, blurRadius: 4),
+            ],
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMapControls(LatLng? userLoc) {
+    return Positioned(
+      right: 12,
+      bottom: 12,
+      child: Column(
+        children: [
+          _MapButton(
+            icon: Icons.my_location,
+            onTap: () {
+              if (widget.state.location != null && userLoc != null) {
+                _mapController.animateTo(
+                  dest: userLoc,
+                  zoom: 15,
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 8),
+          _MapButton(
+            icon: Icons.add,
+            onTap: () => _mapController.animatedZoomIn(),
+          ),
+          const SizedBox(height: 8),
+          _MapButton(
+            icon: Icons.remove,
+            onTap: () => _mapController.animatedZoomOut(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorOverlay() {
+    return Positioned(
+      left: 12,
+      top: 12,
+      right: 12,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: _templateLooksValid ? Colors.amber : Colors.redAccent,
+              size: 18,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                !_templateLooksValid
+                    ? 'Map tiles misconfigured (missing {z}/{x}/{y}).'
+                    : 'Map tiles failed to load. Check internet / tile provider.\n'
+                      'Template: ${MapTileConfig.effectiveUrlTemplate}',
+                style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.25),
               ),
             ),
-        ],
+            const SizedBox(width: 10),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _tileErrorCount = 0;
+                  _tileLayerNonce += 1; // forces TileLayer rebuild
+                });
+              },
+              child: const Text('RETRY'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingHint() {
+    return Positioned(
+      left: 12,
+      bottom: 46,
+      child: Builder(
+        builder: (context) {
+          final seconds = DateTime.now().difference(_mountedAt).inSeconds;
+          if (seconds < 6) return const SizedBox.shrink();
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.65),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: const Text(
+              'Map still loading… If this stays blank, check internet or switch networks.',
+              style: TextStyle(color: Colors.white70, fontSize: 11),
+            ),
+          );
+        },
       ),
     );
   }
