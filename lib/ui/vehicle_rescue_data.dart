@@ -1,6 +1,7 @@
 /// Offline vehicle rescue data.
 /// All data is hardcoded — works with ZERO internet.
 /// Covers dangers, extraction steps, and first aid per vehicle type.
+library;
 
 class VehicleRescueData {
   final String vehicleType;

@@ -52,5 +52,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Bolt / Jules workspace files
+.jules/
+
 # Local developer secrets (root only; committed template is assets/.env)
 /.env
