@@ -37,158 +37,182 @@ class AiExplainabilityView extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          // ── Header ────────────────────────────────────────────────────────
-          Row(
-            children: [
-              Icon(Icons.psychology, color: scheme.primary, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  l10n.aiThinkingTraceTitle,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        letterSpacing: 1.2,
-                        fontWeight: FontWeight.bold,
-                        color: scheme.primary,
-                      ),
-                ),
-              ),
-              // Confidence badge
-              _ConfidenceBadge(confidence: triage.confidence, label: triage.confidenceLabel),
-            ],
-          ),
-
+          _buildHeader(context, scheme, l10n),
           const Divider(height: 20),
-
-          // ── Source tier ───────────────────────────────────────────────────
-          _InfoRow(
-            icon: Icons.hub_outlined,
-            label: 'Source',
-            value: triage.sourceLabel,
-            valueColor: scheme.primary,
-          ),
-          const SizedBox(height: 6),
-
-          // ── Thinking trace ────────────────────────────────────────────────
-          if (triage.thinkingTrace != null) ...[
-            Text(
-              triage.thinkingTrace!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontFamily: 'monospace',
-                    height: 1.5,
-                    color: scheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 10),
-          ],
-
-          // ── Validation overrides (Phase 3) ────────────────────────────────
-          if (triage.wasOverridden && triage.validationNotes.isNotEmpty) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.amber.withAlpha(30),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.withAlpha(102)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.shield_outlined, size: 14, color: Colors.amber),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Safety validation — rule-based overrides applied',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.amber.shade800,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ...triage.validationNotes.map(
-                    (note) => Padding(
-                      padding: const EdgeInsets.only(top: 3),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '• ',
-                            style: TextStyle(
-                              color: Colors.amber.shade700,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              note,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: scheme.onSurface.withAlpha(230),
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-          ],
-
-          // ── First-aid source tag ──────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.blue.withAlpha(31),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              triage.source == TriageSource.offlineClassifier
-                  ? 'First-aid: curated offline library (WHO/ILCOR aligned)'
-                  : 'First-aid: RAG from curated library (WHO/ILCOR aligned)',
-              style: const TextStyle(
-                color: Colors.blueAccent,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-
+          _buildSourceTier(scheme),
+          if (triage.thinkingTrace != null)
+            _buildThinkingTrace(context, scheme),
+          if (triage.wasOverridden && triage.validationNotes.isNotEmpty)
+            _buildValidationOverrides(scheme),
+          _buildFirstAidTag(),
           const SizedBox(height: 14),
-
-          // ── Phase 6: Android ecosystem quick-action buttons ───────────────
-          Row(
-            children: [
-              Expanded(
-                child: _ActionButton(
-                  icon: Icons.map_outlined,
-                  label: 'Open in Maps',
-                  color: Colors.green.shade700,
-                  onTap: () => _openMaps(triage.location),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _ActionButton(
-                  icon: Icons.phone_outlined,
-                  label: 'Call 112',
-                  color: Colors.red.shade700,
-                  onTap: _call112,
-                ),
-              ),
-            ],
-          ),
+          _buildActionButtons(),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeader(
+    BuildContext context,
+    ColorScheme scheme,
+    AppLocalizations l10n,
+  ) {
+    return Row(
+      children: [
+        Icon(Icons.psychology, color: scheme.primary, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            l10n.aiThinkingTraceTitle,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.bold,
+              color: scheme.primary,
+            ),
+          ),
+        ),
+        _ConfidenceBadge(
+          confidence: triage.confidence,
+          label: triage.confidenceLabel,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSourceTier(ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0),
+      child: _InfoRow(
+        icon: Icons.hub_outlined,
+        label: 'Source',
+        value: triage.sourceLabel,
+        valueColor: scheme.primary,
+      ),
+    );
+  }
+
+  Widget _buildThinkingTrace(BuildContext context, ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: Text(
+        triage.thinkingTrace!,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontFamily: 'monospace',
+          height: 1.5,
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildValidationOverrides(ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.amber.withAlpha(30),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.amber.withAlpha(102)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.shield_outlined,
+                  size: 14,
+                  color: Colors.amber,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Safety validation — rule-based overrides applied',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.amber.shade800,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ...triage.validationNotes.map(
+              (note) => Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '• ',
+                      style: TextStyle(
+                        color: Colors.amber.shade700,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        note,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: scheme.onSurface.withAlpha(230),
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFirstAidTag() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.blue.withAlpha(31),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        triage.source == TriageSource.offlineClassifier
+            ? 'First-aid: curated offline library (WHO/ILCOR aligned)'
+            : 'First-aid: RAG from curated library (WHO/ILCOR aligned)',
+        style: const TextStyle(
+          color: Colors.blueAccent,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: _ActionButton(
+            icon: Icons.map_outlined,
+            label: 'Open in Maps',
+            color: Colors.green.shade700,
+            onTap: () => _openMaps(triage.location),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _ActionButton(
+            icon: Icons.phone_outlined,
+            label: 'Call 112',
+            color: Colors.red.shade700,
+            onTap: _call112,
+          ),
+        ),
+      ],
     );
   }
 
@@ -231,8 +255,8 @@ class _ConfidenceBadge extends StatelessWidget {
     final color = confidence >= 0.80
         ? Colors.green.shade700
         : confidence >= 0.60
-            ? Colors.orange.shade700
-            : Colors.red.shade700;
+        ? Colors.orange.shade700
+        : Colors.red.shade700;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -248,8 +272,8 @@ class _ConfidenceBadge extends StatelessWidget {
             confidence >= 0.80
                 ? Icons.verified_outlined
                 : confidence >= 0.60
-                    ? Icons.info_outline
-                    : Icons.warning_amber_outlined,
+                ? Icons.info_outline
+                : Icons.warning_amber_outlined,
             size: 11,
             color: color,
           ),
