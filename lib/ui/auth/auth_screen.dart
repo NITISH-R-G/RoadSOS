@@ -83,7 +83,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> with SingleTickerProvid
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
+              child: SingleChildScrollView(
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 60),
@@ -222,10 +223,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> with SingleTickerProvid
                   // Google Button
                   OutlinedButton.icon(
                     onPressed: _loading ? null : () => ref.read(authServiceProvider.notifier).signInWithGoogle(),
-                    icon: Image.network(
-                      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
-                      height: 18,
-                    ),
+                    icon: const Icon(Icons.g_mobiledata_rounded, size: 22, color: Color(0xFF4285F4)),
                     label: const Text('CONTINUE WITH GOOGLE'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
@@ -246,6 +244,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> with SingleTickerProvid
                     ),
                   ),
                 ],
+              ),
               ),
             ),
           ),
