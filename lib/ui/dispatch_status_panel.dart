@@ -41,14 +41,15 @@ class DispatchStatusPanel extends StatelessWidget {
                 child: Text(
                   'DISPATCH STATUS',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        letterSpacing: 1.2,
-                        color: scheme.onSurface.withValues(alpha: 0.88),
-                        fontWeight: FontWeight.w800,
-                      ),
+                    letterSpacing: 1.2,
+                    color: scheme.onSurface.withValues(alpha: 0.88),
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               if (isBeaconActive) _BeaconBanner(scheme: scheme),
-              for (final row in channels) _DispatchRow(row: row, scheme: scheme),
+              for (final row in channels)
+                _DispatchRow(row: row, scheme: scheme),
             ],
           ),
         ),
@@ -81,17 +82,17 @@ class _DispatchRow extends StatelessWidget {
                 Text(
                   row.title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
-                      ),
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   row.detail,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface.withValues(alpha: 0.87),
-                        height: 1.35,
-                      ),
+                    color: scheme.onSurface.withValues(alpha: 0.87),
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),
@@ -101,7 +102,10 @@ class _DispatchRow extends StatelessWidget {
     );
   }
 
-  (IconData, Color) _iconFor(DispatchChannelLifecycle life, ColorScheme scheme) {
+  (IconData, Color) _iconFor(
+    DispatchChannelLifecycle life,
+    ColorScheme scheme,
+  ) {
     switch (life) {
       case DispatchChannelLifecycle.pending:
         return (Icons.radio_button_unchecked, scheme.outline);
@@ -125,13 +129,17 @@ class _BeaconBanner extends StatefulWidget {
   State<_BeaconBanner> createState() => _BeaconBannerState();
 }
 
-class _BeaconBannerState extends State<_BeaconBanner> with SingleTickerProviderStateMixin {
+class _BeaconBannerState extends State<_BeaconBanner>
+    with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat(reverse: true);
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -160,10 +168,10 @@ class _BeaconBannerState extends State<_BeaconBanner> with SingleTickerProviderS
               child: Text(
                 'RESCUE BEACON ACTIVE: FLASH + SIREN',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: widget.scheme.error,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                    ),
+                  color: widget.scheme.error,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ],
