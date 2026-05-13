@@ -25,10 +25,13 @@ class RuntimeConfig {
 
     if (!kReleaseMode) {
       try {
-        // On web, flutter_dotenv reads via rootBundle (Flutter asset system).
-        // The .env must be listed in pubspec.yaml assets as 'assets/.env'.
-        // On native, it reads from the filesystem at the project root.
-        final envPath = kIsWeb ? 'assets/.env' : '.env';
+        // flutter_dotenv reads via Flutter's rootBundle (asset system) on
+        // ALL platforms — web, Android, and iOS alike.
+        // The file must be listed in pubspec.yaml assets as 'assets/.env'.
+        // Using a bare '.env' path on native would try to read from the
+        // filesystem (which doesn't exist in a packaged app) and silently
+        // return empty strings, causing Supabase to never be initialized.
+        const envPath = 'assets/.env';
         await dotenv.load(fileName: envPath);
         appLog.i('Loaded $envPath for development');
       } catch (e) {

@@ -222,7 +222,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> with SingleTickerProvid
 
                   // Google Button
                   OutlinedButton.icon(
-                    onPressed: _loading ? null : () => ref.read(authServiceProvider.notifier).signInWithGoogle(),
+                    onPressed: _loading ? null : () async {
+                      setState(() {
+                        _loading = true;
+                        _error = null;
+                      });
+                      try {
+                        await ref.read(authServiceProvider.notifier).signInWithGoogle();
+                        if (ref.read(authServiceProvider.notifier).isAuthenticated) {
+                           widget.onComplete();
+                        }
+                      } catch (e) {
+                        setState(() => _error = 'Error: $e');
+                      } finally {
+                        if (mounted) setState(() => _loading = false);
+                      }
+                    },
                     icon: const Icon(Icons.g_mobiledata_rounded, size: 22, color: Color(0xFF4285F4)),
                     label: const Text('CONTINUE WITH GOOGLE'),
                     style: OutlinedButton.styleFrom(

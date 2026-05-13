@@ -21,6 +21,7 @@ import 'medical_card_screen.dart';
 import 'mesh_chat_screen.dart';
 import 'mesh_radar.dart';
 import 'offline_map_screen.dart';
+import 'auth/auth_screen.dart';
 import 'profile_editor_screen.dart';
 import 'responder_dashboard.dart';
 import 'safe_walk_overlay.dart';
@@ -530,17 +531,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   Widget _profileTab(BuildContext context) {
     final user = ref.watch(authServiceProvider);
-    
+    final isSignedIn = user != null && user.appMetadata['provider'] != 'anonymous';
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        if (user != null) ...[
+        // ── Header: show user info when signed in ─────────────────────────
+        if (isSignedIn) ...[
           Center(
             child: Column(
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: _kRed.withOpacity(0.1),
+                  backgroundColor: _kRed.withAlpha(25),
                   child: const Icon(Icons.person, color: _kRed, size: 40),
                 ),
                 const SizedBox(height: 16),
@@ -551,13 +554,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 const SizedBox(height: 4),
                 Text(
                   'Account verified via Supabase',
-                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                  style: TextStyle(color: Colors.white.withAlpha(128), fontSize: 12),
                 ),
                 const SizedBox(height: 32),
               ],
             ),
           ),
         ],
+
         _sectionLabel('MY INFORMATION'),
         const SizedBox(height: 8),
         _toolCard(
@@ -613,10 +617,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ),
         ),
         
-        if (user != null) ...[
-          const SizedBox(height: 20),
-          _sectionLabel('ACCOUNT'),
-          const SizedBox(height: 8),
+        // ── Account — always visible ──────────────────────────────────────
+        const SizedBox(height: 20),
+        _sectionLabel('ACCOUNT'),
+        const SizedBox(height: 8),
+
+        if (!isSignedIn) ...[
+          // Status banner
+          _accountStatusBanner(),
+          const SizedBox(height: 10),
+          // Sign-in card
+          _signInCard(context),
+        ] else ...[
+          // Sign-out card for real accounts
           _toolCard(
             context,
             icon: Icons.logout,
@@ -626,14 +639,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             onTap: () async {
               final ok = await showDialog<bool>(
                 context: context,
-                builder: (context) => AlertDialog(
+                builder: (ctx) => AlertDialog(
                   backgroundColor: _kSurface,
                   title: const Text('Sign Out?', style: TextStyle(color: Colors.white)),
-                  content: const Text('You will need to sign in again to sync your data.', style: TextStyle(color: Colors.white70)),
+                  content: const Text(
+                    'You will need to sign in again to sync your data.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
                     TextButton(
-                      onPressed: () => Navigator.pop(context, true),
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('CANCEL'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
                       child: const Text('SIGN OUT', style: TextStyle(color: Colors.redAccent)),
                     ),
                   ],
@@ -646,6 +665,114 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ),
         ],
       ],
+    );
+  }
+
+  /// Amber info banner shown when the user skipped sign-in.
+  Widget _accountStatusBanner() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1F2B),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withAlpha(18)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.amber.withAlpha(30),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.person_off_outlined, color: Colors.amber, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Not signed in',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Data is stored locally only. Sign in to sync across devices and enable cloud backup.',
+                  style: TextStyle(color: Colors.white.withAlpha(120), fontSize: 11, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Prominent red-accent card to open the sign-in screen.
+  Widget _signInCard(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: const Color(0xFFE8281A).withAlpha(18),
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: () => Navigator.push<void>(
+            context,
+            MaterialPageRoute<void>(
+              fullscreenDialog: true,
+              builder: (_) => AuthScreen(onComplete: () => Navigator.pop(context)),
+            ),
+          ),
+          borderRadius: BorderRadius.circular(14),
+          splashColor: const Color(0xFFE8281A).withAlpha(30),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE8281A).withAlpha(90)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8281A).withAlpha(38),
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: const Icon(Icons.login_rounded, color: Color(0xFFE8281A), size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Sign In / Create Account',
+                        style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Sync medical ID, contacts & SOS history across devices',
+                        style: TextStyle(
+                          color: const Color(0xFFE8281A).withAlpha(200),
+                          fontSize: 12,
+                          height: 1.3,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.arrow_forward_ios_rounded, color: const Color(0xFFE8281A).withAlpha(180), size: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
