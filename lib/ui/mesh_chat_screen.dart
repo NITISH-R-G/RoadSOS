@@ -19,7 +19,10 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('SCENE COORDINATION (OFFLINE)', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+        title: const Text(
+          'SCENE COORDINATION (OFFLINE)',
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+        ),
         backgroundColor: Colors.transparent,
       ),
       body: Column(
@@ -34,7 +37,11 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
                 Expanded(
                   child: Text(
                     'BLE broadcast (foreground only). No delivery guarantee; use for short scene coordination.',
-                    style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -48,20 +55,42 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
                 final msg = messages[index];
                 final isMe = msg.senderId == 'SELF';
                 return Align(
-                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isMe
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
-                      color: isMe ? Colors.blue : Colors.white.withValues(alpha: 0.1),
+                      color: isMe
+                          ? Colors.blue
+                          : Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
-                      crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      crossAxisAlignment: isMe
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       children: [
-                        Text(msg.senderId, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isMe ? Colors.white70 : Colors.blue)),
+                        Text(
+                          msg.senderId,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: isMe ? Colors.white70 : Colors.blue,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text(msg.content, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                        Text(
+                          msg.content,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -88,7 +117,10 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
               decoration: InputDecoration(
                 hintText: 'Coordinate with others...',
                 hintStyle: const TextStyle(color: Colors.white24),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
                 filled: true,
                 fillColor: Colors.black,
               ),
@@ -98,7 +130,9 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
           IconButton.filled(
             onPressed: () {
               if (_controller.text.isNotEmpty) {
-                ref.read(meshChatProvider.notifier).sendMessage(_controller.text);
+                ref
+                    .read(meshChatProvider.notifier)
+                    .sendMessage(_controller.text);
                 _controller.clear();
               }
             },

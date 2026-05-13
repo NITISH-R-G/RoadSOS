@@ -114,7 +114,9 @@ class GemmaLocalService {
       loadedViaLoadModel = true;
       appLog.d('[GemmaLocal] loadModel() succeeded');
     } on NoSuchMethodError {
-      appLog.d('[GemmaLocal] loadModel() not in this build — will pass via init()');
+      appLog.d(
+        '[GemmaLocal] loadModel() not in this build — will pass via init()',
+      );
     } catch (e) {
       appLog.w('[GemmaLocal] loadModel() threw: $e — trying init() fallback');
     }
@@ -152,7 +154,11 @@ class GemmaLocalService {
         }
       }
     } catch (e, st) {
-      appLog.w('[GemmaLocal] flutter_gemma init() failed', error: e, stackTrace: st);
+      appLog.w(
+        '[GemmaLocal] flutter_gemma init() failed',
+        error: e,
+        stackTrace: st,
+      );
       return null;
     }
 
@@ -184,11 +190,17 @@ class GemmaLocalService {
       if (raw == null || raw.isEmpty) return null;
       final parsed = _parseJSON(raw);
       if (parsed != null) {
-        appLog.d('[GemmaLocal] On-device triage: severity=${parsed['severity_level']}');
+        appLog.d(
+          '[GemmaLocal] On-device triage: severity=${parsed['severity_level']}',
+        );
       }
       return parsed;
     } catch (e, st) {
-      appLog.w('[GemmaLocal] Inference failed — marking tier unavailable', error: e, stackTrace: st);
+      appLog.w(
+        '[GemmaLocal] Inference failed — marking tier unavailable',
+        error: e,
+        stackTrace: st,
+      );
       _available = false; // Fall through to Tier 3 on next call
       _lastError = 'Inference error: $e';
       return null;
@@ -216,7 +228,11 @@ class GemmaLocalService {
         if (token != null) yield token;
       }
     } catch (e, st) {
-      appLog.w('[GemmaLocal] generateStream() failed', error: e, stackTrace: st);
+      appLog.w(
+        '[GemmaLocal] generateStream() failed',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 

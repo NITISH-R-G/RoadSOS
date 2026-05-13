@@ -72,6 +72,10 @@ class CrashTuning {
   static int get interSpikeDebounceMs =>
       _rc.getInt('CRASH_INTER_SPIKE_DEBOUNCE_MS', 900, min: 100, max: 10000);
 
-  static int get sosCooldownMs =>
-      _rc.getInt('CRASH_SOS_COOLDOWN_MS', 45000, min: 5000, max: 10 * 60 * 1000);
+  static int get sosCooldownMs => _rc.getInt(
+    'CRASH_SOS_COOLDOWN_MS',
+    45000,
+    min: 5000,
+    max: 10 * 60 * 1000,
+  );
 }

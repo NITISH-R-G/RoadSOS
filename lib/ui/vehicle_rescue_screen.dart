@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'vehicle_rescue_data.dart';
 
 /// VehicleRescueScreen
-/// 
+///
 /// Allows a bystander to:
 ///   1. Select vehicle type (or enter plate number)
 ///   2. Get instant offline rescue steps specific to that vehicle
@@ -67,7 +67,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: _showingRescueSteps ? _goBack : () => Navigator.pop(context),
+          onPressed: _showingRescueSteps
+              ? _goBack
+              : () => Navigator.pop(context),
         ),
         title: Text(
           _showingRescueSteps ? 'Rescue Guide' : 'Vehicle Rescue',
@@ -90,7 +92,14 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
               children: [
                 Icon(Icons.offline_bolt, color: Colors.green, size: 14),
                 SizedBox(width: 4),
-                Text('OFFLINE', style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
+                Text(
+                  'OFFLINE',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -120,7 +129,10 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.red.shade900.withValues(alpha: 0.6), Colors.black],
+                colors: [
+                  Colors.red.shade900.withValues(alpha: 0.6),
+                  Colors.black,
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -194,7 +206,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                 if (formatted != value) {
                   _plateController.value = TextEditingValue(
                     text: formatted,
-                    selection: TextSelection.collapsed(offset: formatted.length),
+                    selection: TextSelection.collapsed(
+                      offset: formatted.length,
+                    ),
                   );
                 }
               },
@@ -300,7 +314,11 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                 padding: EdgeInsets.only(top: 4),
                 child: Text(
                   'HIGH VOLTAGE',
-                  style: TextStyle(color: Colors.yellow, fontSize: 9, letterSpacing: 1),
+                  style: TextStyle(
+                    color: Colors.yellow,
+                    fontSize: 9,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
           ],
@@ -383,7 +401,10 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
@@ -431,7 +452,11 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               danger,
-              style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
           );
         }).toList(),
@@ -498,14 +523,21 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                     ),
                     if (step.isCritical)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
                           'CRITICAL',
-                          style: TextStyle(color: Colors.red, fontSize: 9, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                   ],
@@ -513,7 +545,11 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
                 const SizedBox(height: 4),
                 Text(
                   step.detail,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -540,7 +576,11 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               tip,
-              style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
           );
         }).toList(),
@@ -561,7 +601,9 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Could not launch dialer. Please call 108 manually.'),
+                  content: Text(
+                    'Could not launch dialer. Please call 108 manually.',
+                  ),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -571,13 +613,19 @@ class _VehicleRescueScreenState extends State<VehicleRescueScreen> {
         icon: const Icon(Icons.call, size: 20),
         label: const Text(
           'CALL AMBULANCE — 108',
-          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 16,
+            letterSpacing: 1,
+          ),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
     );

@@ -19,7 +19,7 @@ class EmergencyBeaconService {
   bool _isActive = false;
   Timer? _flashTimer;
   final AudioPlayer _player = AudioPlayer();
-  
+
   bool get isActive => _isActive;
 
   /// Starts the hardware SOS beacon.
@@ -27,7 +27,9 @@ class EmergencyBeaconService {
   Future<void> start() async {
     if (_isActive) return;
     _isActive = true;
-    appLog.i('🚨 [BEACON] Hardware takeover initiated: SOS strobe + Siren active.');
+    appLog.i(
+      '🚨 [BEACON] Hardware takeover initiated: SOS strobe + Siren active.',
+    );
 
     _startFlashlightStrobe();
     _startSiren();
@@ -39,7 +41,7 @@ class EmergencyBeaconService {
     _isActive = false;
     _flashTimer?.cancel();
     _flashTimer = null;
-    
+
     try {
       await TorchLight.disableTorch();
     } catch (_) {}
@@ -47,7 +49,7 @@ class EmergencyBeaconService {
     try {
       await _player.stop();
     } catch (_) {}
-    
+
     appLog.i('✅ [BEACON] Hardware SOS signals disabled.');
   }
 
@@ -55,17 +57,17 @@ class EmergencyBeaconService {
 
   void _startFlashlightStrobe() {
     _flashTimer?.cancel();
-    
+
     // SOS Morse Pattern: ... --- ...
     // Dot = 200ms, Dash = 600ms, Gap = 200ms
     final pattern = [
       200, 200, 200, 200, 200, 400, // S (...)
       600, 200, 600, 200, 600, 400, // O (---)
-      200, 200, 200, 200, 200, 2000 // S (...) + 2s rest
+      200, 200, 200, 200, 200, 2000, // S (...) + 2s rest
     ];
 
     int index = 0;
-    
+
     void nextStep() {
       if (!_isActive) return;
 
@@ -123,7 +125,9 @@ class EmergencyBeaconService {
   }
 }
 
-final emergencyBeaconServiceProvider = Provider((ref) => EmergencyBeaconService.instance);
+final emergencyBeaconServiceProvider = Provider(
+  (ref) => EmergencyBeaconService.instance,
+);
 
 /// Generates a two-tone siren WAV (880Hz / 660Hz alternating) entirely in memory.
 /// No external asset file required.
@@ -157,18 +161,31 @@ class _SirenAudioSource extends StreamAudioSource {
 
     // WAV header
     writeString('RIFF');
-    buffer.setUint32(offset, fileSize - 8, Endian.little); offset += 4;
+    buffer.setUint32(offset, fileSize - 8, Endian.little);
+    offset += 4;
     writeString('WAVE');
     writeString('fmt ');
-    buffer.setUint32(offset, 16, Endian.little); offset += 4;
-    buffer.setUint16(offset, 1, Endian.little); offset += 2; // PCM
-    buffer.setUint16(offset, _channels, Endian.little); offset += 2;
-    buffer.setUint32(offset, _sampleRate, Endian.little); offset += 4;
-    buffer.setUint32(offset, _sampleRate * _channels * (_bitsPerSample ~/ 8), Endian.little); offset += 4;
-    buffer.setUint16(offset, _channels * (_bitsPerSample ~/ 8), Endian.little); offset += 2;
-    buffer.setUint16(offset, _bitsPerSample, Endian.little); offset += 2;
+    buffer.setUint32(offset, 16, Endian.little);
+    offset += 4;
+    buffer.setUint16(offset, 1, Endian.little);
+    offset += 2; // PCM
+    buffer.setUint16(offset, _channels, Endian.little);
+    offset += 2;
+    buffer.setUint32(offset, _sampleRate, Endian.little);
+    offset += 4;
+    buffer.setUint32(
+      offset,
+      _sampleRate * _channels * (_bitsPerSample ~/ 8),
+      Endian.little,
+    );
+    offset += 4;
+    buffer.setUint16(offset, _channels * (_bitsPerSample ~/ 8), Endian.little);
+    offset += 2;
+    buffer.setUint16(offset, _bitsPerSample, Endian.little);
+    offset += 2;
     writeString('data');
-    buffer.setUint32(offset, dataSize, Endian.little); offset += 4;
+    buffer.setUint32(offset, dataSize, Endian.little);
+    offset += 4;
 
     // Alternating tone: first half high, second half low
     final halfSamples = numSamples ~/ 2;
