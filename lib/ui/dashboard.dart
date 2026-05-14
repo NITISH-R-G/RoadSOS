@@ -442,7 +442,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           subtitle: 'Offline extraction guide by vehicle type',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const VehicleRescueScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const VehicleRescueScreen(),
+            ),
           ),
         ),
 

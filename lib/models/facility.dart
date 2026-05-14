@@ -8,6 +8,7 @@ class Facility {
   final double longitude;
   final String? contactNumber;
   final String? capabilities;
+
   /// gov_nhm | gov_ayushman | osm | merged
   final String? dataSource;
 

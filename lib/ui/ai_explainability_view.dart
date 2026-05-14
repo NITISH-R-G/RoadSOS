@@ -37,7 +37,6 @@ class AiExplainabilityView extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           // ── Header ────────────────────────────────────────────────────────
           Row(
             children: [
@@ -47,14 +46,17 @@ class AiExplainabilityView extends ConsumerWidget {
                 child: Text(
                   l10n.aiThinkingTraceTitle,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        letterSpacing: 1.2,
-                        fontWeight: FontWeight.bold,
-                        color: scheme.primary,
-                      ),
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.bold,
+                    color: scheme.primary,
+                  ),
                 ),
               ),
               // Confidence badge
-              _ConfidenceBadge(confidence: triage.confidence, label: triage.confidenceLabel),
+              _ConfidenceBadge(
+                confidence: triage.confidence,
+                label: triage.confidenceLabel,
+              ),
             ],
           ),
 
@@ -74,10 +76,10 @@ class AiExplainabilityView extends ConsumerWidget {
             Text(
               triage.thinkingTrace!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontFamily: 'monospace',
-                    height: 1.5,
-                    color: scheme.onSurfaceVariant,
-                  ),
+                fontFamily: 'monospace',
+                height: 1.5,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 10),
           ],
@@ -97,7 +99,11 @@ class AiExplainabilityView extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.shield_outlined, size: 14, color: Colors.amber),
+                      const Icon(
+                        Icons.shield_outlined,
+                        size: 14,
+                        color: Colors.amber,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'Safety validation — rule-based overrides applied',
@@ -231,8 +237,8 @@ class _ConfidenceBadge extends StatelessWidget {
     final color = confidence >= 0.80
         ? Colors.green.shade700
         : confidence >= 0.60
-            ? Colors.orange.shade700
-            : Colors.red.shade700;
+        ? Colors.orange.shade700
+        : Colors.red.shade700;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -248,8 +254,8 @@ class _ConfidenceBadge extends StatelessWidget {
             confidence >= 0.80
                 ? Icons.verified_outlined
                 : confidence >= 0.60
-                    ? Icons.info_outline
-                    : Icons.warning_amber_outlined,
+                ? Icons.info_outline
+                : Icons.warning_amber_outlined,
             size: 11,
             color: color,
           ),
