@@ -38,7 +38,7 @@ import 'emergency_orchestrator.dart';
 ///   - GPS permission loss stops streaming; an error is logged.
 class SosLocationTracker {
   static const Duration _updateInterval = Duration(seconds: 30);
-  static const int      _maxMissedUpdates = 4; // stop after 2 min of GPS failure
+  static const int _maxMissedUpdates = 4; // stop after 2 min of GPS failure
 
   Timer? _updateTimer;
   StreamSubscription<Position>? _positionSub;
@@ -48,17 +48,17 @@ class SosLocationTracker {
 
   /// Attach to the Riverpod container. Call once from a long-lived provider.
   void attach(Ref ref) {
-    ref.listen<SOSPhase>(
-      emergencyOrchestratorProvider.select((s) => s.phase),
-      (prev, next) {
-        if (next == SOSPhase.active && prev != SOSPhase.active) {
-          final incidentId = ref.read(emergencyOrchestratorProvider).incidentId;
-          _start(incidentId);
-        } else if (next == SOSPhase.idle) {
-          _stop();
-        }
-      },
-    );
+    ref.listen<SOSPhase>(emergencyOrchestratorProvider.select((s) => s.phase), (
+      prev,
+      next,
+    ) {
+      if (next == SOSPhase.active && prev != SOSPhase.active) {
+        final incidentId = ref.read(emergencyOrchestratorProvider).incidentId;
+        _start(incidentId);
+      } else if (next == SOSPhase.idle) {
+        _stop();
+      }
+    });
   }
 
   void _start(String? incidentId) {
@@ -66,24 +66,30 @@ class SosLocationTracker {
     if (_updateTimer != null) return; // already running
 
     _activeIncidentId = incidentId;
-    _missedUpdates    = 0;
+    _missedUpdates = 0;
 
-    appLog.i('[SosLocationTracker] Started streaming location for incident $_activeIncidentId');
-
-    _positionSub = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 0,
-        // Minimum 15s interval between positions — OS enforces this.
-      ),
-    ).listen(
-      (p) => _latestPosition = p,
-      onError: (Object e) {
-        appLog.w('[SosLocationTracker] GPS stream error: $e');
-      },
+    appLog.i(
+      '[SosLocationTracker] Started streaming location for incident $_activeIncidentId',
     );
 
-    _updateTimer = Timer.periodic(_updateInterval, (_) => unawaited(_pushUpdate()));
+    _positionSub =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 0,
+            // Minimum 15s interval between positions — OS enforces this.
+          ),
+        ).listen(
+          (p) => _latestPosition = p,
+          onError: (Object e) {
+            appLog.w('[SosLocationTracker] GPS stream error: $e');
+          },
+        );
+
+    _updateTimer = Timer.periodic(
+      _updateInterval,
+      (_) => unawaited(_pushUpdate()),
+    );
   }
 
   void _stop() {
@@ -91,19 +97,21 @@ class SosLocationTracker {
     _updateTimer = null;
     _positionSub?.cancel();
     _positionSub = null;
-    _latestPosition   = null;
+    _latestPosition = null;
     _activeIncidentId = null;
-    _missedUpdates    = 0;
+    _missedUpdates = 0;
     appLog.i('[SosLocationTracker] Stopped');
   }
 
   Future<void> _pushUpdate() async {
     final pos = _latestPosition;
-    final id  = _activeIncidentId;
+    final id = _activeIncidentId;
     if (pos == null || id == null) {
       _missedUpdates++;
       if (_missedUpdates >= _maxMissedUpdates) {
-        appLog.w('[SosLocationTracker] $_maxMissedUpdates missed GPS updates — stopping');
+        appLog.w(
+          '[SosLocationTracker] $_maxMissedUpdates missed GPS updates — stopping',
+        );
         _stop();
       }
       return;
@@ -115,17 +123,20 @@ class SosLocationTracker {
       SupabaseClient client;
       try {
         client = Supabase.instance.client;
-      } catch (_) {
+      } on Object catch (_) {
         return;
       }
 
-      await client.from('incident_live_links').update({
-        'latitude'   : pos.latitude,
-        'longitude'  : pos.longitude,
-        'accuracy_m' : pos.accuracy,
-        'speed_kmh'  : pos.speed >= 0 ? (pos.speed * 3.6) : null,
-        'updated_at' : DateTime.now().toUtc().toIso8601String(),
-      }).eq('incident_id', id);
+      await client
+          .from('incident_live_links')
+          .update({
+            'latitude': pos.latitude,
+            'longitude': pos.longitude,
+            'accuracy_m': pos.accuracy,
+            'speed_kmh': pos.speed >= 0 ? (pos.speed * 3.6) : null,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('incident_id', id);
 
       _missedUpdates = 0;
       appLog.d(
@@ -133,8 +144,10 @@ class SosLocationTracker {
         '${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)} '
         'acc=${pos.accuracy.toStringAsFixed(0)}m',
       );
-    } catch (e) {
-      appLog.w('[SosLocationTracker] Update failed: $e — will retry next cycle');
+    } on Object catch (e) {
+      appLog.w(
+        '[SosLocationTracker] Update failed: $e — will retry next cycle',
+      );
       _missedUpdates++;
     }
   }

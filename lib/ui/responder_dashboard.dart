@@ -15,26 +15,34 @@ class ResponderDashboard extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('RESPONDER VIEW', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+        title: const Text(
+          'RESPONDER VIEW',
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+        ),
         backgroundColor: Colors.transparent,
       ),
       body: Column(
         children: [
-          Expanded(
-            child: RoadSosMap(state: sosState, autoCenter: false),
-          ),
+          Expanded(child: RoadSosMap(state: sosState, autoCenter: false)),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'ACTIVE SIGNALS (REAL-TIME)',
-                  style: TextStyle(color: Colors.white38, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5),
+                  style: TextStyle(
+                    color: Colors.white38,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    letterSpacing: 1.5,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildSosCard(sosState),
@@ -42,7 +50,12 @@ class ResponderDashboard extends ConsumerWidget {
                 const Divider(color: Colors.white10, height: 24),
                 const Text(
                   'RECENT MESH PACKETS',
-                  style: TextStyle(color: Colors.white38, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5),
+                  style: TextStyle(
+                    color: Colors.white38,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    letterSpacing: 1.5,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 StreamBuilder<MeshPacket>(
@@ -69,14 +82,22 @@ class ResponderDashboard extends ConsumerWidget {
                         children: [
                           Text(
                             'From ${pkt.senderId}${pkt.rssi != null ? ' (RSSI ${pkt.rssi})' : ''}',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             pkt.payload,
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.35),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              height: 1.35,
+                            ),
                           ),
                         ],
                       ),
@@ -92,7 +113,8 @@ class ResponderDashboard extends ConsumerWidget {
   }
 
   Widget _buildSosCard(SOSState state) {
-    final active = state.phase == SOSPhase.active || state.phase == SOSPhase.dispatching;
+    final active =
+        state.phase == SOSPhase.active || state.phase == SOSPhase.dispatching;
     final title = active ? 'SOS ACTIVE' : 'NO ACTIVE SOS';
     final detail = state.incidentId == null ? '—' : state.incidentId!;
     final sev = state.triageResult?.severityLevel;
@@ -105,9 +127,13 @@ class ResponderDashboard extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: active ? Colors.red.withValues(alpha: 0.10) : Colors.white.withValues(alpha: 0.04),
+        color: active
+            ? Colors.red.withValues(alpha: 0.10)
+            : Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: active ? Colors.red.withValues(alpha: 0.30) : Colors.white10),
+        border: Border.all(
+          color: active ? Colors.red.withValues(alpha: 0.30) : Colors.white10,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,12 +150,20 @@ class ResponderDashboard extends ConsumerWidget {
           const SizedBox(height: 6),
           Text(
             'Incident: $detail',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             '$sevLabel\n$locLine',
-            style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.35),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              height: 1.35,
+            ),
           ),
         ],
       ),

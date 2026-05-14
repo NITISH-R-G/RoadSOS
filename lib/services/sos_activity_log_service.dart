@@ -23,7 +23,7 @@ class SosActivityLogService {
       return list
           .map((e) => SosActivityRecord.fromJson(e as Map<String, dynamic>))
           .toList();
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('Activity log parse failed', error: e, stackTrace: st);
       return [];
     }
@@ -33,10 +33,14 @@ class SosActivityLogService {
     try {
       final existing = await loadHistory();
       final next = [record, ...existing];
-      final trimmed =
-          next.length > _maxRecords ? next.sublist(0, _maxRecords) : next;
-      await _storage.write(key: _key, value: jsonEncode(trimmed.map((e) => e.toJson()).toList()));
-    } catch (e, st) {
+      final trimmed = next.length > _maxRecords
+          ? next.sublist(0, _maxRecords)
+          : next;
+      await _storage.write(
+        key: _key,
+        value: jsonEncode(trimmed.map((e) => e.toJson()).toList()),
+      );
+    } on Object catch (e, st) {
       appLog.w('Activity log append failed', error: e, stackTrace: st);
     }
   }

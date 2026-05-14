@@ -54,7 +54,7 @@ class DrivingModeService extends StateNotifier<DrivingMode> {
           distanceFilter: 20,
         ),
       ).listen(_onPosition, onError: (Object _) {});
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 
   void _onPosition(Position p) {
@@ -94,5 +94,5 @@ class DrivingModeService extends StateNotifier<DrivingMode> {
 /// autoDispose would kill GPS tracking whenever the dashboard rebuilds.
 final drivingModeProvider =
     StateNotifierProvider<DrivingModeService, DrivingMode>((ref) {
-  return DrivingModeService();
-});
+      return DrivingModeService();
+    });

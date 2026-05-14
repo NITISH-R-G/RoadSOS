@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-
-
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -93,8 +91,12 @@ class CameraTriageService {
         sizeBytes: bytes.length,
         capturedAt: DateTime.now().toUtc(),
       );
-    } catch (e, st) {
-      appLog.w('[CameraTriageService] Image selection failed', error: e, stackTrace: st);
+    } on Object catch (e, st) {
+      appLog.w(
+        '[CameraTriageService] Image selection failed',
+        error: e,
+        stackTrace: st,
+      );
       return null;
     }
   }
@@ -130,7 +132,7 @@ class CameraTriageService {
         sizeBytes: bytes.length,
         capturedAt: DateTime.now().toUtc(),
       );
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[CameraTriageService] Silent capture failed: $e');
       return null;
     }

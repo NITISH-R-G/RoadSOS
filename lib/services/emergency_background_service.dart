@@ -12,24 +12,25 @@ import '../logging/app_log.dart';
 
 // MethodChannel shared with MainActivity for hardware-button events.
 // We reuse it here to sync the QS tile's SharedPreferences state.
-const _kHardwareButtonsChannel =
-    MethodChannel('com.codestreak.roadsos/hardware_buttons');
+const _kHardwareButtonsChannel = MethodChannel(
+  'com.codestreak.roadsos/hardware_buttons',
+);
 
 /// IPC command constants between the UI isolate and the background isolate.
 class BgCommand {
   static const String startCrashMonitor = 'start_crash_monitor';
-  static const String stopCrashMonitor  = 'stop_crash_monitor';
-  static const String startSafeWalk     = 'start_safe_walk';
-  static const String stopSafeWalk      = 'stop_safe_walk';
-  static const String sosTriggered      = 'sos_triggered';
-  static const String heartbeat         = 'heartbeat';
-  static const String drivingModeOn     = 'driving_mode_on';
-  static const String drivingModeOff    = 'driving_mode_off';
+  static const String stopCrashMonitor = 'stop_crash_monitor';
+  static const String startSafeWalk = 'start_safe_walk';
+  static const String stopSafeWalk = 'stop_safe_walk';
+  static const String sosTriggered = 'sos_triggered';
+  static const String heartbeat = 'heartbeat';
+  static const String drivingModeOn = 'driving_mode_on';
+  static const String drivingModeOff = 'driving_mode_off';
 }
 
-const _kChannelId   = 'roadsos_monitor';
+const _kChannelId = 'roadsos_monitor';
 const _kChannelName = 'RoadSOS Monitor';
-const _kNotifId     = 888;
+const _kNotifId = 888;
 
 /// Wraps flutter_background_service to provide:
 ///
@@ -79,7 +80,7 @@ class EmergencyBackgroundService {
       );
       _initialized = true;
       appLog.i('[BgService] Foreground service configured.');
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[BgService] Configure failed', error: e, stackTrace: st);
     }
   }
@@ -106,7 +107,9 @@ class EmergencyBackgroundService {
     if (kIsWeb || !Platform.isAndroid) return;
     _kHardwareButtonsChannel
         .invokeMethod<void>('setCrashMonitorActive', active)
-        .catchError((_) {/* activity may not be in foreground; tile will sync on next panel open */});
+        .catchError((_) {
+          /* activity may not be in foreground; tile will sync on next panel open */
+        });
   }
 
   static Future<void> startSafeWalk({required Duration duration}) async {
@@ -116,7 +119,9 @@ class EmergencyBackgroundService {
     _service.invoke(BgCommand.startSafeWalk, {
       'duration_seconds': duration.inSeconds,
     });
-    appLog.i('[BgService] Safe-walk timer started (${duration.inMinutes} min).');
+    appLog.i(
+      '[BgService] Safe-walk timer started (${duration.inMinutes} min).',
+    );
   }
 
   static Future<void> stopSafeWalk() async {
@@ -149,15 +154,12 @@ class EmergencyBackgroundService {
     try {
       final status = await Permission.ignoreBatteryOptimizations.status;
       if (!status.isGranted) {
-        final result =
-            await Permission.ignoreBatteryOptimizations.request();
-        appLog.i(
-          '[BgService] Battery optimization exemption: ${result.name}',
-        );
+        final result = await Permission.ignoreBatteryOptimizations.request();
+        appLog.i('[BgService] Battery optimization exemption: ${result.name}');
       } else {
         appLog.d('[BgService] Battery optimization exemption already granted.');
       }
-    } catch (e) {
+    } on Object catch (e) {
       appLog.w('[BgService] Battery exemption request failed: $e');
     }
   }
@@ -201,7 +203,9 @@ class EmergencyBackgroundService {
         safeWalkTimer?.cancel();
         final seconds = (data?['duration_seconds'] as int?) ?? 1800;
         safeWalkTimer = Timer(Duration(seconds: seconds), () {
-          service.invoke(BgCommand.sosTriggered, {'source': 'safe_walk_escalation'});
+          service.invoke(BgCommand.sosTriggered, {
+            'source': 'safe_walk_escalation',
+          });
         });
         service.setForegroundNotificationInfo(
           title: 'RoadSOS — Safe Walk Active',
@@ -244,7 +248,8 @@ class EmergencyBackgroundService {
     );
     await plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
   }
 }

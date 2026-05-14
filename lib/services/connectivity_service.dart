@@ -64,9 +64,9 @@ class ConnectivityService {
     if (results.isEmpty || results.every((r) => r == ConnectivityResult.none)) {
       return NetworkQuality.none;
     }
-    if (results.any((r) =>
-        r == ConnectivityResult.wifi ||
-        r == ConnectivityResult.ethernet)) {
+    if (results.any(
+      (r) => r == ConnectivityResult.wifi || r == ConnectivityResult.ethernet,
+    )) {
       return NetworkQuality.wifi;
     }
     return NetworkQuality.cellular;

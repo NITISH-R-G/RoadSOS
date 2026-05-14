@@ -22,7 +22,8 @@ class GemmaModelDownloadScreen extends StatefulWidget {
   final VoidCallback onComplete;
 
   @override
-  State<GemmaModelDownloadScreen> createState() => _GemmaModelDownloadScreenState();
+  State<GemmaModelDownloadScreen> createState() =>
+      _GemmaModelDownloadScreenState();
 }
 
 class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
@@ -70,7 +71,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
   Future<void> _startDownload() async {
     final token = _tokenController.text.trim();
     if (token.isEmpty) {
-      setState(() => _errorMessage = 'Paste your HuggingFace read token above first.');
+      setState(
+        () => _errorMessage = 'Paste your HuggingFace read token above first.',
+      );
       return;
     }
     setState(() {
@@ -106,7 +109,7 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
         _phase = _Phase.prompt;
         _errorMessage = e.message;
       });
-    } catch (e) {
+    } on Object catch (e) {
       if (!mounted) return;
       setState(() {
         _phase = _Phase.prompt;
@@ -122,7 +125,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
 
   Future<void> _openUrl(String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -153,13 +158,20 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
       child: Row(
         children: [
           Container(
-            width: 40, height: 40,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: const Color(0xFF4a90d9).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFF4a90d9).withValues(alpha: 0.4)),
+              border: Border.all(
+                color: const Color(0xFF4a90d9).withValues(alpha: 0.4),
+              ),
             ),
-            child: const Icon(Icons.memory_rounded, color: Color(0xFF7bc8f8), size: 20),
+            child: const Icon(
+              Icons.memory_rounded,
+              color: Color(0xFF7bc8f8),
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -168,7 +180,11 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
               children: [
                 Text(
                   'Gemma 4 On-Device AI',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 Text(
                   'Offline emergency triage — works without internet',
@@ -202,9 +218,7 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
               _buildResumeNote(),
             ],
           ],
-          if (_phase == _Phase.downloading) ...[
-            _buildProgressPanel(),
-          ],
+          if (_phase == _Phase.downloading) ...[_buildProgressPanel()],
           if (_phase == _Phase.check) ...[
             const Center(
               child: Padding(
@@ -224,7 +238,11 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
       children: [
         const Text(
           'Why download this model?',
-          style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 12),
         _infoRow(
@@ -269,14 +287,31 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
         const SizedBox(height: 20),
         const Text(
           'How to get your HuggingFace token',
-          style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: 10),
-        _stepRow('1', 'Accept Gemma 4 terms',
-            'Required by Google before downloading', GemmaModelManager.hfTermsUrl),
-        _stepRow('2', 'Create a read token',
-            'Free account required', GemmaModelManager.hfTokenUrl),
-        _stepRow('3', 'Paste it below', 'Token is used for this download only', null),
+        _stepRow(
+          '1',
+          'Accept Gemma 4 terms',
+          'Required by Google before downloading',
+          GemmaModelManager.hfTermsUrl,
+        ),
+        _stepRow(
+          '2',
+          'Create a read token',
+          'Free account required',
+          GemmaModelManager.hfTokenUrl,
+        ),
+        _stepRow(
+          '3',
+          'Paste it below',
+          'Token is used for this download only',
+          null,
+        ),
       ],
     );
   }
@@ -287,7 +322,11 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
       children: [
         const Text(
           'HuggingFace token',
-          style: TextStyle(color: Color(0xFF6b7a99), fontSize: 12, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: Color(0xFF6b7a99),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 6),
         Row(
@@ -297,7 +336,11 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
                 controller: _tokenController,
                 focusNode: _tokenFocus,
                 obscureText: true,
-                style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'monospace'),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontFamily: 'monospace',
+                ),
                 decoration: InputDecoration(
                   hintText: 'hf_...',
                   hintStyle: const TextStyle(color: Color(0xFF6b7a99)),
@@ -315,7 +358,10 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(color: Color(0xFF4a90d9)),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ),
@@ -341,7 +387,11 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
       children: [
         const Text(
           'Downloading Gemma 4 E4B...',
-          style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
@@ -368,7 +418,11 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
             ),
             Text(
               '${(percent * 100).toStringAsFixed(1)}%',
-              style: const TextStyle(color: Color(0xFF4a90d9), fontSize: 13, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Color(0xFF4a90d9),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -380,7 +434,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF6b7a99),
               side: const BorderSide(color: Color(0xFF1e2a40)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
             child: const Text('Pause Download'),
@@ -395,18 +451,30 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
       children: [
         const SizedBox(height: 24),
         Container(
-          width: 72, height: 72,
+          width: 72,
+          height: 72,
           decoration: BoxDecoration(
             color: const Color(0xFF27c96b).withValues(alpha: 0.12),
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFF27c96b).withValues(alpha: 0.4), width: 2),
+            border: Border.all(
+              color: const Color(0xFF27c96b).withValues(alpha: 0.4),
+              width: 2,
+            ),
           ),
-          child: const Icon(Icons.check_rounded, color: Color(0xFF27c96b), size: 36),
+          child: const Icon(
+            Icons.check_rounded,
+            color: Color(0xFF27c96b),
+            size: 36,
+          ),
         ),
         const SizedBox(height: 20),
         const Text(
           'Gemma 4 E4B Ready',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 10),
@@ -424,9 +492,14 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
               backgroundColor: const Color(0xFF27c96b),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: const Text('Continue to RoadSOS', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+            child: const Text(
+              'Continue to RoadSOS',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+            ),
           ),
         ),
       ],
@@ -439,17 +512,27 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFe8354a).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFe8354a).withValues(alpha: 0.3)),
+        border: Border.all(
+          color: const Color(0xFFe8354a).withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.error_outline_rounded, color: Color(0xFFe8354a), size: 18),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Color(0xFFe8354a),
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               _errorMessage!,
-              style: const TextStyle(color: Color(0xFFe8354a), fontSize: 12.5, height: 1.45),
+              style: const TextStyle(
+                color: Color(0xFFe8354a),
+                fontSize: 12.5,
+                height: 1.45,
+              ),
             ),
           ),
         ],
@@ -464,7 +547,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF4a90d9).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF4a90d9).withValues(alpha: 0.3)),
+        border: Border.all(
+          color: const Color(0xFF4a90d9).withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
@@ -523,9 +608,23 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(body, style: const TextStyle(color: Color(0xFF6b7a99), fontSize: 12.5, height: 1.4)),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    color: Color(0xFF6b7a99),
+                    fontSize: 12.5,
+                    height: 1.4,
+                  ),
+                ),
               ],
             ),
           ),
@@ -541,15 +640,24 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 22, height: 22,
+            width: 22,
+            height: 22,
             decoration: BoxDecoration(
               color: const Color(0xFF4a90d9).withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF4a90d9).withValues(alpha: 0.4)),
+              border: Border.all(
+                color: const Color(0xFF4a90d9).withValues(alpha: 0.4),
+              ),
             ),
             child: Center(
-              child: Text(num,
-                  style: const TextStyle(color: Color(0xFF7bc8f8), fontSize: 11, fontWeight: FontWeight.w800)),
+              child: Text(
+                num,
+                style: const TextStyle(
+                  color: Color(0xFF7bc8f8),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -561,22 +669,38 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
                   onTap: url != null ? () => _openUrl(url) : null,
                   child: Row(
                     children: [
-                      Text(title,
-                          style: TextStyle(
-                            color: url != null ? const Color(0xFF7bc8f8) : Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            decoration: url != null ? TextDecoration.underline : null,
-                            decorationColor: const Color(0xFF7bc8f8),
-                          )),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: url != null
+                              ? const Color(0xFF7bc8f8)
+                              : Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          decoration: url != null
+                              ? TextDecoration.underline
+                              : null,
+                          decorationColor: const Color(0xFF7bc8f8),
+                        ),
+                      ),
                       if (url != null) ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.open_in_new_rounded, size: 12, color: Color(0xFF7bc8f8)),
+                        const Icon(
+                          Icons.open_in_new_rounded,
+                          size: 12,
+                          color: Color(0xFF7bc8f8),
+                        ),
                       ],
                     ],
                   ),
                 ),
-                Text(sub, style: const TextStyle(color: Color(0xFF6b7a99), fontSize: 11.5)),
+                Text(
+                  sub,
+                  style: const TextStyle(
+                    color: Color(0xFF6b7a99),
+                    fontSize: 11.5,
+                  ),
+                ),
               ],
             ),
           ),
@@ -597,7 +721,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 18),
         ),
         child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),

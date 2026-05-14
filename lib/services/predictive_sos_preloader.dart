@@ -30,10 +30,7 @@ class PredictiveSosPreloader {
   /// Fire-and-forget — do not await.
   static Future<void> onDrivingModeActivated() async {
     appLog.d('[Preloader] Driving mode activated — pre-warming connections');
-    await Future.wait<void>([
-      _prewarmSupabaseEdge(),
-      _prewarmGps(),
-    ]);
+    await Future.wait<void>([_prewarmSupabaseEdge(), _prewarmGps()]);
     appLog.d('[Preloader] Pre-warm complete');
   }
 
@@ -51,7 +48,7 @@ class PredictiveSosPreloader {
           .head(Uri.parse('$url/functions/v1/triage-gemini'))
           .timeout(const Duration(seconds: 4));
       appLog.d('[Preloader] Supabase edge TLS session pre-warmed ✓');
-    } catch (_) {
+    } on Object catch (_) {
       // Expected on first cold-start or offline — not an error.
       appLog.d('[Preloader] Supabase pre-warm skipped (offline or timeout)');
     }
@@ -80,7 +77,7 @@ class PredictiveSosPreloader {
         ),
       );
       appLog.d('[Preloader] GPS chipset pre-warmed ✓');
-    } catch (_) {
+    } on Object catch (_) {
       appLog.d('[Preloader] GPS pre-warm skipped');
     }
   }

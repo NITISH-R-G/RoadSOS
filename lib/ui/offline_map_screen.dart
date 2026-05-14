@@ -41,7 +41,9 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
   Future<void> _startDownloadAroundMe() async {
     if (_busy) return;
     if (kIsWeb) {
-      setState(() => _lastStatus = 'Offline map downloads are not supported on web.');
+      setState(
+        () => _lastStatus = 'Offline map downloads are not supported on web.',
+      );
       return;
     }
     if (!fmtcMapCacheReady) {
@@ -87,7 +89,9 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
         ),
       );
 
-      final tiles = await FMTCStore(kFmtcRoadsosOsmStore).download.countTiles(region);
+      final tiles = await FMTCStore(
+        kFmtcRoadsosOsmStore,
+      ).download.countTiles(region);
       if (!mounted) return;
 
       setState(() {
@@ -95,36 +99,50 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
             'Downloading ~${tiles.toString()} tiles (r=${radiusKm.toStringAsFixed(0)}km, z${minZoom.toStringAsFixed(0)}–${maxZoom.toStringAsFixed(0)})…';
       });
 
-      final (:downloadProgress, :tileEvents) = FMTCStore(kFmtcRoadsosOsmStore).download.startForeground(
-        region: region,
-        parallelThreads: 6,
-        skipExistingTiles: true,
-        skipSeaTiles: true,
-      );
+      final (:downloadProgress, :tileEvents) = FMTCStore(kFmtcRoadsosOsmStore)
+          .download
+          .startForeground(
+            region: region,
+            parallelThreads: 6,
+            skipExistingTiles: true,
+            skipSeaTiles: true,
+          );
 
       await _progressSub?.cancel();
       await _tileEventSub?.cancel();
 
-      _progressSub = downloadProgress.listen((p) {
-        if (!mounted) return;
-        final complete = p.attemptedTilesCount >= p.maxTilesCount && p.remainingTilesCount == 0;
-        setState(() {
-          _progress = p;
-          _busy = !complete;
-          _lastStatus = complete
-              ? 'Offline region download complete.'
-              : 'Downloading… ${p.successfulTilesCount}/${p.maxTilesCount} tiles';
-        });
-      }, onError: (e, st) {
-        appLog.w('FMTC download progress stream error', error: e, stackTrace: st);
-      });
+      _progressSub = downloadProgress.listen(
+        (p) {
+          if (!mounted) return;
+          final complete =
+              p.attemptedTilesCount >= p.maxTilesCount &&
+              p.remainingTilesCount == 0;
+          setState(() {
+            _progress = p;
+            _busy = !complete;
+            _lastStatus = complete
+                ? 'Offline region download complete.'
+                : 'Downloading… ${p.successfulTilesCount}/${p.maxTilesCount} tiles';
+          });
+        },
+        onError: (e, st) {
+          appLog.w(
+            'FMTC download progress stream error',
+            error: e,
+            stackTrace: st,
+          );
+        },
+      );
 
-      _tileEventSub = tileEvents.listen((_) {}, onError: (e, st) {
-        appLog.w('FMTC tile events stream error', error: e, stackTrace: st);
-      });
+      _tileEventSub = tileEvents.listen(
+        (_) {},
+        onError: (e, st) {
+          appLog.w('FMTC tile events stream error', error: e, stackTrace: st);
+        },
+      );
 
       // No await on completion: download runs in foreground thread; UI updates via stream.
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('Offline map download failed', error: e, stackTrace: st);
       if (!mounted) return;
       setState(() {
@@ -138,7 +156,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
   Future<void> _cancelDownload() async {
     try {
       await FMTCStore(kFmtcRoadsosOsmStore).download.cancel();
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('FMTC download cancel failed', error: e, stackTrace: st);
     }
     if (!mounted) return;
@@ -169,7 +187,12 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
           children: [
             const Text(
               'OFFLINE TILE CACHE',
-              style: TextStyle(color: Colors.white38, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5),
+              style: TextStyle(
+                color: Colors.white38,
+                fontWeight: FontWeight.w900,
+                fontSize: 10,
+                letterSpacing: 1.5,
+              ),
             ),
             const SizedBox(height: 24),
             _cacheStatusCard(),
@@ -180,7 +203,8 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
               LinearProgressIndicator(
                 value: _progress!.maxTilesCount <= 0
                     ? null
-                    : (_progress!.successfulTilesCount / _progress!.maxTilesCount),
+                    : (_progress!.successfulTilesCount /
+                          _progress!.maxTilesCount),
                 backgroundColor: Colors.white10,
                 color: scheme.primary,
               ),
@@ -190,7 +214,11 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
                   Expanded(
                     child: Text(
                       _lastStatus ?? 'Downloading…',
-                      style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   TextButton(
@@ -203,7 +231,10 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
               if (_lastStatus != null) ...[
                 Text(
                   _lastStatus!,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -213,18 +244,25 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _busy ? null : _startDownloadAroundMe,
                   icon: const Icon(Icons.download),
-                  label: Text('DOWNLOAD AROUND ME (${_radiusKm.toStringAsFixed(0)}KM)'),
+                  label: Text(
+                    'DOWNLOAD AROUND ME (${_radiusKm.toStringAsFixed(0)}KM)',
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'This downloads map tiles for offline use. Size depends on zoom levels and your area.',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.38), fontSize: 12),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.38),
+                  fontSize: 12,
+                ),
               ),
             ],
           ],
@@ -258,7 +296,10 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
           const SizedBox(height: 12),
           Text(
             'Radius: ${_radiusKm.toStringAsFixed(0)} km',
-            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           Slider(
             value: _radiusKm,
@@ -271,26 +312,35 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
           const SizedBox(height: 8),
           Text(
             'Zoom: ${_minZoom.toStringAsFixed(0)}–${_maxZoom.toStringAsFixed(0)}',
-            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           RangeSlider(
             values: RangeValues(_minZoom, _maxZoom),
             min: 8,
             max: 18,
             divisions: 10,
-            labels: RangeLabels(_minZoom.toStringAsFixed(0), _maxZoom.toStringAsFixed(0)),
+            labels: RangeLabels(
+              _minZoom.toStringAsFixed(0),
+              _maxZoom.toStringAsFixed(0),
+            ),
             onChanged: _busy
                 ? null
                 : (r) => setState(() {
-                      final start = r.start.roundToDouble();
-                      final end = r.end.roundToDouble();
-                      _minZoom = start <= end ? start : end;
-                      _maxZoom = end >= start ? end : start;
-                    }),
+                    final start = r.start.roundToDouble();
+                    final end = r.end.roundToDouble();
+                    _minZoom = start <= end ? start : end;
+                    _maxZoom = end >= start ? end : start;
+                  }),
           ),
           Text(
             'Tip: higher zoom = more tiles (bigger download).',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 12),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.35),
+              fontSize: 12,
+            ),
           ),
         ],
       ),
@@ -302,7 +352,8 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
       return _infoCard(
         icon: Icons.public,
         title: 'Web limitation',
-        body: 'Offline tile downloads are not supported on web. Install RoadSOS on a phone for offline caching.',
+        body:
+            'Offline tile downloads are not supported on web. Install RoadSOS on a phone for offline caching.',
       );
     }
 
@@ -310,7 +361,8 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
       return _infoCard(
         icon: Icons.warning_amber_rounded,
         title: 'Offline cache unavailable',
-        body: 'Tile cache backend did not initialize on this device. Maps will still work online.',
+        body:
+            'Tile cache backend did not initialize on this device. Maps will still work online.',
       );
     }
 
@@ -361,12 +413,18 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   body,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.75), height: 1.35),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),

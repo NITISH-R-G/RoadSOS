@@ -17,8 +17,9 @@ final iosLifecycleServiceProvider = Provider<IosLifecycleService>((ref) {
 class IosLifecycleService {
   IosLifecycleService();
 
-  static const MethodChannel _channel =
-      MethodChannel('com.codestreak.roadsos/ios_lifecycle');
+  static const MethodChannel _channel = MethodChannel(
+    'com.codestreak.roadsos/ios_lifecycle',
+  );
 
   void attach() {
     if (kIsWeb) return;
@@ -45,7 +46,7 @@ class IosLifecycleService {
     if (!Platform.isIOS) return;
     try {
       await _channel.invokeMethod<void>('scheduleBackgroundRefresh');
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('scheduleBackgroundRefresh failed', error: e, stackTrace: st);
     }
   }

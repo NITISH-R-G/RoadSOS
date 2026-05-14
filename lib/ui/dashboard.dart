@@ -442,7 +442,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           subtitle: 'Offline extraction guide by vehicle type',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const VehicleRescueScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const VehicleRescueScreen(),
+            ),
           ),
         ),
 
@@ -886,7 +888,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           .map((e) => e['display_name'] as String)
                           .toList();
                     }
-                  } catch (e) {
+                  } on Object catch (e) {
                     appLog.w('Error fetching location suggestions: $e');
                   }
                   return const Iterable<String>.empty();

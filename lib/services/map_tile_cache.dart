@@ -15,7 +15,7 @@ Future<void> initializeFmtcMapCache() async {
     await FMTCObjectBoxBackend().initialise();
     await FMTCStore(kFmtcRoadsosOsmStore).manage.create();
     fmtcMapCacheReady = true;
-  } catch (e, st) {
+  } on Object catch (e, st) {
     fmtcMapCacheReady = false;
     appLog.w(
       'FMTC map cache init failed — using network tiles only',

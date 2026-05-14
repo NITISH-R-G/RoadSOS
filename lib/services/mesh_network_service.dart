@@ -43,10 +43,13 @@ class MeshPacket {
 ///   rendering — including mid-emergency when the dispatch panel covered the
 ///   radar. The service must live for the entire app session.
 class MeshNetworkService {
-  final ble_adv.FlutterBlePeripheral _peripheral = ble_adv.FlutterBlePeripheral();
+  final ble_adv.FlutterBlePeripheral _peripheral =
+      ble_adv.FlutterBlePeripheral();
 
-  final _discoveredBeaconsController = StreamController<List<String>>.broadcast();
-  Stream<List<String>> get discoveredBeacons => _discoveredBeaconsController.stream;
+  final _discoveredBeaconsController =
+      StreamController<List<String>>.broadcast();
+  Stream<List<String>> get discoveredBeacons =>
+      _discoveredBeaconsController.stream;
 
   final _packetsController = StreamController<MeshPacket>.broadcast();
   Stream<MeshPacket> get packets => _packetsController.stream;
@@ -74,7 +77,7 @@ class MeshNetworkService {
       if (Platform.isAndroid || Platform.isIOS) {
         try {
           unawaited(FlutterBluePlus.stopScan());
-        } catch (_) {}
+        } on Object catch (_) {}
       }
     }
   }
@@ -108,7 +111,8 @@ class MeshNetworkService {
 
         // Try binary decode first (v2 BlePayloadCodec), fall back to UTF-8 text.
         final decoded = BlePayloadCodec.decode(md);
-        final displayPayload = decoded?.toDisplayString() ?? _tryDecodeUtf8(md) ?? '';
+        final displayPayload =
+            decoded?.toDisplayString() ?? _tryDecodeUtf8(md) ?? '';
 
         if (displayPayload.isNotEmpty && !_packetsController.isClosed) {
           _emitPacketDedup(id, displayPayload, r.rssi, decoded);
@@ -133,7 +137,7 @@ class MeshNetworkService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     try {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 30));
-    } catch (e) {
+    } on Object catch (e) {
       appLog.w('Failed to start BLE scan', error: e);
     }
   }
@@ -141,12 +145,17 @@ class MeshNetworkService {
   String? _tryDecodeUtf8(List<int> data) {
     try {
       return utf8.decode(data, allowMalformed: true).trim();
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }
 
-  void _emitPacketDedup(String senderId, String payload, int? rssi, BleDecodedPayload? decoded) {
+  void _emitPacketDedup(
+    String senderId,
+    String payload,
+    int? rssi,
+    BleDecodedPayload? decoded,
+  ) {
     final now = DateTime.now();
     final key = '$senderId|$payload';
     final last = _recentPacketDedup[key];
@@ -223,7 +232,7 @@ class MeshNetworkService {
       await _peripheral.start(advertiseData: advertiseData);
       appLog.d('BLE mesh advertising SOS (${advertiseBytes.length}B)');
       return true;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('BLE advertising failed', error: e, stackTrace: st);
       return false;
     }
@@ -248,7 +257,8 @@ class MeshNetworkService {
     if (kIsWeb) return smsOutcome;
     if (lat == null || lng == null) return smsOutcome;
 
-    final inIndia = CountryCodes.getDeviceLocale()?.countryCode == 'IN' ||
+    final inIndia =
+        CountryCodes.getDeviceLocale()?.countryCode == 'IN' ||
         coordinatesRoughlyInIndia(lat, lng);
     if (!inIndia) return smsOutcome;
 
@@ -282,7 +292,7 @@ final meshListeningBootstrapProvider = FutureProvider<void>((ref) async {
   final mesh = ref.watch(meshNetworkServiceProvider);
   try {
     await mesh.ensureListeningForPeers();
-  } catch (e, st) {
+  } on Object catch (e, st) {
     appLog.w('Mesh listening bootstrap failed', error: e, stackTrace: st);
   }
 });

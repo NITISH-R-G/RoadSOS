@@ -87,7 +87,9 @@ class EmergencySmsDispatchService {
     if (deviceDirectSmsSent) return true;
     if (!backendRelayAccepted) return false;
     if (defaultTargetPlatform == TargetPlatform.iOS) return true;
-    final v = dotenv.env['SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH']?.trim().toLowerCase();
+    final v = dotenv.env['SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH']
+        ?.trim()
+        .toLowerCase();
     return v == 'true' || v == '1' || v == 'yes';
   }
 
@@ -104,7 +106,9 @@ class EmergencySmsDispatchService {
       deviceDirectSmsSent: device,
       backendRelayAccepted: relay,
       primaryAutomatedBarMet: primary,
-      proofLevel: (device || relay) ? SmsDispatchProofLevel.accepted : SmsDispatchProofLevel.none,
+      proofLevel: (device || relay)
+          ? SmsDispatchProofLevel.accepted
+          : SmsDispatchProofLevel.none,
       detail: detail,
     );
   }
@@ -136,46 +140,51 @@ class EmergencySmsDispatchService {
     }
 
     // India — server-side relay when enrolled (MoHA / state ERSS integrations).
-    final inIndiaContext = cc == 'IN' ||
+    final inIndiaContext =
+        cc == 'IN' ||
         (lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng));
     if (inIndiaContext) {
       final indiaUrl = dotenv.env['INDIA_SOS_DISPATCH_URL']?.trim();
-      final indiaDest = (dotenv.env['INDIA_EMERGENCY_NUMBER']?.trim().isNotEmpty ?? false)
+      final indiaDest =
+          (dotenv.env['INDIA_EMERGENCY_NUMBER']?.trim().isNotEmpty ?? false)
           ? dotenv.env['INDIA_EMERGENCY_NUMBER']!.trim()
           : '112';
-      final route = lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng)
+      final route =
+          lat != null && lng != null && coordinatesRoughlyInIndia(lat, lng)
           ? resolveIndiaEmergencyRoute(lat, lng)
           : null;
       if (indiaUrl != null && indiaUrl.isNotEmpty) {
-        final ok = await _postJson(
-          indiaUrl,
-          <String, dynamic>{
-            'channel': 'india_emergency_sms',
-            'country_code': 'IN',
-            'destination': indiaDest,
-            'payload': payload,
-            'latitude': lat,
-            'longitude': lng,
-            'body': body,
-            if (route != null) ...<String, dynamic>{
-              'state_code': route.stateCode,
-              'state_name': route.stateName,
-              'ambulance_number': route.ambulanceNumber,
-              'police_number': route.policeNumber,
-              'fire_number': route.fireNumber,
-            },
+        final ok = await _postJson(indiaUrl, <String, dynamic>{
+          'channel': 'india_emergency_sms',
+          'country_code': 'IN',
+          'destination': indiaDest,
+          'payload': payload,
+          'latitude': lat,
+          'longitude': lng,
+          'body': body,
+          if (route != null) ...<String, dynamic>{
+            'state_code': route.stateCode,
+            'state_name': route.stateName,
+            'ambulance_number': route.ambulanceNumber,
+            'police_number': route.policeNumber,
+            'fire_number': route.fireNumber,
           },
-        );
+        });
         if (ok) {
           appLog.d('SMS India relay accepted');
-          final primary = _primaryAutomatedBar(deviceDirectSmsSent: false, backendRelayAccepted: true);
+          final primary = _primaryAutomatedBar(
+            deviceDirectSmsSent: false,
+            backendRelayAccepted: true,
+          );
           final detail = primary
               ? 'India relay accepted ✓ (request handed off; not delivery-proof)'
               : 'India relay HTTP 2xx ✓ — primary (A) bar needs device SEND_SMS or '
-                  'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true (audited SMS to 112).';
+                    'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true (audited SMS to 112).';
           return _outcome(device: false, relay: true, detail: detail);
         }
-        appLog.w('SMS India relay failed; falling back to device SMS where allowed');
+        appLog.w(
+          'SMS India relay failed; falling back to device SMS where allowed',
+        );
       }
     }
 
@@ -216,24 +225,22 @@ class EmergencySmsDispatchService {
             'SMS did not send automatically on iOS — configure SMS_DISPATCH_URL or dial $emergencyNum manually.',
       );
     }
-    final ok = await _postJson(
-      url,
-      <String, dynamic>{
-        'channel': 'twilio_backend',
-        'destination': emergencyNum,
-        'country_code': cc,
-        'payload': payload,
-        'latitude': lat,
-        'longitude': lng,
-        'body': body,
-      },
-    );
+    final ok = await _postJson(url, <String, dynamic>{
+      'channel': 'twilio_backend',
+      'destination': emergencyNum,
+      'country_code': cc,
+      'payload': payload,
+      'latitude': lat,
+      'longitude': lng,
+      'body': body,
+    });
     if (ok) {
       appLog.d('iOS backend SMS dispatch sent');
       return _outcome(
         device: false,
         relay: true,
-        detail: 'SMS relay accepted for $emergencyNum ✓ (request handed off; not delivery-proof)',
+        detail:
+            'SMS relay accepted for $emergencyNum ✓ (request handed off; not delivery-proof)',
       );
     }
     appLog.w('iOS backend SMS dispatch failed');
@@ -255,25 +262,27 @@ class EmergencySmsDispatchService {
   ) async {
     final relayUrl = dotenv.env['SMS_DISPATCH_URL']?.trim();
     if (relayUrl != null && relayUrl.isNotEmpty) {
-      final relayOk = await _postJson(
-        relayUrl,
-        <String, dynamic>{
-          'channel': 'twilio_backend',
-          'destination': number,
-          'country_code': cc,
-          'payload': payload,
-          'latitude': lat,
-          'longitude': lng,
-          'body': body,
-        },
-      );
+      final relayOk = await _postJson(relayUrl, <String, dynamic>{
+        'channel': 'twilio_backend',
+        'destination': number,
+        'country_code': cc,
+        'payload': payload,
+        'latitude': lat,
+        'longitude': lng,
+        'body': body,
+      });
       if (relayOk) {
-        appLog.d('Android SMS dispatched via SMS_DISPATCH_URL (Twilio/backend)');
-        final primary = _primaryAutomatedBar(deviceDirectSmsSent: false, backendRelayAccepted: true);
+        appLog.d(
+          'Android SMS dispatched via SMS_DISPATCH_URL (Twilio/backend)',
+        );
+        final primary = _primaryAutomatedBar(
+          deviceDirectSmsSent: false,
+          backendRelayAccepted: true,
+        );
         final detail = primary
             ? 'Backend relay accepted for $number ✓ (request handed off; not delivery-proof)'
             : 'Backend relay HTTP 2xx ✓ — primary bar needs device SEND_SMS or '
-                'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true.';
+                  'SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true.';
         return _outcome(device: false, relay: true, detail: detail);
       }
       appLog.w(
@@ -287,7 +296,8 @@ class EmergencySmsDispatchService {
       return _outcome(
         device: true,
         relay: false,
-        detail: 'Device SMS request accepted for $number ✓ (carrier delivery not confirmed)',
+        detail:
+            'Device SMS request accepted for $number ✓ (carrier delivery not confirmed)',
       );
     }
 
@@ -307,10 +317,13 @@ class EmergencySmsDispatchService {
     final loc = (lat != null && lng != null)
         ? 'LOC ${lat.toStringAsFixed(5)},${lng.toStringAsFixed(5)} '
         : '';
-    final st = route != null ? 'STATE ${route.stateCode} ${route.stateName} ' : '';
+    final st = route != null
+        ? 'STATE ${route.stateCode} ${route.stateName} '
+        : '';
     const maxPayload = 220;
-    final p =
-        payload.length > maxPayload ? '${payload.substring(0, maxPayload)}…' : payload;
+    final p = payload.length > maxPayload
+        ? '${payload.substring(0, maxPayload)}…'
+        : payload;
     return 'RoadSOS $st$loc$p';
   }
 
@@ -349,16 +362,14 @@ class EmergencySmsDispatchService {
       } else {
         appLog.w('India ERSS ingest HTTP ${response.statusCode}');
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('India ERSS ingest failed', error: e, stackTrace: st);
     }
   }
 
   static Future<bool> _postJson(String url, Map<String, dynamic> body) async {
     try {
-      final headers = <String, String>{
-        'Content-Type': 'application/json',
-      };
+      final headers = <String, String>{'Content-Type': 'application/json'};
       final secret = dotenv.env['SMS_DISPATCH_ANON_KEY']?.trim();
       if (secret != null && secret.isNotEmpty) {
         headers['Authorization'] = 'Bearer $secret';
@@ -367,7 +378,7 @@ class EmergencySmsDispatchService {
           .post(Uri.parse(url), headers: headers, body: jsonEncode(body))
           .timeout(const Duration(seconds: 15));
       return response.statusCode >= 200 && response.statusCode < 300;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('SMS HTTP dispatch error', error: e, stackTrace: st);
       return false;
     }

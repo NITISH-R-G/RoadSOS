@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/emergency_orchestrator.dart';
 
-/// SOSSideEffectObserver: Handles platform side-effects (TTS, Haptics) 
+/// SOSSideEffectObserver: Handles platform side-effects (TTS, Haptics)
 /// based on SOS state changes. Decouples UI logic from services.
 class SOSSideEffectObserver extends ConsumerWidget {
   const SOSSideEffectObserver({super.key});
@@ -23,9 +23,11 @@ class SOSSideEffectObserver extends ConsumerWidget {
     switch (phase) {
       case SOSPhase.active:
         HapticFeedback.heavyImpact();
-        ref.read(voiceAssistantServiceProvider).speak(
-          'SOS is live. Help is on the way. Your location and medical profile are being broadcasted.'
-        );
+        ref
+            .read(voiceAssistantServiceProvider)
+            .speak(
+              'SOS is live. Help is on the way. Your location and medical profile are being broadcasted.',
+            );
         break;
       case SOSPhase.triaging:
         HapticFeedback.mediumImpact();
