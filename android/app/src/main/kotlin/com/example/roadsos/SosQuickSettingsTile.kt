@@ -10,6 +10,7 @@ import android.service.quicksettings.TileService
 import androidx.annotation.RequiresApi
 import id.flutter.flutter_background_service.FlutterBackgroundServicePlugin
 import org.json.JSONObject
+import com.roadsos.app.R
 
 // SharedPreferences written by both the tile and Flutter (via MainActivity
 // MethodChannel "setCrashMonitorActive") to keep crash-monitor state in sync.
