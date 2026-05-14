@@ -886,7 +886,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           .map((e) => e['display_name'] as String)
                           .toList();
                     }
-                  } catch (e) {
+                  } on Object catch (e) {
                     appLog.w('Error fetching location suggestions: $e');
                   }
                   return const Iterable<String>.empty();

@@ -180,7 +180,7 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
         return (data['text'] as String).trim();
       }
       return null;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d('[Assistant] Gemma 4 cloud generate failed', error: e, stackTrace: st);
       return null;
     }

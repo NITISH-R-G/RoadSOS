@@ -61,7 +61,7 @@ class SceneSecurityService {
 
       final clear = await _aead.decrypt(secretBox, secretKey: secretKey);
       return utf8.decode(clear);
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }

@@ -279,7 +279,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
           .read(locationServiceProvider)
           .getCurrentLocation()
           .timeout(_sosLocationTimeout);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[Orchestrator] Location acquisition timed out/failed', error: e, stackTrace: st);
       location = LocationFix(
         latitude: 0,
@@ -362,7 +362,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             languageCode: locale.languageCode,
           )
           .timeout(_sosTriageTimeout);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[Orchestrator] Triage timed out/failed — using safety fallback', error: e, stackTrace: st);
       rawTriage = TriageResult(
         functionCall: 'dispatch_emergency',
@@ -449,7 +449,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             return fallback;
           },
         );
-      } catch (_) {
+      } on Object catch (_) {
         _patchDispatchChannel(id, DispatchChannelLifecycle.failed, failureDetail);
         return fallback;
       }
@@ -569,7 +569,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         familyFuture,
         nearbyFuture,
       ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 1));
-    } catch (e, st) {
+    } on Object catch (e, st) {
       // Absolute guard: never hang in dispatching.
       appLog.w('[Orchestrator] Dispatch futures did not complete in time', error: e, stackTrace: st);
       await failOpenToActive('Dispatch timed out — take manual action (dial emergency number).');
@@ -743,7 +743,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             ? 'Saved on device. Sync is enabled when network allows.'
             : 'Saved on device. Cloud sync needs Supabase credentials.',
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('Local incident insert failed', error: e, stackTrace: st);
       return (ok: false, detail: 'Could not save incident log on device.');
     }
@@ -752,7 +752,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   bool _hasSupabaseSession() {
     try {
       return Supabase.instance.client.auth.currentSession != null;
-    } catch (_) {
+    } on Object catch (_) {
       return false;
     }
   }
@@ -787,7 +787,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       } else {
         appLog.w('[Orchestrator] Could not launch dialer for $contact');
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.e('[Orchestrator] Error launching dialer', error: e, stackTrace: st);
     }
   }

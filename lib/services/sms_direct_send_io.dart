@@ -48,7 +48,7 @@ Future<bool> sendSmsDirectAndroidImpl(String number, String message) async {
       appLog.w('[SmsDirect] launchUrl returned false for SMS URI');
     }
     return launched;
-  } catch (e, st) {
+  } on Object catch (e, st) {
     appLog.w('[SmsDirect] SMS launch failed', error: e, stackTrace: st);
     return false;
   }

@@ -106,7 +106,7 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
         _phase = _Phase.prompt;
         _errorMessage = e.message;
       });
-    } catch (e) {
+    } on Object catch (e) {
       if (!mounted) return;
       setState(() {
         _phase = _Phase.prompt;

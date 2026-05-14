@@ -54,7 +54,7 @@ class DrivingModeService extends StateNotifier<DrivingMode> {
           distanceFilter: 20,
         ),
       ).listen(_onPosition, onError: (Object _) {});
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 
   void _onPosition(Position p) {

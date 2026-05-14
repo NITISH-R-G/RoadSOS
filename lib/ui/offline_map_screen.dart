@@ -124,7 +124,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
       });
 
       // No await on completion: download runs in foreground thread; UI updates via stream.
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('Offline map download failed', error: e, stackTrace: st);
       if (!mounted) return;
       setState(() {
@@ -138,7 +138,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen> {
   Future<void> _cancelDownload() async {
     try {
       await FMTCStore(kFmtcRoadsosOsmStore).download.cancel();
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('FMTC download cancel failed', error: e, stackTrace: st);
     }
     if (!mounted) return;

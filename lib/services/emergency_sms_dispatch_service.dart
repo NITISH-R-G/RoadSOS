@@ -349,7 +349,7 @@ class EmergencySmsDispatchService {
       } else {
         appLog.w('India ERSS ingest HTTP ${response.statusCode}');
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('India ERSS ingest failed', error: e, stackTrace: st);
     }
   }
@@ -367,7 +367,7 @@ class EmergencySmsDispatchService {
           .post(Uri.parse(url), headers: headers, body: jsonEncode(body))
           .timeout(const Duration(seconds: 15));
       return response.statusCode >= 200 && response.statusCode < 300;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('SMS HTTP dispatch error', error: e, stackTrace: st);
       return false;
     }

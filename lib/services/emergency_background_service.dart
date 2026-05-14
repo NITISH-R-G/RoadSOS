@@ -79,7 +79,7 @@ class EmergencyBackgroundService {
       );
       _initialized = true;
       appLog.i('[BgService] Foreground service configured.');
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[BgService] Configure failed', error: e, stackTrace: st);
     }
   }
@@ -157,7 +157,7 @@ class EmergencyBackgroundService {
       } else {
         appLog.d('[BgService] Battery optimization exemption already granted.');
       }
-    } catch (e) {
+    } on Object catch (e) {
       appLog.w('[BgService] Battery exemption request failed: $e');
     }
   }

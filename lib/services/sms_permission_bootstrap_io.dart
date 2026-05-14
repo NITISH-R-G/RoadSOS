@@ -15,7 +15,7 @@ Future<void> requestSmsPermissionEarlyIfAndroidImpl() async {
     // Intentionally no-op: direct SEND_SMS is increasingly restricted by OS/policy.
     // RoadSOS uses server relay (Twilio / Edge Function) and SMS-app intent fallback.
     await Permission.sms.status; // keep plugin warmed for health checks if needed
-  } catch (e, st) {
+  } on Object catch (e, st) {
     appLog.w(
       'Startup SMS permission request failed',
       error: e,

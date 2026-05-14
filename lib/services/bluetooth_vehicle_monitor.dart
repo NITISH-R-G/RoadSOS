@@ -82,14 +82,14 @@ class BluetoothVehicleMonitor {
         },
         onError: (Object _) {},
       );
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 
   void _poll() {
     List<BluetoothDevice> devices;
     try {
       devices = FlutterBluePlus.connectedDevices;
-    } catch (_) {
+    } on Object catch (_) {
       return; // BT not available on this device.
     }
 

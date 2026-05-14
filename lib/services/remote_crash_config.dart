@@ -300,7 +300,7 @@ class RemoteCrashConfig {
       await _persistThresholdsToCache();
       appLog.i('[RemoteCrashConfig] Thresholds refreshed: '
           '${rows.length} rows, zones=${_values.keys.toList()}');
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[RemoteCrashConfig] Threshold fetch failed — cached values in use',
           error: e, stackTrace: st);
     }
@@ -327,7 +327,7 @@ class RemoteCrashConfig {
             maxLng: (row['max_lng'] as num).toDouble(),
             priority: (row['priority'] as num).toInt(),
           ));
-        } catch (_) {}
+        } on Object catch (_) {}
       }
 
       _regions
@@ -336,7 +336,7 @@ class RemoteCrashConfig {
 
       await _persistRegionsToCache();
       appLog.i('[RemoteCrashConfig] Regions refreshed: ${_regions.length} geofences');
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[RemoteCrashConfig] Region fetch failed — cached regions in use',
           error: e, stackTrace: st);
     }
@@ -355,7 +355,7 @@ class RemoteCrashConfig {
         final inner = entry.value as Map<String, dynamic>;
         _values[entry.key] = inner.map((k, v) => MapEntry(k, (v as num).toDouble()));
       }
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[RemoteCrashConfig] Threshold cache empty (first run): $e');
     }
   }
@@ -364,7 +364,7 @@ class RemoteCrashConfig {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_cacheKey, jsonEncode(_values));
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[RemoteCrashConfig] Threshold cache write failed: $e');
     }
   }
@@ -388,7 +388,7 @@ class RemoteCrashConfig {
           priority: (m['priority'] as num).toInt(),
         ));
       }
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[RemoteCrashConfig] Region cache empty (first run): $e');
     }
   }
@@ -408,7 +408,7 @@ class RemoteCrashConfig {
               })
           .toList();
       await prefs.setString(_regionsCacheKey, jsonEncode(list));
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[RemoteCrashConfig] Region cache write failed: $e');
     }
   }

@@ -158,7 +158,7 @@ class AgentHealthService {
         return AgentReadiness.unavailable;
       }
       return AgentReadiness.ready;
-    } catch (_) {
+    } on Object catch (_) {
       return AgentReadiness.degraded;
     }
   }
@@ -173,7 +173,7 @@ class AgentHealthService {
       // Fallback: open SMS app intent (no permission). If relay isn't configured,
       // we mark this as degraded (still usable, but requires user interaction).
       return AgentReadiness.degraded;
-    } catch (_) {
+    } on Object catch (_) {
       return AgentReadiness.degraded;
     }
   }
@@ -182,7 +182,7 @@ class AgentHealthService {
     try {
       final status = await Permission.bluetooth.status;
       return status.isGranted ? AgentReadiness.ready : AgentReadiness.degraded;
-    } catch (_) {
+    } on Object catch (_) {
       return AgentReadiness.degraded;
     }
   }

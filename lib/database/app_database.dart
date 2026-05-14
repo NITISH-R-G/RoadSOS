@@ -33,7 +33,7 @@ Future<void> bootstrapSupabaseAuth() async {
     await ensureSupabaseAnonymousSession(Supabase.instance.client);
     _supabaseSdkInitialized = true;
     appLog.i('Supabase anonymous sign-in completed.');
-  } catch (e, st) {
+  } on Object catch (e, st) {
     _supabaseSdkInitialized = false;
     appLog.e('Supabase bootstrap failed', error: e, stackTrace: st);
   }
@@ -53,12 +53,12 @@ Future<void> ensureSupabaseAnonymousSession(SupabaseClient client) async {
         if (after != null && !after.isExpired) {
           return;
         }
-      } catch (e, st) {
+      } on Object catch (e, st) {
         appLog.w('Session refresh failed; re-authenticating', error: e, stackTrace: st);
       }
     }
     await client.auth.signInAnonymously();
-  } catch (e, st) {
+  } on Object catch (e, st) {
     appLog.w('Anonymous auth failed', error: e, stackTrace: st);
   }
 }
@@ -103,7 +103,7 @@ class SupabaseConnector extends PowerSyncBackendConnector {
         }
       }
       await transaction.complete();
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.e('PowerSync upload error', error: e, stackTrace: st);
     }
   }
@@ -159,7 +159,7 @@ Future<void> initializeDatabase() async {
     appDb.connect(connector: SupabaseConnector(Supabase.instance.client));
     _dbInitialized = true;
     appLog.i('PowerSync + Supabase initialized.');
-  } catch (e, st) {
+  } on Object catch (e, st) {
     appLog.e('Database initialization failed', error: e, stackTrace: st);
     _dbInitialized = false;
   }

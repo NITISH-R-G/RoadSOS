@@ -79,7 +79,7 @@ class FamilyTrackingService {
         'expires_at': expiresAt.toIso8601String(),
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('incident_live_links insert failed', error: e, stackTrace: st);
       return (
         ok: false,

@@ -154,7 +154,7 @@ class _IncidentReportingScreenState
         _sceneImageBytes = bytes;
         _sceneCaptureBusy = false;
       });
-    } catch (_) {
+    } on Object catch (_) {
       // On emulators/devices without camera, fall back to gallery.
       try {
         final file = await _picker.pickImage(
@@ -173,7 +173,7 @@ class _IncidentReportingScreenState
           _sceneImageBytes = bytes;
           _sceneCaptureBusy = false;
         });
-      } catch (e) {
+      } on Object {
         if (!mounted) return;
         setState(() => _sceneCaptureBusy = false);
         ScaffoldMessenger.of(context).showSnackBar(

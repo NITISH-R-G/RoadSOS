@@ -33,7 +33,7 @@ class PrivacyConsentService {
   static Future<bool> extendedRetentionForUploads() async {
     try {
       return await extendedCloudRetentionEnabled();
-    } catch (_) {
+    } on Object catch (_) {
       return false;
     }
   }

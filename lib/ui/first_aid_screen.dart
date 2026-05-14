@@ -63,7 +63,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
       setState(() {
         _result = res;
       });
-    } catch (e) {
+    } on Object {
       setState(() {
         _error = 'Could not load first-aid guidance on this device.';
       });

@@ -40,7 +40,7 @@ class GyroscopeFusionService {
       );
       _available = true;
       appLog.d('[Gyro] Gyroscope fusion tracking started');
-    } catch (e) {
+    } on Object catch (e) {
       _available = false;
       appLog.d('[Gyro] Gyroscope unavailable on this device: $e');
     }

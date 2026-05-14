@@ -28,7 +28,7 @@ class WakeLockService {
       await WakelockPlus.enable();
       _held = true;
       appLog.i('[WakeLock] Screen wake lock acquired for active SOS');
-    } catch (e) {
+    } on Object catch (e) {
       appLog.w('[WakeLock] Failed to acquire: $e');
     }
   }
@@ -40,7 +40,7 @@ class WakeLockService {
       await WakelockPlus.disable();
       _held = false;
       appLog.d('[WakeLock] Screen wake lock released');
-    } catch (e) {
+    } on Object catch (e) {
       appLog.w('[WakeLock] Failed to release: $e');
     }
   }

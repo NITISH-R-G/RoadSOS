@@ -106,7 +106,7 @@ class SafeWalkNotificationService {
           iOS: DarwinNotificationDetails(),
         ),
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('Safe Walk local notification failed', error: e, stackTrace: st);
     }
   }
@@ -114,7 +114,7 @@ class SafeWalkNotificationService {
   Future<void> cancelCheckInNotification() async {
     try {
       await _local.cancel(id: _checkInNotificationId);
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 
   /// Best-effort foreground prompt for users already in-app.

@@ -21,13 +21,13 @@ class RuntimeConfig {
   static Future<void> bootstrap() async {
     try {
       dotenv.env.clear();
-    } catch (_) {}
+    } on Object catch (_) {}
 
     if (!kReleaseMode) {
       try {
         await dotenv.load(fileName: '.env');
         appLog.i('Loaded local .env for development');
-      } catch (_) {}
+      } on Object catch (_) {}
     }
 
     // ── Backend / cloud ────────────────────────────────────────────────────

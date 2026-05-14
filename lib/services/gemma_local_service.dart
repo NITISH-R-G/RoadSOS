@@ -62,7 +62,7 @@ class GemmaLocalService {
           '  Model not downloaded yet? Run model download during onboarding.',
         );
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       _lastError = 'Init error: $e';
       _available = false;
       appLog.w('[GemmaLocal] Init failed', error: e, stackTrace: st);
@@ -115,7 +115,7 @@ class GemmaLocalService {
       appLog.d('[GemmaLocal] loadModel() succeeded');
     } on NoSuchMethodError {
       appLog.d('[GemmaLocal] loadModel() not in this build — will pass via init()');
-    } catch (e) {
+    } on Object catch (e) {
       appLog.w('[GemmaLocal] loadModel() threw: $e — trying init() fallback');
     }
 
@@ -151,7 +151,7 @@ class GemmaLocalService {
           );
         }
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[GemmaLocal] flutter_gemma init() failed', error: e, stackTrace: st);
       return null;
     }
@@ -187,7 +187,7 @@ class GemmaLocalService {
         appLog.d('[GemmaLocal] On-device triage: severity=${parsed['severity_level']}');
       }
       return parsed;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[GemmaLocal] Inference failed — marking tier unavailable', error: e, stackTrace: st);
       _available = false; // Fall through to Tier 3 on next call
       _lastError = 'Inference error: $e';
@@ -201,7 +201,7 @@ class GemmaLocalService {
     try {
       final result = await _plugin!.getResponse(prompt: prompt);
       return result;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[GemmaLocal] generate() failed', error: e, stackTrace: st);
       _available = false;
       return null;
@@ -215,7 +215,7 @@ class GemmaLocalService {
       await for (final token in _plugin!.getResponseAsync(prompt: prompt)) {
         if (token != null) yield token;
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[GemmaLocal] generateStream() failed', error: e, stackTrace: st);
     }
   }
@@ -251,7 +251,7 @@ class GemmaLocalService {
       if (s < 0 || e <= s) return null;
       final decoded = jsonDecode(text.substring(s, e + 1));
       return decoded is Map<String, dynamic> ? decoded : null;
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }
