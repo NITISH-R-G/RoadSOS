@@ -13,17 +13,21 @@ import '../logging/app_log.dart';
 ///   • Cancel in-progress download
 ///   • Delete to reclaim space
 ///
-/// Model: gemma-4-e4b-it-Q4_K_M.gguf (~2.4 GB)
-/// Source: https://huggingface.co/google/gemma-4-E4B-it-GGUF
+/// Model: gemma-4-E4B-it-Q4_K_M.gguf (~2.4 GB)
+/// Source: https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF
 ///
-/// **NO TOKEN REQUIRED.** Gemma 4 (released Apr 2026) is **Apache 2.0** +
-/// **ungated** on Hugging Face — the earlier code's HF-token gate was
-/// inherited from the Gemma 2 days when the license required acceptance
-/// and is now pure friction that drives users to skip the download.
-/// Downloads now run anonymous-HTTPS with optional token override for
-/// users behind a rate-limited HF mirror.
+/// **NO TOKEN REQUIRED.** Gemma 4 weights are Apache 2.0, but Google's
+/// **official** repo `google/gemma-4-E4B-it-GGUF` still gates the resolve
+/// endpoint behind a click-through terms screen + HF login (returns HTTP
+/// 401 to anonymous fetches as of May 2026). The Unsloth, ggml-org, and
+/// bartowski mirrors redistribute the **identical model bytes** under the
+/// same Apache 2.0 license with no gating — verified 302→CDN on anonymous
+/// `curl` from a clean IP. We point at Unsloth (most-downloaded GGUF
+/// publisher, maintained by the same team behind unsloth.ai's training
+/// stack) so the auto-installer just works without any HF account.
 class GemmaModelManager {
-  static const _modelFileName = 'gemma-4-e4b-it-Q4_K_M.gguf';
+  /// Filename — matches Unsloth's casing for the Q4_K_M quant.
+  static const _modelFileName = 'gemma-4-E4B-it-Q4_K_M.gguf';
 
   /// Minimum sane file size: anything under 800 MB is definitely truncated.
   static const int expectedMinBytes = 800 * 1024 * 1024;
@@ -31,16 +35,22 @@ class GemmaModelManager {
   /// Approximate full model size — used for progress UI when Content-Length is missing.
   static const int approximateFullBytes = 2_400_000_000;
 
-  /// HuggingFace download URL. Apache 2.0 + ungated — no Authorization header
-  /// needed. We keep an optional token override for users who hit an HF
-  /// rate-limit on a shared IP (very rare for one-time downloads).
+  /// Primary download URL — Unsloth mirror (no auth required, identical bytes
+  /// to Google's official repo, Apache 2.0).
   static const String modelDownloadUrl =
-      'https://huggingface.co/google/gemma-4-E4B-it-GGUF/resolve/main/$_modelFileName';
+      'https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/$_modelFileName';
+
+  /// Fallback mirrors in case the primary is rate-limited or in maintenance.
+  /// Tried in order; all hold the same Apache 2.0 weights.
+  static const List<String> modelDownloadFallbackUrls = [
+    'https://huggingface.co/ggml-org/gemma-4-E4B-it-GGUF/resolve/main/$_modelFileName',
+    'https://huggingface.co/bartowski/google_gemma-4-E4B-it-GGUF/resolve/main/google_gemma-4-E4B-it-Q4_K_M.gguf',
+  ];
 
   /// Model card — opens in browser if the user wants to read the license /
   /// model card before downloading. Not required to proceed.
   static const String hfModelCardUrl =
-      'https://huggingface.co/google/gemma-4-E4B-it-GGUF';
+      'https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF';
 
   /// Optional HF token override page (only needed for very-high-volume IPs).
   static const String hfTokenUrl = 'https://huggingface.co/settings/tokens';
@@ -112,6 +122,44 @@ class GemmaModelManager {
     required void Function(int received, int total) onProgress,
     CancelToken? cancelToken,
   }) async {
+    final candidateUrls = <String>[
+      modelDownloadUrl,
+      ...modelDownloadFallbackUrls,
+    ];
+    GemmaDownloadException? lastErr;
+    for (final url in candidateUrls) {
+      if (cancelToken?.isCancelled ?? false) return;
+      try {
+        await _downloadFromUrl(
+          url: url,
+          hfToken: hfToken,
+          onProgress: onProgress,
+          cancelToken: cancelToken,
+        );
+        return; // success
+      } on GemmaDownloadException catch (e) {
+        lastErr = e;
+        // Only fail-over on auth-ish / rate-limit responses; bubble unknown
+        // errors so the caller can show a clean message.
+        if (e.statusCode != 401 &&
+            e.statusCode != 403 &&
+            e.statusCode != 404 &&
+            e.statusCode != 429) {
+          rethrow;
+        }
+        appLog.w('[GemmaModel] $url failed (${e.statusCode}); trying next mirror');
+      }
+    }
+    throw lastErr ??
+        const GemmaDownloadException('All Gemma 4 mirrors are unreachable.');
+  }
+
+  static Future<void> _downloadFromUrl({
+    required String url,
+    String? hfToken,
+    required void Function(int received, int total) onProgress,
+    CancelToken? cancelToken,
+  }) async {
     final path = await localModelPath();
     final tmpPath = '$path.download';
     final tmpFile = File(tmpPath);
@@ -120,7 +168,9 @@ class GemmaModelManager {
     int alreadyHave = 0;
     if (tmpFile.existsSync()) {
       alreadyHave = tmpFile.lengthSync();
-      appLog.i('[GemmaModel] Resuming download from ${(alreadyHave / 1e6).round()} MB');
+      appLog.i(
+        '[GemmaModel] Resuming download from ${(alreadyHave / 1e6).round()} MB ($url)',
+      );
     }
 
     final headers = <String, String>{
@@ -133,7 +183,7 @@ class GemmaModelManager {
     final client = http.Client();
 
     try {
-      final request = http.Request('GET', Uri.parse(modelDownloadUrl));
+      final request = http.Request('GET', Uri.parse(url));
       request.headers.addAll(headers);
       final response = await client.send(request);
 
@@ -142,19 +192,25 @@ class GemmaModelManager {
         final body = await response.stream.bytesToString();
         if (response.statusCode == 401 || response.statusCode == 403) {
           throw GemmaDownloadException(
-            'Hugging Face refused the request (HTTP ${response.statusCode}). '
-            'This is unusual for Gemma 4 (Apache 2.0 + ungated). Most likely '
-            'cause: a shared IP / VPN hit anonymous rate-limits. '
-            'Workaround: create a free read token at $hfTokenUrl and paste it '
-            'in Settings → Advanced.',
+            'Hugging Face mirror $url refused the request (HTTP '
+            '${response.statusCode}). Trying the next mirror — if all fail, '
+            'paste an HF read token in Settings → Advanced as a workaround.',
             statusCode: response.statusCode,
           );
         }
         if (response.statusCode == 429) {
           throw GemmaDownloadException(
-            'Hugging Face rate-limit reached (HTTP 429). Try again in a few '
-            'minutes, or add an HF read token in Settings → Advanced.',
+            'Hugging Face rate-limited mirror $url (HTTP 429). Will retry on '
+            'the next Wi-Fi event, or paste an HF read token in Settings → '
+            'Advanced to override.',
             statusCode: response.statusCode,
+          );
+        }
+        if (response.statusCode == 404) {
+          throw GemmaDownloadException(
+            'Mirror $url is missing the expected GGUF file (HTTP 404). Trying '
+            'the next mirror.',
+            statusCode: 404,
           );
         }
         throw GemmaDownloadException(
