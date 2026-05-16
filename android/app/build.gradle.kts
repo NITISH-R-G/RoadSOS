@@ -25,7 +25,7 @@ android {
         // flutter_webrtc 0.12.x requires minSdk 23 (Android 6.0).
         // Bumped from flutter.minSdkVersion (21) so the WebRTC in-app voice
         // call between Family Circle peers can compile + ship.
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -62,16 +62,20 @@ android {
         }
     }
 
-    // Split APKs per ABI so each download is ~30-45 MB instead of ~90 MB.
-    // Controlled by --split-per-abi in the Flutter CLI (see build_apk.yml).
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("arm64-v8a", "armeabi-v7a", "x86_64")
-            isUniversalApk = false
-        }
-    }
+    // Per-ABI split is opt-in via the Flutter CLI flag `--split-per-abi`
+    // (see build_apk.yml). When that flag is set, Flutter 3.41 itself drives
+    // `ndk.abiFilters` per output via `flutter.targetPlatforms`, so a static
+    // `splits.abi { include(...) }` block here conflicts with the
+    // auto-injected `ndk.abiFilters` and breaks every `flutter build apk` /
+    // `assembleDebug` invocation:
+    //
+    //   Conflicting configuration : 'armeabi-v7a,arm64-v8a,x86_64' in ndk
+    //   abiFilters cannot be present when splits abi filters are set.
+    //
+    // The CI workflow that wants per-ABI APKs already uses
+    // `flutter build apk --split-per-abi`, which is enough. Leaving the
+    // explicit `splits.abi` block here for "just in case" was actively
+    // breaking debug builds and judge-demo APKs.
 }
 
 flutter {

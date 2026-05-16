@@ -1,4 +1,4 @@
-package com.example.roadsos
+package com.roadsos.app
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
