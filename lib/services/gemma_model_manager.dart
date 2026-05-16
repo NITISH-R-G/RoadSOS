@@ -14,11 +14,14 @@ import '../logging/app_log.dart';
 ///   • Delete to reclaim space
 ///
 /// Model: gemma-4-e4b-it-Q4_K_M.gguf (~2.4 GB)
-/// Source: https://huggingface.co/google/gemma-4-e4b-it-GGUF
+/// Source: https://huggingface.co/google/gemma-4-E4B-it-GGUF
 ///
-/// IMPORTANT — gated model:
-/// The user must accept Gemma terms on HuggingFace and provide a read token.
-/// See [GemmaModelDownloadScreen] for the onboarding UI.
+/// **NO TOKEN REQUIRED.** Gemma 4 (released Apr 2026) is **Apache 2.0** +
+/// **ungated** on Hugging Face — the earlier code's HF-token gate was
+/// inherited from the Gemma 2 days when the license required acceptance
+/// and is now pure friction that drives users to skip the download.
+/// Downloads now run anonymous-HTTPS with optional token override for
+/// users behind a rate-limited HF mirror.
 class GemmaModelManager {
   static const _modelFileName = 'gemma-4-e4b-it-Q4_K_M.gguf';
 
@@ -28,15 +31,25 @@ class GemmaModelManager {
   /// Approximate full model size — used for progress UI when Content-Length is missing.
   static const int approximateFullBytes = 2_400_000_000;
 
-  /// HuggingFace download URL.
+  /// HuggingFace download URL. Apache 2.0 + ungated — no Authorization header
+  /// needed. We keep an optional token override for users who hit an HF
+  /// rate-limit on a shared IP (very rare for one-time downloads).
   static const String modelDownloadUrl =
-      'https://huggingface.co/google/gemma-4-e4b-it-GGUF/resolve/main/$_modelFileName';
+      'https://huggingface.co/google/gemma-4-E4B-it-GGUF/resolve/main/$_modelFileName';
 
-  /// HuggingFace terms acceptance page (user must visit before downloading).
-  static const String hfTermsUrl = 'https://huggingface.co/google/gemma-4-e4b-it-GGUF';
+  /// Model card — opens in browser if the user wants to read the license /
+  /// model card before downloading. Not required to proceed.
+  static const String hfModelCardUrl =
+      'https://huggingface.co/google/gemma-4-E4B-it-GGUF';
 
-  /// HuggingFace token creation page.
+  /// Optional HF token override page (only needed for very-high-volume IPs).
   static const String hfTokenUrl = 'https://huggingface.co/settings/tokens';
+
+  /// SharedPreferences keys.
+  static const String prefAutoDownloadOptOut =
+      'gemma_auto_download_opt_out_v1';
+  static const String prefAutoDownloadInFlight =
+      'gemma_auto_download_in_flight_v1';
 
   // ── Path ──────────────────────────────────────────────────────────────────
 
@@ -85,15 +98,17 @@ class GemmaModelManager {
 
   /// Downloads the Gemma 4 E4B model from HuggingFace.
   ///
-  /// [hfToken] — HuggingFace read token (required — model is gated)
-  /// [onProgress] — called with (bytesReceived, totalBytes) — totalBytes may be
-  ///   [approximateFullBytes] if the server omits Content-Length.
+  /// [hfToken] — **optional** HuggingFace read token. Gemma 4 is Apache 2.0
+  /// and ungated, so the anonymous request works for nearly every user; the
+  /// token is only useful when sharing an IP that hit HF's anon rate limit.
+  /// [onProgress] — called with (bytesReceived, totalBytes) — totalBytes may
+  /// be [approximateFullBytes] if the server omits Content-Length.
   /// [cancelToken] — call [CancelToken.cancel] to abort; partial file is kept
-  ///   so the next call resumes from where it left off.
+  /// so the next call resumes from where it left off.
   ///
   /// Throws [GemmaDownloadException] on auth failure or unexpected HTTP error.
   static Future<void> downloadModel({
-    required String hfToken,
+    String? hfToken,
     required void Function(int received, int total) onProgress,
     CancelToken? cancelToken,
   }) async {
@@ -109,9 +124,10 @@ class GemmaModelManager {
     }
 
     final headers = <String, String>{
-      'Authorization': 'Bearer ${hfToken.trim()}',
       'User-Agent': 'RoadSOS/1.0 (Gemma 4 Good Hackathon)',
       if (alreadyHave > 0) 'Range': 'bytes=$alreadyHave-',
+      if (hfToken != null && hfToken.trim().isNotEmpty)
+        'Authorization': 'Bearer ${hfToken.trim()}',
     };
 
     final client = http.Client();
@@ -126,10 +142,18 @@ class GemmaModelManager {
         final body = await response.stream.bytesToString();
         if (response.statusCode == 401 || response.statusCode == 403) {
           throw GemmaDownloadException(
-            'Access denied (HTTP ${response.statusCode}).\n\n'
-            '1. Accept Gemma 4 terms at: $hfTermsUrl\n'
-            '2. Generate a read token at: $hfTokenUrl\n'
-            '3. Paste the token here and try again.',
+            'Hugging Face refused the request (HTTP ${response.statusCode}). '
+            'This is unusual for Gemma 4 (Apache 2.0 + ungated). Most likely '
+            'cause: a shared IP / VPN hit anonymous rate-limits. '
+            'Workaround: create a free read token at $hfTokenUrl and paste it '
+            'in Settings → Advanced.',
+            statusCode: response.statusCode,
+          );
+        }
+        if (response.statusCode == 429) {
+          throw GemmaDownloadException(
+            'Hugging Face rate-limit reached (HTTP 429). Try again in a few '
+            'minutes, or add an HF read token in Settings → Advanced.',
             statusCode: response.statusCode,
           );
         }

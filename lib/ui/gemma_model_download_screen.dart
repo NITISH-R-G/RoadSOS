@@ -69,10 +69,6 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
 
   Future<void> _startDownload() async {
     final token = _tokenController.text.trim();
-    if (token.isEmpty) {
-      setState(() => _errorMessage = 'Paste your HuggingFace read token above first.');
-      return;
-    }
     setState(() {
       _phase = _Phase.downloading;
       _errorMessage = null;
@@ -81,7 +77,7 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
 
     try {
       await GemmaModelManager.downloadModel(
-        hfToken: token,
+        hfToken: token.isEmpty ? null : token,
         cancelToken: _cancelToken,
         onProgress: (received, total) {
           if (!mounted) return;
@@ -272,11 +268,13 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
           style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 10),
-        _stepRow('1', 'Accept Gemma 4 terms',
-            'Required by Google before downloading', GemmaModelManager.hfTermsUrl),
-        _stepRow('2', 'Create a read token',
-            'Free account required', GemmaModelManager.hfTokenUrl),
-        _stepRow('3', 'Paste it below', 'Token is used for this download only', null),
+        _stepRow('1', 'View model card (optional)',
+            'Gemma 4 is Apache 2.0 + ungated — no terms to accept',
+            GemmaModelManager.hfModelCardUrl),
+        _stepRow('2', 'Create a read token (only if rate-limited)',
+            'Most users skip this step', GemmaModelManager.hfTokenUrl),
+        _stepRow('3', 'Tap Download',
+            'Empty token field is fine for nearly every user', null),
       ],
     );
   }

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../database/app_database.dart';
+import '../database/app_database.dart' show isSupabaseSdkInitialized, ensureSupabaseAnonymousSession;
 import '../logging/app_log.dart';
 
 /// A member of a Family Circle (mapped from `family_circle_members` + auth uid).
@@ -182,19 +182,38 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
     }
   }
 
+  Future<void> _retryAnonSignIn() async {
+    if (!isSupabaseSdkInitialized) return;
+    try {
+      await ensureSupabaseAnonymousSession(Supabase.instance.client);
+    } catch (e, st) {
+      appLog.d('[FamilyCircle] anon sign-in retry failed', stackTrace: st);
+    }
+  }
+
   Future<void> _bootstrap() async {
     if (!_hasSession) return;
     await refresh();
   }
 
   /// Reload circles + members + initial live snapshot. Re-subscribes realtime.
+  ///
+  /// If [_hasSession] is false but Supabase SDK is initialized, transparently
+  /// retries anonymous sign-in once before giving up. This handles the
+  /// first-launch race where the user reached the dashboard before the
+  /// background sign-in finished.
   Future<void> refresh() async {
+    if (!_hasSession) {
+      await _retryAnonSignIn();
+    }
     if (!_hasSession) {
       state = state.copyWith(
         circles: const [],
         members: const [],
         livePositions: const {},
-        lastError: 'Sign in (anonymous Supabase auth) to use Family Circle.',
+        lastError: isSupabaseSdkInitialized
+            ? 'Sign-in to Supabase is still completing — tap Refresh in a moment.'
+            : 'Family Circle needs Supabase credentials. Add SUPABASE_URL + SUPABASE_ANON_KEY to your build (see README) and restart the app.',
       );
       return;
     }

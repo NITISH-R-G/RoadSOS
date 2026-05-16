@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../services/gemma_model_manager.dart';
-import 'gemma_model_download_screen.dart';
 import 'permission_onboarding_screen.dart';
 
 const _kPermsDone = 'permissions_onboarding_v1_done';
@@ -37,39 +35,19 @@ class _OnboardingGateState extends State<OnboardingGate> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final permsDone = prefs.getBool(_kPermsDone) ?? false;
-    final modelPromptDone = prefs.getBool(_kModelPromptDone) ?? false;
-    final modelReady = await GemmaModelManager.isModelReady();
 
     if (!mounted) return;
-
-    if (!permsDone) {
-      setState(() => _phase = _GatePhase.permissions);
-    } else if (!modelPromptDone && !modelReady) {
-      setState(() => _phase = _GatePhase.modelDownload);
-    } else {
-      setState(() => _phase = _GatePhase.app);
-    }
+    setState(() {
+      _phase = permsDone ? _GatePhase.app : _GatePhase.permissions;
+    });
   }
 
   Future<void> _onPermsDone() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kPermsDone, true);
-    if (!mounted) return;
-
-    // Check if model is already downloaded before showing prompt.
-    final modelReady = await GemmaModelManager.isModelReady();
-    final modelPromptDone = prefs.getBool(_kModelPromptDone) ?? false;
-
-    if (!mounted) return;
-    if (!modelPromptDone && !modelReady) {
-      setState(() => _phase = _GatePhase.modelDownload);
-    } else {
-      setState(() => _phase = _GatePhase.app);
-    }
-  }
-
-  Future<void> _onModelPhaseDone() async {
-    final prefs = await SharedPreferences.getInstance();
+    // Mark the legacy "model download screen" as done so users on existing
+    // installs skip the obsolete HF-token wall. The new
+    // GemmaAutoDownloader takes over silently in the background.
     await prefs.setBool(_kModelPromptDone, true);
     if (!mounted) return;
     setState(() => _phase = _GatePhase.app);
@@ -85,12 +63,10 @@ class _OnboardingGateState extends State<OnboardingGate> {
         );
       case _GatePhase.permissions:
         return PermissionOnboardingScreen(onComplete: _onPermsDone);
-      case _GatePhase.modelDownload:
-        return GemmaModelDownloadScreen(onComplete: _onModelPhaseDone);
       case _GatePhase.app:
         return widget.child;
     }
   }
 }
 
-enum _GatePhase { loading, permissions, modelDownload, app }
+enum _GatePhase { loading, permissions, app }
