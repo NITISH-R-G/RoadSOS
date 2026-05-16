@@ -62,3 +62,7 @@ graphify-out/
 
 # Local developer secrets (root only; committed template is assets/.env)
 /.env
+
+# Supabase CLI transient state (version cache, local stack metadata)
+supabase/.temp/
+supabase/.branches/
