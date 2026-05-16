@@ -1,4 +1,6 @@
+// ignore_for_file: experimental_member_use
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:torch_light/torch_light.dart';
 import 'package:just_audio/just_audio.dart';
@@ -105,15 +107,13 @@ class EmergencyBeaconService {
 
   Future<void> _startSiren() async {
     try {
-      // Note: User must add emergency_siren.mp3 to assets/audio/
-      // and define it in pubspec.yaml for this to play.
-      // If asset missing, it fails silently with a log.
-      await _player.setAsset('assets/audio/emergency_siren.mp3');
+      final source = _SirenAudioSource();
+      await _player.setAudioSource(source);
       await _player.setLoopMode(LoopMode.one);
-      await _player.setVolume(1.0); // 100% volume
+      await _player.setVolume(1.0);
       await _player.play();
     } catch (e) {
-      appLog.d('[BEACON] Siren asset not found or failed to play: $e');
+      appLog.d('[BEACON] Siren failed to play: $e');
     }
   }
 
@@ -124,3 +124,74 @@ class EmergencyBeaconService {
 }
 
 final emergencyBeaconServiceProvider = Provider((ref) => EmergencyBeaconService.instance);
+
+/// Generates a two-tone siren WAV (880Hz / 660Hz alternating) entirely in memory.
+/// No external asset file required.
+class _SirenAudioSource extends StreamAudioSource {
+  static const int _sampleRate = 44100;
+  static const int _channels = 1;
+  static const int _bitsPerSample = 16;
+  static const double _durationSec = 2.0;
+  static const double _freqHigh = 880.0;
+  static const double _freqLow = 660.0;
+
+  late final Uint8List _bytes;
+
+  _SirenAudioSource() {
+    _bytes = _generateSirenWav();
+  }
+
+  Uint8List _generateSirenWav() {
+    final numSamples = (_sampleRate * _durationSec).toInt();
+    final dataSize = numSamples * _channels * (_bitsPerSample ~/ 8);
+    final fileSize = 44 + dataSize;
+
+    final buffer = ByteData(fileSize);
+    var offset = 0;
+
+    void writeString(String s) {
+      for (var i = 0; i < s.length; i++) {
+        buffer.setUint8(offset++, s.codeUnitAt(i));
+      }
+    }
+
+    // WAV header
+    writeString('RIFF');
+    buffer.setUint32(offset, fileSize - 8, Endian.little); offset += 4;
+    writeString('WAVE');
+    writeString('fmt ');
+    buffer.setUint32(offset, 16, Endian.little); offset += 4;
+    buffer.setUint16(offset, 1, Endian.little); offset += 2; // PCM
+    buffer.setUint16(offset, _channels, Endian.little); offset += 2;
+    buffer.setUint32(offset, _sampleRate, Endian.little); offset += 4;
+    buffer.setUint32(offset, _sampleRate * _channels * (_bitsPerSample ~/ 8), Endian.little); offset += 4;
+    buffer.setUint16(offset, _channels * (_bitsPerSample ~/ 8), Endian.little); offset += 2;
+    buffer.setUint16(offset, _bitsPerSample, Endian.little); offset += 2;
+    writeString('data');
+    buffer.setUint32(offset, dataSize, Endian.little); offset += 4;
+
+    // Alternating tone: first half high, second half low
+    final halfSamples = numSamples ~/ 2;
+    for (var i = 0; i < numSamples; i++) {
+      final freq = i < halfSamples ? _freqHigh : _freqLow;
+      final sample = (sin(2 * pi * freq * i / _sampleRate) * 32000).toInt();
+      buffer.setInt16(offset, sample, Endian.little);
+      offset += 2;
+    }
+
+    return buffer.buffer.asUint8List();
+  }
+
+  @override
+  Future<StreamAudioResponse> request([int? start, int? end]) async {
+    final s = start ?? 0;
+    final e = end ?? _bytes.length;
+    return StreamAudioResponse(
+      sourceLength: _bytes.length,
+      contentLength: e - s,
+      offset: s,
+      stream: Stream.value(_bytes.sublist(s, e)),
+      contentType: 'audio/wav',
+    );
+  }
+}

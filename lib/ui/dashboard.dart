@@ -28,6 +28,7 @@ import 'sos_activity_log_screen.dart';
 import 'sos_countdown_widget.dart';
 import 'sos_side_effect_observer.dart';
 import 'status_indicator.dart';
+import 'vehicle_rescue_screen.dart';
 import 'triage_result_card.dart';
 import 'vital_scan_screen.dart';
 
@@ -431,6 +432,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const ResponderDashboard()),
+          ),
+        ),
+        _toolCard(
+          context,
+          icon: Icons.car_crash,
+          color: const Color(0xFFFF5722),
+          title: 'Vehicle Rescue',
+          subtitle: 'Offline extraction guide by vehicle type',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const VehicleRescueScreen()),
           ),
         ),
 
