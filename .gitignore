@@ -17,6 +17,8 @@
 !.cursor/agents/
 !.cursor/agents/**
 !.cursor/hooks.json
+!.cursor/environment.json
+!.cursor/setup.sh
 .svn/
 .swiftpm/
 migrate_working_dir/
