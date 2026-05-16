@@ -24,6 +24,7 @@ import 'profile_editor_screen.dart';
 import 'responder_dashboard.dart';
 import 'bystander_coach_screen.dart';
 import 'family_circle_screen.dart';
+import 'gemma_status_banner.dart';
 import 'safe_walk_overlay.dart';
 import 'settings_screen.dart';
 import 'sos_activity_log_screen.dart';
@@ -400,6 +401,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ),
         ),
         const SizedBox(height: 16),
+
+        // Auto-Gemma install + readiness banner (hides itself when ready).
+        const GemmaStatusBanner(),
 
         // ── Emergency Response ──────────────────────────────────────────
         _sectionLabel('EMERGENCY RESPONSE'),

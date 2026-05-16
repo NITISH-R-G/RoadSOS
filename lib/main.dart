@@ -26,6 +26,7 @@ import 'ui/dashboard.dart';
 import 'ui/consent_screen.dart';
 import 'ui/onboarding_gate.dart';
 import 'ui/voice_call_overlay.dart';
+import 'services/gemma_auto_downloader.dart';
 import 'services/webrtc_voice_call_service.dart';
 import 'services/privacy_consent_service.dart';
 import 'services/nearby_sos_push_service.dart';
@@ -225,6 +226,10 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
     ref.watch(sosLocationTrackerProvider);
     // Keeps the WebRTC ringer subscribed for incoming Family Circle calls.
     ref.watch(webRtcVoiceCallServiceProvider);
+    // Kicks off the Gemma-4 background download on first WiFi (silent, no
+    // token, ungated). Without this watch the provider is lazy and the
+    // 2.4 GB download never starts until the user opens Bystander Coach.
+    ref.watch(gemmaAutoDownloaderProvider);
 
     final sosPhase =
         ref.watch(emergencyOrchestratorProvider.select((s) => s.phase));
