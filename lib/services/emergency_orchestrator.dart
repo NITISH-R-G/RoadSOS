@@ -22,6 +22,7 @@ import 'facility_query_service.dart';
 import 'facility_sync_service.dart';
 import 'sos_activity_log_service.dart';
 import 'family_tracking_service.dart';
+import 'structured_sms_service.dart';
 import 'privacy_consent_service.dart';
 import 'driving_mode_service.dart';
 import 'wake_lock_service.dart';
@@ -478,10 +479,28 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return meshOk;
     });
 
+    // Build the rich, dispatcher-friendly SMS body. Falls back to the legacy
+    // compressedPayload if the structured builder fails (must never throw).
+    String smsBody;
+    try {
+      smsBody = await _ref
+          .read(structuredSmsServiceProvider)
+          .buildStructured112Sms(
+            incidentId: state.incidentId ?? '',
+            location: location,
+            triage: triage,
+          )
+          .timeout(const Duration(seconds: 3));
+    } catch (e, st) {
+      appLog.w('[Orchestrator] structured SMS build failed — using legacy payload',
+          error: e, stackTrace: st);
+      smsBody = triage.compressedPayload;
+    }
+
     final smsFuture = guard<SmsDispatchOutcome>(
       id: 'sms',
       future: _dispatchSmsWithRetry(
-        triage.compressedPayload,
+        smsBody,
         lat: location.latitude,
         lng: location.longitude,
       ),
