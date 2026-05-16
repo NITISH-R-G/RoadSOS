@@ -22,7 +22,9 @@ import 'facility_query_service.dart';
 import 'facility_sync_service.dart';
 import 'sos_activity_log_service.dart';
 import 'family_tracking_service.dart';
+import 'family_circle_service.dart';
 import 'structured_sms_service.dart';
+import 'webrtc_voice_call_service.dart';
 import 'privacy_consent_service.dart';
 import 'driving_mode_service.dart';
 import 'wake_lock_service.dart';
@@ -435,6 +437,12 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     unawaited(_notifyUser());
     unawaited(_callEmergencyContact());
 
+    // Family Circle: start broadcasting SOS-mode live position to peers and
+    // try a WebRTC voice ring to the first peer (only fires if signed in to
+    // Supabase + the user has a circle with at least one other member).
+    unawaited(_publishSosToFamilyCircle(location));
+    unawaited(_ringFirstFamilyCirclePeer());
+
     Future<T> guard<T>({
       required String id,
       required Future<T> future,
@@ -813,6 +821,51 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
   Future<void> _notifyUser() async {
     await EmergencyNotificationService.instance.showSosActiveNotification();
+  }
+
+  Future<void> _publishSosToFamilyCircle(LocationFix location) async {
+    try {
+      final profile = _ref.read(userProfileProvider);
+      await _ref.read(familyCircleServiceProvider.notifier).startPublishing(
+            mode: FamilyPublishMode.sos,
+            displayName: profile.fullName.trim().isEmpty
+                ? 'RoadSOS user'
+                : profile.fullName.trim(),
+          );
+    } catch (e, st) {
+      appLog.d('[Orchestrator] family circle SOS publish failed',
+          stackTrace: st);
+    }
+  }
+
+  Future<void> _ringFirstFamilyCirclePeer() async {
+    try {
+      final circle = _ref.read(familyCircleServiceProvider);
+      if (circle.members.isEmpty) return;
+      String? client;
+      try {
+        client = Supabase.instance.client.auth.currentUser?.id;
+      } catch (_) {}
+      if (client == null) return;
+      // Find the first member that is NOT the current user.
+      final peer = circle.members.firstWhere(
+        (m) => m.userId != client,
+        orElse: () => circle.members.first,
+      );
+      if (peer.userId == client) return;
+      final res = await _ref
+          .read(webRtcVoiceCallServiceProvider.notifier)
+          .startCall(
+            calleeId: peer.userId,
+            peerName: peer.displayName,
+            isEmergency: true,
+          );
+      if (res.error != null) {
+        appLog.d('[Orchestrator] family ring skipped: ${res.error}');
+      }
+    } catch (e, st) {
+      appLog.d('[Orchestrator] family ring failed', stackTrace: st);
+    }
   }
 }
 

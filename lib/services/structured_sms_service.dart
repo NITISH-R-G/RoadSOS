@@ -44,10 +44,13 @@ class StructuredSmsService {
     required String incidentId,
     required LocationFix location,
     required TriageResult triage,
+    UserProfile? profileOverride,
+    bool useGemma = true,
   }) async {
     final route = resolveIndiaEmergencyRoute(location.latitude, location.longitude);
     final stateCode = route?.stateCode ?? 'IN';
-    final profile = _ref.read(userProfileProvider);
+    final UserProfile profile =
+        profileOverride ?? _ref.read(userProfileProvider);
     final idShort = incidentId.replaceAll('-', '').padRight(8, '0').substring(0, 8);
 
     final servicesShort = _shortServices(triage.requiredServices);
@@ -65,18 +68,20 @@ class StructuredSmsService {
       idShort: idShort,
     );
 
-    final gemmaText = await _tryGemmaCompose(
-      stateCode: stateCode,
-      stateName: route?.stateName ?? 'Unknown',
-      lat: location.latitude,
-      lng: location.longitude,
-      severity: triage.severityLevel,
-      services: triage.requiredServices,
-      profile: profile,
-      idShort: idShort,
-      vitals: vitals,
-      deterministicFallback: deterministic,
-    );
+    final gemmaText = useGemma
+        ? await _tryGemmaCompose(
+            stateCode: stateCode,
+            stateName: route?.stateName ?? 'Unknown',
+            lat: location.latitude,
+            lng: location.longitude,
+            severity: triage.severityLevel,
+            services: triage.requiredServices,
+            profile: profile,
+            idShort: idShort,
+            vitals: vitals,
+            deterministicFallback: deterministic,
+          )
+        : null;
 
     final chosen = gemmaText ?? deterministic;
     final trimmed = _truncateGsm7Safe(chosen, kMaxStructured112SmsLength);

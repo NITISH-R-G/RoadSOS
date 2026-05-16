@@ -44,9 +44,11 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
 
     <!-- ═══════════════════════════════════════════════════════════════
-         VOICE — STT for in-car SOS voice confirmation
+         VOICE — STT for in-car SOS voice confirmation; mic + audio routing
+         for WebRTC in-app Family Circle voice calls (speakerphone toggle).
     ═══════════════════════════════════════════════════════════════ -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <!-- ═══════════════════════════════════════════════════════════════
          FOREGROUND SERVICE — EmergencyBackgroundService

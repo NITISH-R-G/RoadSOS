@@ -11,6 +11,7 @@ import '../services/family_circle_service.dart';
 import '../services/family_tracking_service.dart';
 import '../services/sms_direct_send.dart';
 import '../services/user_profile_service.dart';
+import '../services/webrtc_voice_call_service.dart';
 
 /// Family Circle: list of trusted peers, live map of their positions, invite +
 /// redeem flows. Map uses the same `flutter_map` + OSM tiles used elsewhere in
@@ -308,12 +309,34 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
                   ],
                 ),
               ),
-              if (!isSelf && m.phoneE164 != null)
+              if (!isSelf) ...[
                 IconButton(
-                  tooltip: 'Call',
-                  onPressed: () => launchUrl(Uri.parse('tel:${m.phoneE164}')),
-                  icon: const Icon(Icons.call, color: Color(0xFF00B8A0)),
+                  tooltip: 'Voice call in app',
+                  onPressed: () async {
+                    final res = await ref
+                        .read(webRtcVoiceCallServiceProvider.notifier)
+                        .startCall(
+                          calleeId: m.userId,
+                          peerName: m.displayName,
+                        );
+                    if (!context.mounted) return;
+                    if (res.error != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(res.error!)),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.headset_mic,
+                      color: Color(0xFF5C7CFA)),
                 ),
+                if (m.phoneE164 != null)
+                  IconButton(
+                    tooltip: 'PSTN call',
+                    onPressed: () =>
+                        launchUrl(Uri.parse('tel:${m.phoneE164}')),
+                    icon: const Icon(Icons.call, color: Color(0xFF00B8A0)),
+                  ),
+              ],
             ],
           ),
         );

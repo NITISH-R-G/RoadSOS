@@ -22,7 +22,10 @@ android {
 
     defaultConfig {
         applicationId = "com.roadsos.app"
-        minSdk = flutter.minSdkVersion
+        // flutter_webrtc 0.12.x requires minSdk 23 (Android 6.0).
+        // Bumped from flutter.minSdkVersion (21) so the WebRTC in-app voice
+        // call between Family Circle peers can compile + ship.
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
