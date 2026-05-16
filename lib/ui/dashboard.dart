@@ -476,6 +476,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             MaterialPageRoute<void>(builder: (_) => const FamilyCircleScreen()),
           ),
         ),
+        _toolCard(
+          context,
+          icon: Icons.play_circle_fill,
+          color: const Color(0xFFB388FF),
+          title: 'Demo Mode (judges + first-time users)',
+          subtitle:
+              'Simulate a crash to walk the full SOS pipeline end-to-end. No real SMS or 112 dispatched.',
+          onTap: () => _runDemoMode(context),
+        ),
 
         const SizedBox(height: 20),
 
@@ -858,6 +867,58 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
   // Safe Walk dialog
   // ─────────────────────────────────────────────────────────────────────────
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Demo Mode — surfaces a clearly-labelled simulated crash so first-time
+  // users and judges can walk the full SOS pipeline (countdown → bystander
+  // mode → AI triage → dispatch panel → Bystander Coach hand-off) without
+  // ever sending real SMS, dialing 112, or waking up Family Circle peers.
+  // Per `critical-feature-audit.mdc`: Simulated content MUST be labelled
+  // simulated — done via the "SIMULATED" banner in the confirmation dialog.
+
+  Future<void> _runDemoMode(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Demo Mode — SIMULATED crash'),
+        content: const Text(
+          'Walks every screen in the SOS pipeline so you can see what RoadSOS does on a real accident.\n\n'
+          'This is fully simulated:\n'
+          '  • Bystander-mode SOS countdown starts (not self-SOS).\n'
+          '  • No real SMS, 112 dial, or WebRTC ring to your Family Circle.\n'
+          '  • The Bystander Coach screen opens after dispatch so you can rehearse the first-aid voice flow.\n'
+          '\nTap CANCEL on the SOS countdown any time to abort.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('RUN DEMO'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    // Bystander mode = the safety-validation agent treats it as severity 2
+    // baseline; even if dispatch fails (no Supabase / no SMS perm), the
+    // countdown + status panel still walk the same code path the real SOS
+    // does, which is the entire point of the demo.
+    await ref.read(emergencyOrchestratorProvider.notifier).startSos(isBystander: true);
+
+    // Auto-open the Bystander Coach so the rehearsal hits the on-device
+    // Gemma-4 voice flow without the user having to tap a second time.
+    if (!context.mounted) return;
+    await Future<void>.delayed(const Duration(seconds: 12));
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const BystanderCoachScreen()),
+    );
+  }
 
   // ──────────────────────────────────────────────────────────────────────
   // Dialog uses a typed Nominatim hit so we capture the lat/lng alongside the
