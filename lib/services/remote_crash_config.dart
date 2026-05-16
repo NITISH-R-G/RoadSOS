@@ -166,8 +166,10 @@ class RemoteCrashConfig {
   /// the network. Falls through to hardcoded defaults if no cache exists.
   Future<void> loadCachedValues() async {
     await Future.wait([_loadThresholdsFromCache(), _loadRegionsFromCache()]);
-    appLog.d('[RemoteCrashConfig] Cache loaded. '
-        'zones=${_values.keys.toList()} regions=${_regions.length}');
+    appLog.d(
+      '[RemoteCrashConfig] Cache loaded. '
+      'zones=${_values.keys.toList()} regions=${_regions.length}',
+    );
   }
 
   // ── Phase 2: Remote fetch ──────────────────────────────────────────────────
@@ -183,7 +185,10 @@ class RemoteCrashConfig {
       appLog.d('[RemoteCrashConfig] Skipping refresh — Supabase not ready');
       return;
     }
-    await Future.wait([_fetchThresholdsFromSupabase(), _fetchRegionsFromSupabase()]);
+    await Future.wait([
+      _fetchThresholdsFromSupabase(),
+      _fetchRegionsFromSupabase(),
+    ]);
   }
 
   /// Start periodic background refresh every [refreshInterval].
@@ -196,8 +201,10 @@ class RemoteCrashConfig {
       appLog.d('[RemoteCrashConfig] Periodic refresh triggered');
       refresh();
     });
-    appLog.i('[RemoteCrashConfig] Periodic refresh armed: every '
-        '${refreshInterval.inMinutes} min');
+    appLog.i(
+      '[RemoteCrashConfig] Periodic refresh armed: every '
+      '${refreshInterval.inMinutes} min',
+    );
   }
 
   /// Call when the app returns to foreground so threshold changes propagate
@@ -225,8 +232,10 @@ class RemoteCrashConfig {
       if (region.contains(lat, lng)) {
         final newZone = _parseZone(region.zone);
         if (newZone != _currentZone || _currentRegionName != region.name) {
-          appLog.d('[RemoteCrashConfig] Zone ← region "${region.name}" '
-              '(${region.zone}): $_currentZone → $newZone');
+          appLog.d(
+            '[RemoteCrashConfig] Zone ← region "${region.name}" '
+            '(${region.zone}): $_currentZone → $newZone',
+          );
           _currentZone = newZone;
           _currentRegionName = region.name;
         }
@@ -280,7 +289,9 @@ class RemoteCrashConfig {
           .timeout(const Duration(seconds: 5));
 
       if (rows.isEmpty) {
-        appLog.d('[RemoteCrashConfig] crash_config table empty — defaults retained');
+        appLog.d(
+          '[RemoteCrashConfig] crash_config table empty — defaults retained',
+        );
         return;
       }
 
@@ -298,11 +309,16 @@ class RemoteCrashConfig {
         ..addAll(fetched);
 
       await _persistThresholdsToCache();
-      appLog.i('[RemoteCrashConfig] Thresholds refreshed: '
-          '${rows.length} rows, zones=${_values.keys.toList()}');
+      appLog.i(
+        '[RemoteCrashConfig] Thresholds refreshed: '
+        '${rows.length} rows, zones=${_values.keys.toList()}',
+      );
     } catch (e, st) {
-      appLog.w('[RemoteCrashConfig] Threshold fetch failed — cached values in use',
-          error: e, stackTrace: st);
+      appLog.w(
+        '[RemoteCrashConfig] Threshold fetch failed — cached values in use',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -318,15 +334,17 @@ class RemoteCrashConfig {
       final fetched = <_ConfigRegion>[];
       for (final row in rows) {
         try {
-          fetched.add(_ConfigRegion(
-            name: row['name'] as String,
-            zone: row['zone'] as String,
-            minLat: (row['min_lat'] as num).toDouble(),
-            maxLat: (row['max_lat'] as num).toDouble(),
-            minLng: (row['min_lng'] as num).toDouble(),
-            maxLng: (row['max_lng'] as num).toDouble(),
-            priority: (row['priority'] as num).toInt(),
-          ));
+          fetched.add(
+            _ConfigRegion(
+              name: row['name'] as String,
+              zone: row['zone'] as String,
+              minLat: (row['min_lat'] as num).toDouble(),
+              maxLat: (row['max_lat'] as num).toDouble(),
+              minLng: (row['min_lng'] as num).toDouble(),
+              maxLng: (row['max_lng'] as num).toDouble(),
+              priority: (row['priority'] as num).toInt(),
+            ),
+          );
         } catch (_) {}
       }
 
@@ -335,10 +353,15 @@ class RemoteCrashConfig {
         ..addAll(fetched);
 
       await _persistRegionsToCache();
-      appLog.i('[RemoteCrashConfig] Regions refreshed: ${_regions.length} geofences');
+      appLog.i(
+        '[RemoteCrashConfig] Regions refreshed: ${_regions.length} geofences',
+      );
     } catch (e, st) {
-      appLog.w('[RemoteCrashConfig] Region fetch failed — cached regions in use',
-          error: e, stackTrace: st);
+      appLog.w(
+        '[RemoteCrashConfig] Region fetch failed — cached regions in use',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -353,7 +376,9 @@ class RemoteCrashConfig {
       _values.clear();
       for (final entry in decoded.entries) {
         final inner = entry.value as Map<String, dynamic>;
-        _values[entry.key] = inner.map((k, v) => MapEntry(k, (v as num).toDouble()));
+        _values[entry.key] = inner.map(
+          (k, v) => MapEntry(k, (v as num).toDouble()),
+        );
       }
     } catch (e) {
       appLog.d('[RemoteCrashConfig] Threshold cache empty (first run): $e');
@@ -378,15 +403,17 @@ class RemoteCrashConfig {
       _regions.clear();
       for (final item in list) {
         final m = item as Map<String, dynamic>;
-        _regions.add(_ConfigRegion(
-          name: m['name'] as String,
-          zone: m['zone'] as String,
-          minLat: (m['min_lat'] as num).toDouble(),
-          maxLat: (m['max_lat'] as num).toDouble(),
-          minLng: (m['min_lng'] as num).toDouble(),
-          maxLng: (m['max_lng'] as num).toDouble(),
-          priority: (m['priority'] as num).toInt(),
-        ));
+        _regions.add(
+          _ConfigRegion(
+            name: m['name'] as String,
+            zone: m['zone'] as String,
+            minLat: (m['min_lat'] as num).toDouble(),
+            maxLat: (m['max_lat'] as num).toDouble(),
+            minLng: (m['min_lng'] as num).toDouble(),
+            maxLng: (m['max_lng'] as num).toDouble(),
+            priority: (m['priority'] as num).toInt(),
+          ),
+        );
       }
     } catch (e) {
       appLog.d('[RemoteCrashConfig] Region cache empty (first run): $e');
@@ -397,15 +424,17 @@ class RemoteCrashConfig {
     try {
       final prefs = await SharedPreferences.getInstance();
       final list = _regions
-          .map((r) => {
-                'name': r.name,
-                'zone': r.zone,
-                'min_lat': r.minLat,
-                'max_lat': r.maxLat,
-                'min_lng': r.minLng,
-                'max_lng': r.maxLng,
-                'priority': r.priority,
-              })
+          .map(
+            (r) => {
+              'name': r.name,
+              'zone': r.zone,
+              'min_lat': r.minLat,
+              'max_lat': r.maxLat,
+              'min_lng': r.minLng,
+              'max_lng': r.maxLng,
+              'priority': r.priority,
+            },
+          )
           .toList();
       await prefs.setString(_regionsCacheKey, jsonEncode(list));
     } catch (e) {
@@ -427,11 +456,14 @@ class RemoteCrashConfig {
       _setZone(RoadZone.unknown, source: 'no-speed-data');
       return;
     }
-    final avg = _speedWindow.map((e) => e.$2).reduce((a, b) => a + b) /
+    final avg =
+        _speedWindow.map((e) => e.$2).reduce((a, b) => a + b) /
         _speedWindow.length;
     final zone = avg >= _highwaySpeedKmh ? RoadZone.highway : RoadZone.urban;
-    _setZone(zone,
-        source: 'speed-heuristic(avg=${avg.toStringAsFixed(1)} km/h)');
+    _setZone(
+      zone,
+      source: 'speed-heuristic(avg=${avg.toStringAsFixed(1)} km/h)',
+    );
   }
 
   void _setZone(RoadZone zone, {required String source}) {

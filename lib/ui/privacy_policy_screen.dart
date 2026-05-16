@@ -11,7 +11,10 @@ class PrivacyPolicyScreen extends StatefulWidget {
 }
 
 class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
-  static const _assets = ['assets/legal/privacy_policy_en.txt', 'assets/legal/privacy_policy_hi.txt'];
+  static const _assets = [
+    'assets/legal/privacy_policy_en.txt',
+    'assets/legal/privacy_policy_hi.txt',
+  ];
 
   int _tab = 0;
   String _en = '';
@@ -59,8 +62,14 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
             padding: const EdgeInsets.all(16),
             child: SegmentedButton<int>(
               segments: [
-                ButtonSegment(value: 0, label: Text(l10n.privacyPolicyLanguageEn)),
-                ButtonSegment(value: 1, label: Text(l10n.privacyPolicyLanguageHi)),
+                ButtonSegment(
+                  value: 0,
+                  label: Text(l10n.privacyPolicyLanguageEn),
+                ),
+                ButtonSegment(
+                  value: 1,
+                  label: Text(l10n.privacyPolicyLanguageHi),
+                ),
               ],
               selected: {_tab},
               onSelectionChanged: (s) => setState(() => _tab = s.first),
@@ -71,7 +80,11 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
               padding: const EdgeInsets.all(20),
               child: Text(
                 _tab == 0 ? _en : _hi,
-                style: const TextStyle(color: Colors.white70, height: 1.5, fontSize: 14),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  height: 1.5,
+                  fontSize: 14,
+                ),
               ),
             ),
           ),

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.roadsos.app"
+    namespace = "com.example.roadsos"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.roadsos.app"
+        applicationId = "com.example.roadsos"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
