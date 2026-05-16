@@ -29,8 +29,10 @@ class _SceneIntelligenceScreenState extends State<SceneIntelligenceScreen> {
 
   // ── Capture from camera ──
   Future<void> _captureFromCamera() async {
-    final XFile? photo =
-        await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+    final XFile? photo = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80,
+    );
     if (photo != null) {
       setState(() {
         _capturedImage = File(photo.path);
@@ -43,8 +45,10 @@ class _SceneIntelligenceScreenState extends State<SceneIntelligenceScreen> {
 
   // ── Pick from gallery ──
   Future<void> _pickFromGallery() async {
-    final XFile? photo =
-        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final XFile? photo = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     if (photo != null) {
       setState(() {
         _capturedImage = File(photo.path);
@@ -73,16 +77,17 @@ class _SceneIntelligenceScreenState extends State<SceneIntelligenceScreen> {
       const url =
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
-      final response = await http.post(
-        Uri.parse('$url?key=$apiKey'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [
-            {
-              'parts': [
+      final response = await http
+          .post(
+            Uri.parse('$url?key=$apiKey'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'contents': [
                 {
-                  'text':
-                      '''You are an emergency road accident AI assistant. Analyze this crash scene image and respond ONLY in this exact JSON format:
+                  'parts': [
+                    {
+                      'text':
+                          '''You are an emergency road accident AI assistant. Analyze this crash scene image and respond ONLY in this exact JSON format:
 {
   "severity": "CRITICAL | HIGH | MODERATE | LOW",
   "vehiclesInvolved": ["list of vehicle types seen"],
@@ -91,19 +96,20 @@ class _SceneIntelligenceScreenState extends State<SceneIntelligenceScreen> {
   "recommendedActions": ["list of 3-5 immediate actions for responder"],
   "callServices": ["108 - Ambulance", "101 - Fire Brigade", "100 - Police"] 
 }
-Only include services that are actually needed based on the scene.'''
+Only include services that are actually needed based on the scene.''',
+                    },
+                    {
+                      'inline_data': {
+                        'mime_type': 'image/jpeg',
+                        'data': base64Image,
+                      },
+                    },
+                  ],
                 },
-                {
-                  'inline_data': {
-                    'mime_type': 'image/jpeg',
-                    'data': base64Image,
-                  }
-                }
-              ]
-            }
-          ]
-        }),
-      ).timeout(const Duration(seconds: 20));
+              ],
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -150,14 +156,12 @@ Only include services that are actually needed based on the scene.'''
         ),
         title: const Text(
           'Scene Intelligence',
-          style: TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w900),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
         ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.blue.withOpacity(0.15),
               borderRadius: BorderRadius.circular(20),
@@ -167,11 +171,14 @@ Only include services that are actually needed based on the scene.'''
               children: [
                 Icon(Icons.psychology, color: Colors.blue, size: 14),
                 SizedBox(width: 4),
-                Text('AI ANALYSIS',
-                    style: TextStyle(
-                        color: Colors.blue,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  'AI ANALYSIS',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -210,10 +217,7 @@ Only include services that are actually needed based on the scene.'''
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.blue.shade900.withOpacity(0.6),
-            Colors.black
-          ],
+          colors: [Colors.blue.shade900.withOpacity(0.6), Colors.black],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -262,8 +266,9 @@ Only include services that are actually needed based on the scene.'''
               color: Colors.white.withOpacity(0.04),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: Colors.blue.withOpacity(0.3),
-                  style: BorderStyle.solid),
+                color: Colors.blue.withOpacity(0.3),
+                style: BorderStyle.solid,
+              ),
             ),
             child: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -292,8 +297,11 @@ Only include services that are actually needed based on the scene.'''
         // Gallery option
         TextButton.icon(
           onPressed: _pickFromGallery,
-          icon: const Icon(Icons.photo_library,
-              color: Colors.white38, size: 18),
+          icon: const Icon(
+            Icons.photo_library,
+            color: Colors.white38,
+            size: 18,
+          ),
           label: const Text(
             'Choose from gallery instead',
             style: TextStyle(color: Colors.white38, fontSize: 13),
@@ -413,7 +421,10 @@ Only include services that are actually needed based on the scene.'''
           Text(
             _errorMessage!,
             style: const TextStyle(
-                color: Colors.white, fontSize: 13, height: 1.6),
+              color: Colors.white,
+              fontSize: 13,
+              height: 1.6,
+            ),
           ),
         ],
       ),
@@ -497,8 +508,10 @@ Only include services that are actually needed based on the scene.'''
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('SCENE SEVERITY',
-                  style: TextStyle(color: Colors.white54, fontSize: 11)),
+              const Text(
+                'SCENE SEVERITY',
+                style: TextStyle(color: Colors.white54, fontSize: 11),
+              ),
               Text(
                 severity,
                 style: TextStyle(
@@ -515,10 +528,11 @@ Only include services that are actually needed based on the scene.'''
     );
   }
 
-  Widget _buildInfoCard(
-      {required String title,
-      required Color color,
-      required String content}) {
+  Widget _buildInfoCard({
+    required String title,
+    required Color color,
+    required String content,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -530,26 +544,35 @@ Only include services that are actually needed based on the scene.'''
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 12,
-                  letterSpacing: 1)),
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(content,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 13, height: 1.4)),
+          Text(
+            content,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildListCard(
-      {required String title,
-      required Color color,
-      required List<String> items,
-      bool numbered = false}) {
+  Widget _buildListCard({
+    required String title,
+    required Color color,
+    required List<String> items,
+    bool numbered = false,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -561,33 +584,40 @@ Only include services that are actually needed based on the scene.'''
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 12,
-                  letterSpacing: 1)),
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 8),
-          ...items.asMap().entries.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      numbered ? '${e.key + 1}. ' : '• ',
-                      style: TextStyle(
-                          color: color, fontWeight: FontWeight.bold),
+          ...items.asMap().entries.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    numbered ? '${e.key + 1}. ' : '• ',
+                    style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                  ),
+                  Expanded(
+                    child: Text(
+                      e.value,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
                     ),
-                    Expanded(
-                      child: Text(e.value,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              height: 1.4)),
-                    ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -605,34 +635,40 @@ Only include services that are actually needed based on the scene.'''
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('📞  CALL NOW',
-              style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 12,
-                  letterSpacing: 1)),
+          const Text(
+            '📞  CALL NOW',
+            style: TextStyle(
+              color: Colors.red,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 10),
-          ...services.map((s) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.call, size: 16),
-                    label: Text(s,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+          ...services.map(
+            (s) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.call, size: 16),
+                  label: Text(
+                    s,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
-              )),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -662,13 +698,10 @@ class SceneAnalysisResult {
   factory SceneAnalysisResult.fromJson(Map<String, dynamic> json) {
     return SceneAnalysisResult(
       severity: json['severity'] ?? 'UNKNOWN',
-      vehiclesInvolved:
-          List<String>.from(json['vehiclesInvolved'] ?? []),
+      vehiclesInvolved: List<String>.from(json['vehiclesInvolved'] ?? []),
       visibleInjuries: json['visibleInjuries'] ?? 'Unable to assess',
-      immediateRisks:
-          List<String>.from(json['immediateRisks'] ?? []),
-      recommendedActions:
-          List<String>.from(json['recommendedActions'] ?? []),
+      immediateRisks: List<String>.from(json['immediateRisks'] ?? []),
+      recommendedActions: List<String>.from(json['recommendedActions'] ?? []),
       callServices: List<String>.from(json['callServices'] ?? []),
     );
   }
