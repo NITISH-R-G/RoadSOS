@@ -103,7 +103,13 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
   MediaStream? _localStream;
   RealtimeChannel? _ringChannel;
   RealtimeChannel? _signalChannel;
+  Timer? _outgoingTimeout;
   final List<RTCIceCandidate> _pendingRemoteIce = [];
+
+  /// Outgoing call rings for at most this long before auto-marking as
+  /// `missed` and tearing down. Avoids forever-ringing when the callee's
+  /// app is killed and the realtime subscription never fires.
+  static const Duration _outgoingRingTimeout = Duration(seconds: 45);
 
   static const Map<String, dynamic> _rtcConfig = {
     'iceServers': [
@@ -220,6 +226,13 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
       await _sendSignal(callId, calleeId, 'offer', {
         'type': offer.type,
         'sdp': offer.sdp,
+      });
+
+      _outgoingTimeout?.cancel();
+      _outgoingTimeout = Timer(_outgoingRingTimeout, () {
+        if (state.phase == VoiceCallPhase.outgoing) {
+          unawaited(hangup(reason: 'missed'));
+        }
       });
 
       return (ok: true, error: null);
@@ -345,6 +358,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     _pc!.onConnectionState = (RTCPeerConnectionState s) {
       switch (s) {
         case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
+          _outgoingTimeout?.cancel();
           state = state.copyWith(phase: VoiceCallPhase.connected);
           break;
         case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
@@ -462,6 +476,8 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
   }
 
   Future<void> _teardown() async {
+    _outgoingTimeout?.cancel();
+    _outgoingTimeout = null;
     try {
       await _pc?.close();
     } catch (_) {}
