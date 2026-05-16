@@ -43,8 +43,9 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
 );
 ''');
 
-    final countRows =
-        await appDb.getAll('SELECT COUNT(*) AS c FROM first_aid_fts');
+    final countRows = await appDb.getAll(
+      'SELECT COUNT(*) AS c FROM first_aid_fts',
+    );
     final count = (countRows.first['c'] as num?)?.toInt() ?? 0;
 
     if (count == 0 && _corpusRows!.isNotEmpty) {
@@ -107,8 +108,8 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
     var bestScore = -1;
     Map<String, dynamic>? best;
     for (final row in _corpusRows!) {
-      final haystack =
-          '${row['title']} ${row['body']} ${row['tags']}'.toLowerCase();
+      final haystack = '${row['title']} ${row['body']} ${row['tags']}'
+          .toLowerCase();
       var score = 0;
       for (final t in tokens) {
         if (haystack.contains(t)) score += 3;

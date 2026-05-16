@@ -56,7 +56,6 @@ class _SOSCountdownWidgetState extends State<SOSCountdownWidget> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-
           // ── Countdown ring ────────────────────────────────────────────────
           Center(
             child: SizedBox(
@@ -110,10 +109,10 @@ class _SOSCountdownWidgetState extends State<SOSCountdownWidget> {
                   child: Text(
                     widget.warningText,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                          height: 1.35,
-                        ),
+                      color: scheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                    ),
                   ),
                 ),
               ],
@@ -178,7 +177,9 @@ class _CountdownRingPainter extends CustomPainter {
 
     // Progress arc
     final progressPaint = Paint()
-      ..color = progress > 0.3 ? const Color(0xFFFF453A) : const Color(0xFF880E1F)
+      ..color = progress > 0.3
+          ? const Color(0xFFFF453A)
+          : const Color(0xFF880E1F)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6
       ..strokeCap = StrokeCap.round;
