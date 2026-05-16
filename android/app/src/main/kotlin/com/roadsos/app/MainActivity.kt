@@ -1,4 +1,4 @@
-package com.example.roadsos
+package com.roadsos.app
 
 import android.content.Intent
 import android.provider.Settings

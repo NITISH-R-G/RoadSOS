@@ -58,6 +58,7 @@ dependencies:
   just_audio: ^0.9.36
   firebase_core: ^3.0.0
   firebase_messaging: ^15.0.0
+  flutter_webrtc: ^0.12.5
 
 dev_dependencies:
   flutter_test:

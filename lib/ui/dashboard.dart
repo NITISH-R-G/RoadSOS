@@ -22,6 +22,8 @@ import 'mesh_radar.dart';
 import 'offline_map_screen.dart';
 import 'profile_editor_screen.dart';
 import 'responder_dashboard.dart';
+import 'bystander_coach_screen.dart';
+import 'family_circle_screen.dart';
 import 'safe_walk_overlay.dart';
 import 'settings_screen.dart';
 import 'sos_activity_log_screen.dart';
@@ -443,6 +445,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const VehicleRescueScreen()),
+          ),
+        ),
+        _toolCard(
+          context,
+          icon: Icons.support_agent,
+          color: const Color(0xFF00B8A0),
+          title: 'Bystander Coach',
+          subtitle: 'On-device Gemma 4 walks you through first aid — offline',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const BystanderCoachScreen()),
+          ),
+        ),
+        _toolCard(
+          context,
+          icon: Icons.group,
+          color: const Color(0xFF5C7CFA),
+          title: 'Family Circle',
+          subtitle: 'Trusted contacts see you live during Safe Walk + SOS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const FamilyCircleScreen()),
           ),
         ),
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'emergency_orchestrator.dart';
+import 'family_circle_service.dart';
 import 'safe_walk_notification_service.dart';
 
 class ProactiveMonitorState {
@@ -59,6 +60,16 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
     _monitorTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       _checkSafety();
     });
+
+    // Go live for Family Circle peers. Fail-soft — if Supabase is offline or
+    // the user has no circle, this becomes a no-op and the timer-only Safe
+    // Walk still works.
+    unawaited(
+      _ref.read(familyCircleServiceProvider.notifier).startPublishing(
+            mode: FamilyPublishMode.safeWalk,
+            destination: dest,
+          ),
+    );
   }
 
   void _checkSafety() {
@@ -106,6 +117,7 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
     _monitorTimer?.cancel();
     _escalationTimer?.cancel();
     SafeWalkNotificationService.instance.cancelCheckInNotification();
+    unawaited(_ref.read(familyCircleServiceProvider.notifier).stopPublishing());
     state = ProactiveMonitorState();
   }
 }

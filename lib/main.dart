@@ -25,6 +25,8 @@ import 'services/sos_location_tracker.dart';
 import 'ui/dashboard.dart';
 import 'ui/consent_screen.dart';
 import 'ui/onboarding_gate.dart';
+import 'ui/voice_call_overlay.dart';
+import 'services/webrtc_voice_call_service.dart';
 import 'services/privacy_consent_service.dart';
 import 'services/nearby_sos_push_service.dart';
 import 'app_navigator.dart';
@@ -221,6 +223,8 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
     ref.watch(bluetoothVehicleMonitorProvider);
     ref.watch(inactivityCrashDetectorProvider);
     ref.watch(sosLocationTrackerProvider);
+    // Keeps the WebRTC ringer subscribed for incoming Family Circle calls.
+    ref.watch(webRtcVoiceCallServiceProvider);
 
     final sosPhase =
         ref.watch(emergencyOrchestratorProvider.select((s) => s.phase));
@@ -258,6 +262,16 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
       theme: theme,
       darkTheme: theme,
       themeMode: ThemeMode.dark,
+      // Wraps every route with a Stack so the WebRTC call overlay can render
+      // above whatever screen the user is on without each route opting in.
+      builder: (context, child) {
+        return Stack(
+          children: [
+            child ?? const SizedBox.shrink(),
+            const VoiceCallOverlay(),
+          ],
+        );
+      },
       home: _home(),
     );
   }
