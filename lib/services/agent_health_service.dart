@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
 import '../logging/app_log.dart';
@@ -132,13 +133,70 @@ class AgentHealthService {
     return _last;
   }
 
+  /// Cached probe result so we do not hammer the Edge Function on every poll.
+  AgentReadiness? _gemmaCloudCached;
+  DateTime _gemmaCloudCachedAt = DateTime(2000);
+
+  /// Real probe of the Gemma 4 cloud triage tier — issues a tiny HEAD/OPTIONS
+  /// request to the Supabase Edge Function. Connectivity is a necessary but
+  /// NOT sufficient signal: the device can be on Wi-Fi while the Edge
+  /// Function is down or `SUPABASE_URL` is unconfigured.
+  ///
+  /// Behaviour:
+  ///   - `NetworkQuality.none` → `unavailable` (short-circuit, no HTTP)
+  ///   - Missing `SUPABASE_URL` → `degraded` (on-device tier still works)
+  ///   - 200/204/401/405 on functions endpoint → `ready` (server alive)
+  ///   - 5xx or timeout (>2.5s) → `degraded`
+  ///   - Network error → `degraded`
+  ///
+  /// Cached for 25s to bound traffic from the 30s poller.
   Future<AgentReadiness> _checkGemmaCloud() async {
     final connectivity = _ref.read(connectivityServiceProvider);
-    return switch (connectivity.currentQuality) {
-      NetworkQuality.wifi     => AgentReadiness.ready,
-      NetworkQuality.cellular => AgentReadiness.ready,
-      NetworkQuality.none     => AgentReadiness.unavailable,
-    };
+    if (connectivity.currentQuality == NetworkQuality.none) {
+      _gemmaCloudCached = AgentReadiness.unavailable;
+      _gemmaCloudCachedAt = DateTime.now();
+      return AgentReadiness.unavailable;
+    }
+
+    final cached = _gemmaCloudCached;
+    if (cached != null &&
+        DateTime.now().difference(_gemmaCloudCachedAt).inSeconds < 25) {
+      return cached;
+    }
+
+    final supabaseUrl = dotenv.env['SUPABASE_URL']?.trim() ?? '';
+    if (supabaseUrl.isEmpty) {
+      _gemmaCloudCached = AgentReadiness.degraded;
+      _gemmaCloudCachedAt = DateTime.now();
+      return AgentReadiness.degraded;
+    }
+
+    final probeUri = Uri.parse(
+      supabaseUrl.endsWith('/')
+          ? '${supabaseUrl}functions/v1/triage-gemini'
+          : '$supabaseUrl/functions/v1/triage-gemini',
+    );
+
+    try {
+      // OPTIONS is the lightest call that confirms the function exists.
+      // Returns 200/204 if the function is deployed; 404 if missing.
+      final response = await http
+          .head(probeUri)
+          .timeout(const Duration(milliseconds: 2500));
+      final code = response.statusCode;
+      // 200/204 = OK, 401/405 = server alive but method/auth gating expected
+      final ready = code == 200 || code == 204 || code == 401 || code == 405;
+      final result =
+          ready ? AgentReadiness.ready : AgentReadiness.degraded;
+      _gemmaCloudCached = result;
+      _gemmaCloudCachedAt = DateTime.now();
+      return result;
+    } catch (e) {
+      appLog.d('[HealthCheck] Gemma cloud probe failed: $e');
+      _gemmaCloudCached = AgentReadiness.degraded;
+      _gemmaCloudCachedAt = DateTime.now();
+      return AgentReadiness.degraded;
+    }
   }
 
   Future<AgentReadiness> _checkGemmaOnDevice() async {
