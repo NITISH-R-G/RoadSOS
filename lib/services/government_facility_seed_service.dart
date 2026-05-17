@@ -22,32 +22,37 @@ class GovernmentFacilitySeedService {
 
     final list = decoded['facilities'] as List<dynamic>? ?? [];
     var n = 0;
+    final batchParameters = <List<Object?>>[];
     for (final item in list) {
       if (item is! Map<String, dynamic>) continue;
       final row = Map<String, dynamic>.from(item);
       final id = row['id']?.toString() ?? '';
       if (id.isEmpty) continue;
 
-      await db.execute(
+      batchParameters.add([
+        id,
+        row['name'] ?? 'Facility',
+        row['type'] ?? 'hospital',
+        (row['latitude'] as num).toDouble(),
+        (row['longitude'] as num).toDouble(),
+        row['contact_number'],
+        row['capabilities'],
+        row['data_source'] ?? 'gov',
+        row['state_code'],
+        row['district'],
+      ]);
+      n++;
+    }
+
+    if (batchParameters.isNotEmpty) {
+      await db.executeBatch(
         '''
         INSERT OR REPLACE INTO emergency_facilities
           (id, name, type, latitude, longitude, contact_number, capabilities, data_source, state_code, district)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''',
-        [
-          id,
-          row['name'] ?? 'Facility',
-          row['type'] ?? 'hospital',
-          (row['latitude'] as num).toDouble(),
-          (row['longitude'] as num).toDouble(),
-          row['contact_number'],
-          row['capabilities'],
-          row['data_source'] ?? 'gov',
-          row['state_code'],
-          row['district'],
-        ],
+        batchParameters,
       );
-      n++;
     }
 
     await prefs.setInt(_prefsKeyImportedVersion, v);
