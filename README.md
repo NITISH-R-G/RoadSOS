@@ -108,14 +108,17 @@ EmergencyOrchestrator
 
 ## Key Features
 
-- **Crash auto-detection** — multi-stage accelerometer + GPS fusion; configurable thresholds; false-positive resistant
-- **Gemma 4 vision triage** — crash-scene photo analyzed by Gemma 4 27B alongside voice description
-- **4-tier inference** — seamless degradation from cloud to on-device to deterministic
-- **Server-side SMS** — automated Twilio dispatch; works for unconscious victims; no API key on device
-- **BLE encrypted mesh** — AES-GCM beacon so nearby users see an alert even with no server
-- **First aid RAG** — 80+ entry SQLite FTS5 corpus; Gemma 4 E4B runs lookup on-device
+- **Crash auto-detection** — multi-stage accelerometer + GPS fusion; configurable thresholds; false-positive resistant; the resulting confidence is forwarded as the real `severity_hint` (1..5) into Gemma 4 triage
+- **Gemma 4 vision triage on the real SOS path** — `LastScenePhotoStore` arms the most recent crash-scene photo (Capture Scene UI) and the orchestrator passes it into Gemma 4 27B during auto-SOS, not just the bystander screen
+- **Gemma 4 RAG first aid** — the First Aid screen retrieves grounding from a SQLite FTS5 corpus, then Gemma 4 27B synthesises 1–6 calm locale-correct numbered steps (Hindi/Tamil/Telugu/Bengali/Marathi/English); falls back to the raw corpus row when cloud is down
+- **Gemma 4 scene classification + adaptive interview** — `RoadSosAssistantService` asks Gemma 4 27B to bucket the bystander's first sentence into collision / pedestrian / rollover / fire / unknown, and composes the FIRST follow-up question dynamically; keyword classifier is offline fallback only
+- **Real Supabase Realtime "nearby services" broadcast** — `NearbyServicesBroadcastService` publishes on `roadsos_nearby_sos` channel; reports honest typed outcomes (ok / skipped — not signed in / skipped — offline / failed); no more `Future.delayed(3s)` fake success
+- **4-tier inference** — seamless degradation from Gemma 4 27B cloud (+ vision) → Gemma 4 E4B on-device → weighted heuristic → keyword classifier
+- **Server-side SMS** — automated Twilio dispatch; works for unconscious victims; no API key on device; structured 112 SMS body includes real bystander-entered vitals (`H120,R28,O88`) instead of `C?B?Bl?` placeholder
+- **BLE encrypted mesh + real radar** — AES-GCM beacon plus a Bystander Radar that plots peers by real `(bearing, distance)` from BLE-decoded coordinates against device GPS (not hashCode-fake positions)
+- **Real agent health probe** — `AgentHealthService` HEADs the actual `triage-gemini` Edge Function with a 2.5 s timeout instead of mirroring connectivity state
 - **6 Indian languages** — English, Hindi, Bengali, Marathi, Tamil, Telugu; full localization
-- **Voice SOS** — TTS + STT for hands-busy emergencies
+- **Voice SOS** — TTS + STT for hands-busy emergencies; spoken countdown + post-dispatch triage summary in driving mode
 - **Offline maps** — PowerSync regional hospital/trauma center data; works offline
 - **Good Samaritan guidance** — Indian law explained in-app so bystanders know they're protected
 

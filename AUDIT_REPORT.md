@@ -4,6 +4,93 @@ This document tracks identified issues and their resolution status.
 
 ---
 
+## Sprint round (May 17, 2026) — "functionally dumb features" pass
+
+Brutal audit by the user: "go through the code and think of a person in a
+situation of an accident and see if it really helps". The following landmines
+were found and fixed across four agile sprints on branch
+`cursor/foolproof-features-and-gemma4-everywhere-bb8f`.
+
+### CRITICAL — Sprint 1
+- ✅ **Fake "nearby services broadcast" success** — `EmergencyOrchestrator`
+  used `Future.delayed(3s, () => true)` for the `nearby_services` dispatch
+  channel. UI claimed "Emergency alert broadcasted to nearby facilities ✓"
+  while nothing was sent. Replaced with `NearbyServicesBroadcastService`
+  that publishes on the Supabase Realtime channel `roadsos_nearby_sos`
+  (the same channel the bystander FCM relay was designed to mirror).
+  Reports honest typed outcomes (`ok` / `skipped — not signed in` /
+  `skipped — offline` / `failed`) with hard subscribe + send timeouts.
+- ✅ **Auto-SOS triage was text-only despite "+vision" marketing** —
+  `AiTriageService.triageEmergency()` hardcoded `scenePhoto = null`. Vision
+  only worked through the unused `triageWithScenePhoto()` API. New
+  `LastScenePhotoStore` is populated by Capture Scene and pulled by the
+  orchestrator (fresh ≤ 120 s) so the Gemma 4 27B vision tier actually
+  fires during real SOS. Stash is cleared after every dispatch.
+- ✅ **Hardcoded severity hint of 3 / 4** — `performTriage` and the safety
+  validator both received a constant severity hint regardless of how
+  violent the detected crash was. Crash detector now stashes
+  `CrashConfidenceResult` and exposes `recentSeverityHint()` (1..5, 30 s
+  freshness). Orchestrator forwards that value to both `performTriage()`
+  and `triageValidationAgent.validate(accelSeverityHint:)`.
+
+### HIGH — Sprint 2 (push Gemma 4 deeper)
+- ✅ **Structured 112 SMS vitals slot always literal `C?B?Bl?`** — now reads
+  from `vitalSignsProvider` and renders `H120,R28,O88` when the bystander
+  entered them in Vital Scan. Falls back to `?` triplet only when nothing
+  has been entered.
+- ✅ **AgentHealthService.gemmaCloud lied** — it mirrored connectivity
+  state and returned "ready" on Wi-Fi even when the Edge Function was
+  down. Now issues a tiny HEAD probe to the actual `triage-gemini`
+  endpoint with a 2.5 s timeout, cached for 25 s.
+- ✅ **RoadSosAssistantService scene detection was keyword matching** —
+  Hindi / mixed Hindi-English mostly landed in `unknown`. Now Gemma 4 27B
+  classifies first; keyword matcher is offline fallback only. The FIRST
+  interview question is also Gemma-composed (was previously a hardcoded
+  line from the canned 5-question script).
+
+### HIGH — Sprint 3 (radar + UI honesty)
+- ✅ **Bystander radar plotted hashCode-fake positions** — every peer dot
+  was placed at `angle = id.hashCode`. Now plots real
+  `(bearing, distance)` from the BLE-decoded lat/lng vs the device's own
+  GPS fix, with a soft logarithmic distance scale. Falls back to an
+  RSSI-based ring and tells the user "GPS unavailable — peer angles
+  approximate" when GPS is missing. Dots are colour-coded by decoded
+  severity. Stale peers expire after 45 s.
+- ✅ **Misleading dashboard subtitles** — "Capture Scene: AI-powered photo
+  analysis" (which did nothing), "Responder View: live map with nearby
+  SOS signals" (no third-party feed), "Vital Scan: check heart rate &
+  oxygen saturation" (no rPPG). All three subtitles now match the
+  honest behaviour and reference the fix from Sprint 1.
+
+### MEDIUM — Sprint 4 (Gemma 4 in first aid + honest comments)
+- ✅ **First Aid screen showed raw FTS rows** — now
+  `FirstAidRepository.lookupWithGemma(query, languageCode)` performs RAG:
+  retrieves grounding from the SQLite FTS5 corpus, asks Gemma 4 27B
+  (cloud) for 1–6 calm, locale-correct numbered steps, with hard
+  constraints (no invented steps, no doses, life-threatening cases force
+  "call 108 first"). Falls back to the raw corpus row when cloud is down.
+- ✅ **`EmergencyBeaconService` comment claimed "Gemma 4 agent takes over"** —
+  there is no ML on that path. Comment now matches reality (it's a pure
+  flashlight strobe + synthesised audio tone driver).
+- ✅ **`TriageFeedbackService` was labelled "RL-based optimisation"** —
+  oversell. The implementation is an EMA over a user-supplied severity
+  bias, bounded to [−1.0, +1.0], and never touches model weights.
+  Re-documented as "bounded preference calibration".
+
+### Verification
+- `flutter analyze` — **No issues found!**
+- `flutter test` — **17 tests pass** (3.41.9 / Dart 3.11.5).
+
+### Still on the backlog (not blocking the round)
+- `MultiAgentCoordinator` is still infrastructure not wired into the SOS
+  pipeline — recommend either delete or wire into the orchestrator next.
+- Mesh chat can collide with the SOS BLE advertising channel — should be
+  refused while `SOSPhase != idle`.
+- `SafeWalk` default 30-min ETA when no destination coords are supplied
+  is brittle — should force-acknowledge "timer-only" mode.
+
+---
+
 ## Critical Issues — RESOLVED
 
 ### ✅ FIXED: Used Gemini Flash instead of Gemma 4

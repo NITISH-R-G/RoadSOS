@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../services/ble_payload_codec.dart';
 import '../services/mesh_network_service.dart';
 
 /// Bystander Radar — plots BLE-decoded SOS beacons in their *real* relative
