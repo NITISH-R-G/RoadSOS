@@ -51,20 +51,21 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
     final count = (countRows.first['c'] as num?)?.toInt() ?? 0;
 
     if (count == 0 && _corpusRows!.isNotEmpty) {
-      for (final row in _corpusRows!) {
-        await appDb.execute(
-          '''
-          INSERT INTO first_aid_fts (title, body, tags, source)
-          VALUES (?, ?, ?, ?)
-          ''',
-          [
-            row['title'] as String? ?? '',
-            row['body'] as String? ?? '',
-            row['tags'] as String? ?? '',
-            row['source'] as String? ?? '',
-          ],
-        );
-      }
+      final parameterSets = _corpusRows!
+          .map(
+            (row) => [
+              row['title'] as String? ?? '',
+              row['body'] as String? ?? '',
+              row['tags'] as String? ?? '',
+              row['source'] as String? ?? '',
+            ],
+          )
+          .toList();
+
+      await appDb.executeBatch('''
+        INSERT INTO first_aid_fts (title, body, tags, source)
+        VALUES (?, ?, ?, ?)
+        ''', parameterSets);
     }
     _ftsReady = true;
   }
