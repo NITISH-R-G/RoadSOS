@@ -225,8 +225,9 @@ class AgentHealthService {
       // Primary: server relay (Twilio / Edge) — no Android SEND_SMS required.
       final relayUrl = dotenv.env['SMS_DISPATCH_URL']?.trim() ?? '';
       final relayKey = dotenv.env['SMS_DISPATCH_ANON_KEY']?.trim() ?? '';
-      if (relayUrl.isNotEmpty && relayKey.isNotEmpty)
+      if (relayUrl.isNotEmpty && relayKey.isNotEmpty) {
         return AgentReadiness.ready;
+      }
 
       // Fallback: open SMS app intent (no permission). If relay isn't configured,
       // we mark this as degraded (still usable, but requires user interaction).

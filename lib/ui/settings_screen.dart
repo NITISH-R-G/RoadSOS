@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/app_locale_controller.dart';
+import '../services/emergency_orchestrator.dart';
 import '../services/hardware_trigger_service.dart';
 import '../services/nearby_sos_preferences.dart';
 import '../services/nearby_sos_push_service.dart';
@@ -187,10 +188,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Icons.bluetooth,
             l10n.meshConfigTitle,
             l10n.meshConfigSubtitle,
-            onTap: () => Navigator.push<void>(
-              context,
-              MaterialPageRoute<void>(builder: (_) => const MeshChatScreen()),
-            ),
+            onTap: () {
+              final sosState = ref.read(emergencyOrchestratorProvider);
+              if (sosState.phase != SOSPhase.idle) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Mesh Chat is disabled during an active SOS to prioritize emergency beacons.',
+                    ),
+                  ),
+                );
+                return;
+              }
+              Navigator.push<void>(
+                context,
+                MaterialPageRoute<void>(builder: (_) => const MeshChatScreen()),
+              );
+            },
           ),
           if (!kIsWeb && Platform.isAndroid) ...[
             const SizedBox(height: 8),
