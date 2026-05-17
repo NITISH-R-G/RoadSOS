@@ -36,10 +36,25 @@ class TriageValidationAgent {
     required double gyroPeakRadPerSec,
     required int accelSeverityHint,
   }) {
-    var severity = raw.severityLevel;
-    final services = List<String>.from(raw.requiredServices);
     final flags = <String>[];
     final overrides = <String>[];
+    var severity = raw.severityLevel.clamp(1, 5);
+    if (severity != raw.severityLevel) {
+      overrides.add(
+        'Severity clamped ${raw.severityLevel}→$severity (outside schema range 1–5).',
+      );
+      flags.add('invalid_severity_clamped');
+    }
+
+    final services = <String>[];
+    for (final service in raw.requiredServices) {
+      if (_allowedServices.contains(service)) {
+        if (!services.contains(service)) services.add(service);
+      } else {
+        flags.add('invalid_service_dropped');
+        overrides.add('Unsupported service "$service" removed from dispatch list.');
+      }
+    }
 
     // ── Rule A: Severity floor from accelerometer sensor hint ─────────────
     // The sensor-derived hint is a hard lower bound: if Gemma says severity 2
@@ -129,7 +144,9 @@ class TriageValidationAgent {
       severityLevel: severity,
       requiredServices: services,
       firstAidQuery: raw.firstAidQuery,
-      compressedPayload: raw.compressedPayload,
+      compressedPayload: wasOverridden
+          ? _buildCompressedPayload(raw.location, severity, services)
+          : raw.compressedPayload,
       thinkingTrace: raw.thinkingTrace,
       isDegradedMode: raw.isDegradedMode,
       source: raw.source,
@@ -147,6 +164,47 @@ class TriageValidationAgent {
       confidence: confidence,
     );
   }
+
+  String _buildCompressedPayload(
+    String location,
+    int severity,
+    List<String> services,
+  ) {
+    final svcCodes = services.map((s) {
+      switch (s) {
+        case 'ambulance':
+          return 'AMB';
+        case 'police':
+          return 'POL';
+        case 'fire_department':
+          return 'FIR';
+        case 'rescue':
+          return 'RES';
+        case 'towing':
+          return 'TOW';
+        case 'puncture_shop':
+          return 'PUN';
+        case 'showroom':
+          return 'SHR';
+        default:
+          return 'UNK';
+      }
+    }).join(',');
+
+    final loc = location.replaceAll(' ', '_');
+    final clipped = loc.length <= 30 ? loc : loc.substring(0, 30);
+    return 'LOC:$clipped|SEV:$severity|SVC:$svcCodes';
+  }
+
+  static const Set<String> _allowedServices = {
+    'ambulance',
+    'police',
+    'fire_department',
+    'rescue',
+    'towing',
+    'puncture_shop',
+    'showroom',
+  };
 
   /// Confidence score from source tier and signal quality.
   ///

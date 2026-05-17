@@ -142,6 +142,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get firstAidGuidance => 'प्राथमिक उपचार मार्गदर्शन';
 
   @override
+  String get triageMedicalDisclaimer =>
+      'केवल मार्गदर्शन — यह चिकित्सा निदान नहीं है। आपातकालीन मदद के लिए 108/112 पर कॉल करें।';
+
+  @override
   String get noAiBadge => 'ऑफ़लाइन';
 
   @override

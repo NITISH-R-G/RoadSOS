@@ -11,6 +11,7 @@ import '../models/sos_activity_record.dart';
 import 'ai_triage_service.dart';
 import 'location_service.dart';
 import 'mesh_network_service.dart';
+import 'emergency_sms_dispatch_service.dart';
 import 'sms_dispatch_outcome.dart';
 import 'crash_detection_service.dart';
 import 'voice_assistant_service.dart';
@@ -78,6 +79,7 @@ class SOSState {
   final bool isBystander;
   final List<DispatchChannelRow> dispatchChannels;
   final bool isBeaconActive;
+  final bool isDemoMode;
 
   /// Whether the SOS was triggered while driving mode was active.
   final bool wasInDrivingMode;
@@ -93,6 +95,7 @@ class SOSState {
     this.isBystander = false,
     this.dispatchChannels = const [],
     this.isBeaconActive = false,
+    this.isDemoMode = false,
     this.wasInDrivingMode = false,
   });
 
@@ -107,6 +110,7 @@ class SOSState {
     bool? isBystander,
     List<DispatchChannelRow>? dispatchChannels,
     bool? isBeaconActive,
+    bool? isDemoMode,
     bool? wasInDrivingMode,
   }) {
     return SOSState(
@@ -120,6 +124,7 @@ class SOSState {
       isBystander: isBystander ?? this.isBystander,
       dispatchChannels: dispatchChannels ?? this.dispatchChannels,
       isBeaconActive: isBeaconActive ?? this.isBeaconActive,
+      isDemoMode: isDemoMode ?? this.isDemoMode,
       wasInDrivingMode: wasInDrivingMode ?? this.wasInDrivingMode,
     );
   }
@@ -151,13 +156,13 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   final Ref _ref;
   Timer? _countdownTimer;
   final _uuid = const Uuid();
-  static const Duration _sosLocationTimeout = Duration(seconds: 12);
+  static const Duration _sosLocationTimeout = Duration(seconds: 16);
   static const Duration _sosTriageTimeout = Duration(seconds: 10);
   static const Duration _dispatchChannelTimeout = Duration(seconds: 8);
+  static const Duration _smsDispatchTimeout = Duration(seconds: 36);
+  static const Duration _dispatchOverallTimeout = Duration(seconds: 38);
 
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
-     
-    
     _restoreState();
     _ref.read(crashDetectionServiceProvider).startMonitoring();
     // Phase 8: ensure RL bias is loaded before any SOS fires.
@@ -188,7 +193,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     appLog.d('🚒 [ORCHESTRATOR] $message');
   }
 
-  Future<void> startSos({bool isBystander = false}) async {
+  Future<void> startSos({bool isBystander = false, bool isDemoMode = false}) async {
     if (state.phase != SOSPhase.idle) return;
 
     final isDriving = _ref.read(drivingModeProvider) == DrivingMode.driving;
@@ -199,6 +204,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       isBystander: isBystander,
       incidentId: _uuid.v4(),
       dispatchChannels: const [],
+      isDemoMode: isDemoMode,
       wasInDrivingMode: isDriving,
     );
 
@@ -261,6 +267,50 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
     final locale = _ref.read(appLocaleProvider);
 
+    if (state.isDemoMode) {
+      _log('Demo mode — simulated SOS pipeline only.', SOSPhase.dispatching);
+      state = state.copyWith(
+        phase: SOSPhase.dispatching,
+        dispatchChannels: _initialDispatchRows(),
+      );
+      _patchDispatchChannel(
+        'mesh',
+        DispatchChannelLifecycle.skipped,
+        'Demo only — no Bluetooth beacon was started.',
+      );
+      _patchDispatchChannel(
+        'sms',
+        DispatchChannelLifecycle.skipped,
+        'Demo only — no SMS relay, SMS composer, or 112 message was attempted.',
+      );
+      _patchDispatchChannel(
+        'voice_call',
+        DispatchChannelLifecycle.skipped,
+        'Demo only — no emergency dialer was opened.',
+      );
+      _patchDispatchChannel(
+        'local_log',
+        DispatchChannelLifecycle.skipped,
+        'Demo only — no incident record was saved.',
+      );
+      _patchDispatchChannel(
+        'family_link',
+        DispatchChannelLifecycle.skipped,
+        'Demo only — no family link, WebRTC ring, or contact alert was sent.',
+      );
+      _patchDispatchChannel(
+        'nearby_services',
+        DispatchChannelLifecycle.skipped,
+        'Demo only — no nearby-services broadcast was attempted.',
+      );
+      state = state.copyWith(phase: SOSPhase.active);
+      _log(
+        'Demo mode active — no real location, AI, dispatch, dialer, or family channels were contacted.',
+        SOSPhase.active,
+      );
+      return;
+    }
+
     Future<void> failOpenToActive(String detail) async {
       _log(detail, SOSPhase.active, isError: true);
       state = state.copyWith(
@@ -315,10 +365,24 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       _patchDispatchChannel('family_link', DispatchChannelLifecycle.skipped, 'Skipped — no usable GPS fix.');
       _patchDispatchChannel('local_log', DispatchChannelLifecycle.failed, 'Not saved — no usable GPS fix.');
       _patchDispatchChannel('sms', DispatchChannelLifecycle.inProgress, 'Sending emergency SMS (no GPS)…');
+      _patchDispatchChannel(
+        'voice_call',
+        DispatchChannelLifecycle.pending,
+        'Will open emergency dialer if automated SMS is not accepted.',
+      );
       final smsOutcome = await _dispatchSmsWithRetry(
         l10n.orchestratorSmsNoGpsPayload,
         lat: null,
         lng: null,
+      ).timeout(
+        _smsDispatchTimeout,
+        onTimeout: () => const SmsDispatchOutcome(
+          deviceDirectSmsSent: false,
+          backendRelayAccepted: false,
+          primaryAutomatedBarMet: false,
+          proofLevel: SmsDispatchProofLevel.none,
+          detail: 'SMS timed out — use dialer/manual SMS now.',
+        ),
       );
       _patchDispatchChannel(
         'sms',
@@ -327,6 +391,26 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             : DispatchChannelLifecycle.failed,
         smsOutcome.detail,
       );
+      if (smsOutcome.primaryAutomatedBarMet) {
+        _patchDispatchChannel(
+          'voice_call',
+          DispatchChannelLifecycle.skipped,
+          'Skipped — automated SMS request was accepted.',
+        );
+      } else {
+        final emergencyNumber = EmergencySmsDispatchService.emergencyNumberForLocale();
+        final dialerOpened = await _launchEmergencyDialer(emergencyNumber).timeout(
+          const Duration(seconds: 4),
+          onTimeout: () => false,
+        );
+        _patchDispatchChannel(
+          'voice_call',
+          dialerOpened ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+          dialerOpened
+              ? 'Emergency dialer opened for $emergencyNumber — press Call. Not dispatch proof.'
+              : 'Could not open emergency dialer — manually call $emergencyNumber.',
+        );
+      }
       state = state.copyWith(phase: SOSPhase.active);
       await _persistState(true);
       await WakeLockService.acquireForSos();
@@ -429,19 +513,25 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     _patchDispatchChannel('mesh', DispatchChannelLifecycle.inProgress, 'Broadcasting BLE beacon…');
     _patchDispatchChannel('sms', DispatchChannelLifecycle.inProgress, 'Sending emergency SMS…');
+    _patchDispatchChannel(
+      'voice_call',
+      DispatchChannelLifecycle.pending,
+      'Will open emergency dialer only if automated SMS is not accepted.',
+    );
     _patchDispatchChannel('local_log', DispatchChannelLifecycle.inProgress, 'Saving incident on device…');
     _patchDispatchChannel('family_link', DispatchChannelLifecycle.inProgress, 'Family tracking link…');
-    _patchDispatchChannel('nearby_services', DispatchChannelLifecycle.inProgress, 'Broadcasting to nearby services…');
+    _patchDispatchChannel(
+      'nearby_services',
+      DispatchChannelLifecycle.skipped,
+      'No verified nearby-services broadcast is wired; showing local facilities only.',
+    );
 
     // Phase 9: Automated alerts and calling
-    unawaited(_notifyUser());
-    unawaited(_callEmergencyContact());
-
-    // Family Circle: start broadcasting SOS-mode live position to peers and
-    // try a WebRTC voice ring to the first peer (only fires if signed in to
-    // Supabase + the user has a circle with at least one other member).
-    unawaited(_publishSosToFamilyCircle(location));
-    unawaited(_ringFirstFamilyCirclePeer());
+    try {
+      await _notifyUser().timeout(const Duration(seconds: 2));
+    } catch (e, st) {
+      appLog.w('[Orchestrator] SOS notification side effect failed', error: e, stackTrace: st);
+    }
 
     Future<T> guard<T>({
       required String id,
@@ -449,10 +539,11 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       required T fallback,
       required String timeoutDetail,
       required String failureDetail,
+      Duration? timeout,
     }) async {
       try {
         return await future.timeout(
-          _dispatchChannelTimeout,
+          timeout ?? _dispatchChannelTimeout,
           onTimeout: () {
             _patchDispatchChannel(id, DispatchChannelLifecycle.failed, timeoutDetail);
             return fallback;
@@ -521,6 +612,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ),
       timeoutDetail: 'SMS timed out — use dialer/manual SMS now.',
       failureDetail: 'SMS failed — use dialer/manual SMS now.',
+      timeout: _smsDispatchTimeout,
     ).then((smsOutcome) {
       _patchDispatchChannel(
         'sms',
@@ -570,22 +662,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return family;
     });
 
-    final nearbyFuture = guard<bool>(
-      id: 'nearby_services',
-      future: Future.delayed(const Duration(seconds: 3), () => true),
-      fallback: false,
-      timeoutDetail: 'Nearby services broadcast timed out.',
-      failureDetail: 'Nearby services broadcast failed.',
-    ).then((ok) {
-      _patchDispatchChannel(
-        'nearby_services',
-        ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
-        ok
-            ? 'Emergency alert broadcasted to nearby facilities and responders ✓'
-            : 'Could not complete nearby services broadcast.',
-      );
-      return ok;
-    });
+    final nearbyFuture = Future<bool>.value(false);
 
     List<Object?> results;
     try {
@@ -595,7 +672,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         persistedFuture,
         familyFuture,
         nearbyFuture,
-      ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 1));
+      ]).timeout(_dispatchOverallTimeout);
     } catch (e, st) {
       // Absolute guard: never hang in dispatching.
       appLog.w('[Orchestrator] Dispatch futures did not complete in time', error: e, stackTrace: st);
@@ -604,6 +681,26 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     }
 
     final smsOutcome = results[1] as SmsDispatchOutcome;
+    if (smsOutcome.primaryAutomatedBarMet) {
+      _patchDispatchChannel(
+        'voice_call',
+        DispatchChannelLifecycle.skipped,
+        'Skipped — automated SMS request was accepted.',
+      );
+    } else {
+      final emergencyNumber = EmergencySmsDispatchService.emergencyNumberForLocale();
+      final dialerOpened = await _launchEmergencyDialer(emergencyNumber).timeout(
+        const Duration(seconds: 4),
+        onTimeout: () => false,
+      );
+      _patchDispatchChannel(
+        'voice_call',
+        dialerOpened ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        dialerOpened
+            ? 'Emergency dialer opened for $emergencyNumber — press Call. Not dispatch proof.'
+            : 'Could not open emergency dialer — manually call $emergencyNumber.',
+      );
+    }
 
     await SosActivityLogService.instance.append(
       SosActivityRecord(
@@ -704,6 +801,12 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         detail: 'Waiting…',
       ),
       DispatchChannelRow(
+        id: 'voice_call',
+        title: 'Emergency dialer fallback',
+        lifecycle: DispatchChannelLifecycle.pending,
+        detail: 'Waiting…',
+      ),
+      DispatchChannelRow(
         id: 'local_log',
         title: 'On-device incident log',
         lifecycle: DispatchChannelLifecycle.pending,
@@ -717,7 +820,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ),
       DispatchChannelRow(
         id: 'nearby_services',
-        title: 'Nearby Services',
+        title: 'Nearby facilities (info only)',
         lifecycle: DispatchChannelLifecycle.pending,
         detail: 'Waiting…',
       ),
@@ -797,6 +900,21 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
   void triggerSOS() => startSos();
   void cancelSOS() => cancelSos();
+
+  Future<bool> _launchEmergencyDialer(String number) async {
+    final uri = Uri.parse('tel:$number');
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+        appLog.i('[Orchestrator] Emergency dialer opened for $number');
+        return true;
+      }
+      appLog.w('[Orchestrator] Could not launch emergency dialer for $number');
+    } catch (e, st) {
+      appLog.e('[Orchestrator] Error launching emergency dialer', error: e, stackTrace: st);
+    }
+    return false;
+  }
 
   Future<void> _callEmergencyContact() async {
     final profile = _ref.read(userProfileProvider);

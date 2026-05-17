@@ -14,6 +14,7 @@
   "triageResultTitle": "AI மதிப்பீடு",
   "triageDegradedTitle": "AI (இணைப்பில்லை)",
   "firstAidGuidance": "முதலுதவி",
+  "triageMedicalDisclaimer": "வழிகாட்டுதல் மட்டும் — இது மருத்துவ நோயறிதல் அல்ல. அவசர உதவிக்கு 108/112 அழைக்கவும்.",
   "settingsLanguage": "மொழி",
   "settingsLanguageSubtitle": "இடைமுகம் மற்றும் குரல்",
   "incidentVoiceHint": "என்ன காண்கிறீர்கள் என்று சொல்லுங்கள்…",

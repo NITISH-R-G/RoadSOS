@@ -352,6 +352,12 @@ abstract class AppLocalizations {
   /// **'FIRST AID GUIDANCE'**
   String get firstAidGuidance;
 
+  /// No description provided for @triageMedicalDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Guidance only — not a medical diagnosis. Call 108/112 for emergency help.'**
+  String get triageMedicalDisclaimer;
+
   /// No description provided for @noAiBadge.
   ///
   /// In en, this message translates to:

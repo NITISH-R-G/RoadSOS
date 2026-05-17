@@ -14,6 +14,7 @@
   "triageResultTitle": "AI ट्रायज परिणाम",
   "triageDegradedTitle": "AI (ऑफलाइन)",
   "firstAidGuidance": "प्रथमोपचार",
+  "triageMedicalDisclaimer": "फक्त मार्गदर्शन — हे वैद्यकीय निदान नाही. आपत्कालीन मदतीसाठी 108/112 वर कॉल करा.",
   "settingsLanguage": "भाषा",
   "settingsLanguageSubtitle": "इंटरफेस आणि आवाज",
   "incidentVoiceHint": "जे दिसते ते सांगा…",

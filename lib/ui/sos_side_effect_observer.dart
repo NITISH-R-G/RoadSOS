@@ -24,7 +24,7 @@ class SOSSideEffectObserver extends ConsumerWidget {
       case SOSPhase.active:
         HapticFeedback.heavyImpact();
         ref.read(voiceAssistantServiceProvider).speak(
-          'SOS is live. Help is on the way. Your location and medical profile are being broadcasted.'
+          'SOS is active. Check the dispatch status. If you can, call emergency services now.'
         );
         break;
       case SOSPhase.triaging:

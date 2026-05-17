@@ -18,9 +18,8 @@ import 'sms_dispatch_outcome.dart';
 /// - **India**: Prefer [INDIA_SOS_DISPATCH_URL], optional [INDIA_ERSS_API_URL] (MHA/CDAC enrollment).
 ///
 /// **Dispatch success contract (v1 India / Android):**
-/// - **(A)** Primary automated bar: [SmsDispatchOutcome.primaryAutomatedBarMet] — **device** [SEND_SMS] to
-///   112/911, *or* (iOS only) HTTP relay 2xx, *or* (Android) HTTP relay 2xx only if
-///   `SMS_RELAY_COUNTS_AS_PRIMARY_DISPATCH=true` (audited backend that actually delivers to 112).
+/// - **(A)** Primary automated bar: [SmsDispatchOutcome.primaryAutomatedBarMet] — a confirmed
+///   automated OS/backend handoff, not merely opening a manual SMS composer.
 /// - **(B)** Parallel **108** dial / USSD — [IndiaOfflineDispatch]; dialer only, not dispatch proof.
 /// - **(C)** [INDIA_ERSS_API_URL] is optional telemetry; never gates outcome.
 class EmergencySmsDispatchService {
@@ -283,11 +282,11 @@ class EmergencySmsDispatchService {
 
     final directOk = await sendSmsDirectAndroid(number, body);
     if (directOk) {
-      appLog.d('Android direct SMS send');
+      appLog.d('Android SMS composer opened; user must press Send');
       return _outcome(
-        device: true,
+        device: false,
         relay: false,
-        detail: 'Device SMS request accepted for $number ✓ (carrier delivery not confirmed)',
+        detail: 'SMS composer opened for $number — press Send. Not counted as automated dispatch.',
       );
     }
 

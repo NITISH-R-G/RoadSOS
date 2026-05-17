@@ -51,7 +51,7 @@ class EmergencyNotificationService {
       await _local.show(
         id: _sosActiveNotificationId,
         title: '🚨 RoadSOS: Emergency Active',
-        body: 'Emergency services and contacts are being notified. Stay calm.',
+        body: 'SOS active. Open RoadSOS for dispatch status; call emergency services if you can.',
         notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             _channelId,

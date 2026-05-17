@@ -142,6 +142,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get firstAidGuidance => 'প্রাথমিক চিকিৎসা';
 
   @override
+  String get triageMedicalDisclaimer =>
+      'শুধু নির্দেশনা — এটি চিকিৎসা নির্ণয় নয়। জরুরি সাহায্যের জন্য 108/112-এ কল করুন।';
+
+  @override
   String get noAiBadge => 'OFFLINE';
 
   @override
