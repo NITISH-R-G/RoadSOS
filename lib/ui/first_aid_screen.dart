@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../services/app_locale_controller.dart';
+import '../services/first_aid_repository.dart';
 import '../services/first_aid_store.dart';
 
 class FirstAidScreen extends ConsumerStatefulWidget {
@@ -59,10 +61,21 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
     });
 
     try {
-      final res = await FirstAidStore.getVerifiedAdvice(query);
+      // Gemma 4 27B (cloud) synthesises a calm step-by-step answer grounded
+      // in the FTS corpus. Falls back to the raw FTS row when the cloud is
+      // unreachable, so the screen never blanks out.
+      final lang = ref.read(appLocaleProvider).languageCode;
+      final res = await FirstAidRepository.instance.lookupWithGemma(
+        query,
+        languageCode: lang,
+      );
+      if (!mounted) return;
       setState(() {
         _result = res;
       });
+      // Side-channel: keep FirstAidStore primed (used elsewhere) — best-effort.
+      // ignore: discarded_futures
+      FirstAidStore.getVerifiedAdvice(query);
     } catch (e) {
       setState(() {
         _error = 'Could not load first-aid guidance on this device.';

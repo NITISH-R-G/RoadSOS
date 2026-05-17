@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../database/app_database.dart';
+import '../logging/app_log.dart';
 
 /// Evidence-based first-aid text bundled in assets and indexed with SQLite FTS5
 /// on the **same** PowerSync database as the rest of the app (no separate sqflite DB).
@@ -78,6 +80,92 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
       return _lookupTokenScore(q);
     }
     return _lookupFts(q);
+  }
+
+  /// Public RAG entry point: retrieve grounding from the FTS corpus, then ask
+  /// Gemma 4 27B (cloud) to synthesise a calm, step-by-step answer in the
+  /// user's locale. Falls back to the raw corpus result if cloud is down /
+  /// times out / Supabase is not configured.
+  ///
+  /// This is the recommended call for the First Aid screen and any UI that
+  /// shows guidance to a human bystander — it produces locale-correct,
+  /// reading-friendly steps instead of a raw corpus row.
+  ///
+  /// `languageCode` is passed through so the model produces output in the
+  /// reader's language (en/hi/ta/te/bn/mr).
+  Future<String> lookupWithGemma(
+    String query, {
+    String languageCode = 'en',
+    Duration cloudTimeout = const Duration(seconds: 5),
+  }) async {
+    final grounding = await lookup(query);
+    if (kIsWeb || query.trim().isEmpty) return grounding;
+
+    final composed = await _gemmaCompose(
+      query: query,
+      grounding: grounding,
+      languageCode: languageCode,
+      cloudTimeout: cloudTimeout,
+    );
+    if (composed != null && composed.trim().isNotEmpty) {
+      return '$composed\n\n---\n$medicalDisclaimer';
+    }
+    return grounding;
+  }
+
+  Future<String?> _gemmaCompose({
+    required String query,
+    required String grounding,
+    required String languageCode,
+    required Duration cloudTimeout,
+  }) async {
+    final langLabel = switch (languageCode) {
+      'hi' => 'Hindi (Devanagari)',
+      'ta' => 'Tamil',
+      'te' => 'Telugu',
+      'bn' => 'Bengali',
+      'mr' => 'Marathi (Devanagari)',
+      _ => 'English',
+    };
+    // Cap grounding so we never blow the token budget on a tiny prompt.
+    final clipped = grounding.length > 2400
+        ? grounding.substring(0, 2400)
+        : grounding;
+    final prompt =
+        'You are RoadSOS First Aid Coach. Produce a short, calm, step-by-step '
+        'answer that the bystander can read aloud. Constraints:\n'
+        '- Output in $langLabel only.\n'
+        '- Maximum 6 numbered steps, each <= 22 words.\n'
+        '- Plain words, no jargon, no medication doses, no markdown headings.\n'
+        '- If situation looks life-threatening, step 1 MUST be "Call 108 (or 112) now".\n'
+        '- Never invent steps that are not supported by the GROUNDING TEXT.\n'
+        '- End with the line: "Stay with them until help arrives."\n\n'
+        'BYSTANDER QUESTION:\n"""$query"""\n\n'
+        'GROUNDING TEXT (verbatim from RoadSOS first-aid corpus):\n'
+        '"""\n$clipped\n"""';
+
+    try {
+      final client = Supabase.instance.client;
+      final res = await client.functions
+          .invoke(
+            'gemini-generate',
+            body: <String, dynamic>{
+              'prompt': prompt,
+              'model': 'gemma-4-27b-it',
+              'temperature': 0.25,
+              'max_output_tokens': 320,
+            },
+          )
+          .timeout(cloudTimeout);
+      final data = res.data;
+      if (data is Map && data['text'] is String) {
+        return (data['text'] as String).trim();
+      }
+      return null;
+    } catch (e, st) {
+      appLog.d('[FirstAid] Gemma 4 compose failed', error: e, stackTrace: st);
+      return null;
+    }
   }
 
   /// Returns a list of titles for autocomplete suggestions.
