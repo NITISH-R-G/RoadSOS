@@ -22,32 +22,38 @@ void main() {
         expect(r?.stateCode, 'IN-KA');
       });
 
-      test('Tamil Nadu box bounds (8.0–13.6N, 76.0–80.6E) excluding KA overlap', () {
-        // TN SW corner
-        var r = resolveIndiaEmergencyRoute(8.0, 76.0);
-        expect(r?.stateCode, 'IN-TN');
+      test(
+        'Tamil Nadu box bounds (8.0–13.6N, 76.0–80.6E) excluding KA overlap',
+        () {
+          // TN SW corner
+          var r = resolveIndiaEmergencyRoute(8.0, 76.0);
+          expect(r?.stateCode, 'IN-TN');
 
-        // TN NW corner (Note: 13.6, 76.0 overlaps with KA box. The code checks KA first,
-        // so it will resolve to IN-KA. We test a point just east of KA box for TN NW corner.)
-        r = resolveIndiaEmergencyRoute(13.6, 79.0);
-        expect(r?.stateCode, 'IN-TN');
+          // TN NW corner (Note: 13.6, 76.0 overlaps with KA box. The code checks KA first,
+          // so it will resolve to IN-KA. We test a point just east of KA box for TN NW corner.)
+          r = resolveIndiaEmergencyRoute(13.6, 79.0);
+          expect(r?.stateCode, 'IN-TN');
 
-        // TN NE corner
-        r = resolveIndiaEmergencyRoute(13.6, 80.6);
-        expect(r?.stateCode, 'IN-TN');
+          // TN NE corner
+          r = resolveIndiaEmergencyRoute(13.6, 80.6);
+          expect(r?.stateCode, 'IN-TN');
 
-        // TN SE corner
-        r = resolveIndiaEmergencyRoute(8.0, 80.6);
-        expect(r?.stateCode, 'IN-TN');
-      });
+          // TN SE corner
+          r = resolveIndiaEmergencyRoute(8.0, 80.6);
+          expect(r?.stateCode, 'IN-TN');
+        },
+      );
 
-      test('Tamil Nadu bounds that overlap with Karnataka resolve to Karnataka', () {
-        // The point (12.0, 77.0) is in both TN box (8.0-13.6, 76.0-80.6)
-        // and KA box (11.5-18.6, 74.0-78.9).
-        // Since KA is checked first in _resolveByCoarseBoxes, it must resolve to KA.
-        final r = resolveIndiaEmergencyRoute(12.0, 77.0);
-        expect(r?.stateCode, 'IN-KA');
-      });
+      test(
+        'Tamil Nadu bounds that overlap with Karnataka resolve to Karnataka',
+        () {
+          // The point (12.0, 77.0) is in both TN box (8.0-13.6, 76.0-80.6)
+          // and KA box (11.5-18.6, 74.0-78.9).
+          // Since KA is checked first in _resolveByCoarseBoxes, it must resolve to KA.
+          final r = resolveIndiaEmergencyRoute(12.0, 77.0);
+          expect(r?.stateCode, 'IN-KA');
+        },
+      );
     });
 
     group('just outside coarse boxes', () {

@@ -195,21 +195,25 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
   /// into the generic five-question script when offline.
   String _detectSceneContextLocal(String input) {
     final lower = input.toLowerCase();
-    if (lower.contains('pedestrian') || lower.contains('पैदल'))
+    if (lower.contains('pedestrian') || lower.contains('पैदल')) {
       return 'pedestrian_hit';
+    }
     if (lower.contains('rollover') ||
         lower.contains('पलटा') ||
-        lower.contains('overturned'))
+        lower.contains('overturned')) {
       return 'rollover';
+    }
     if (lower.contains('fire') ||
         lower.contains('आग') ||
         lower.contains('smoke') ||
-        lower.contains('धुआँ'))
+        lower.contains('धुआँ')) {
       return 'fire_hazard';
+    }
     if (lower.contains('collision') ||
         lower.contains('टक्कर') ||
-        lower.contains('crash'))
+        lower.contains('crash')) {
       return 'vehicle_collision';
+    }
     return 'unknown';
   }
 
