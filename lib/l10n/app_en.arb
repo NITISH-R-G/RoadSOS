@@ -22,7 +22,7 @@
   "orchestratorLocationUnavailable": "Location unavailable — enable location services or move to open sky.",
   "orchestratorManualActionRequired": "Manual action required — if automated dispatch fails, dial your emergency number now.",
   "orchestratorSmsNoGpsPayload": "SOS (no GPS). Please call emergency services now. RoadSOS could not acquire location.",
-  "orchestratorAiBrief": "Cloud AI is assessing the situation…",
+  "orchestratorAiBrief": "AI triage is assessing the situation…",
   "orchestratorTriageDone": "Triage complete — severity {level}",
   "@orchestratorTriageDone": {
     "placeholders": {

@@ -12,7 +12,7 @@
   "orchestratorSelfSosStarted": "सेल्फ SOS शुरू",
   "orchestratorAcquiringLocation": "स्थान प्राप्त कर रहे हैं…",
   "orchestratorLocationSecured": "स्थान: {lat}, {lng}",
-  "orchestratorAiBrief": "क्लाउड AI स्थिति जांच रहा है…",
+  "orchestratorAiBrief": "AI ट्राइएज स्थिति जांच रहा है…",
   "orchestratorTriageDone": "ट्राइएज पूर्ण — गंभीरता {level}",
   "orchestratorDispatching": "सभी चैनलों पर अलर्ट भेज रहे हैं…",
   "orchestratorSosLive": "SOS सक्रिय — सभी चैनल चालू",

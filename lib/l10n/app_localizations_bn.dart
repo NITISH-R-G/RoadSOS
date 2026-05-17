@@ -63,7 +63,7 @@ class AppLocalizationsBn extends AppLocalizations {
       'SOS (no GPS). Please call emergency services now. RoadSOS could not acquire location.';
 
   @override
-  String get orchestratorAiBrief => 'ক্লাউড AI পরিস্থিতি যাচাই করছে…';
+  String get orchestratorAiBrief => 'AI ট্রায়েজ পরিস্থিতি যাচাই করছে…';
 
   @override
   String orchestratorTriageDone(int level) {

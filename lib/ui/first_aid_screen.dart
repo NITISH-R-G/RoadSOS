@@ -65,6 +65,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
         _result = res;
       });
     } catch (e) {
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       setState(() {
         _error = l10n.firstAidLoadError;

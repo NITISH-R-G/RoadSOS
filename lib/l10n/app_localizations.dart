@@ -205,7 +205,7 @@ abstract class AppLocalizations {
   /// No description provided for @orchestratorAiBrief.
   ///
   /// In en, this message translates to:
-  /// **'Cloud AI is assessing the situation…'**
+  /// **'AI triage is assessing the situation…'**
   String get orchestratorAiBrief;
 
   /// No description provided for @orchestratorTriageDone.

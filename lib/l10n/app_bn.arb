@@ -8,7 +8,7 @@
   "sosButtonSub": "জরুরি শুরু করতে চাপুন",
   "cancelSos": "বাতিল",
   "orchestratorAcquiringLocation": "অবস্থান নেওয়া হচ্ছে…",
-  "orchestratorAiBrief": "ক্লাউড AI পরিস্থিতি যাচাই করছে…",
+  "orchestratorAiBrief": "AI ট্রায়েজ পরিস্থিতি যাচাই করছে…",
   "orchestratorDispatching": "সব চ্যানেলে পাঠানো হচ্ছে…",
   "orchestratorSosLive": "SOS সক্রিয়",
   "triageResultTitle": "AI ট্রায়েজ ফল",

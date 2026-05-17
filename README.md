@@ -169,7 +169,7 @@ RoadSOS is not a chatbot. It is an emergency response agent that takes real-worl
 ```
 AGENT LOOP (fires within 10 seconds of crash detection):
 ┌─────────────────────────────────────────────────────────────┐
-│  PERCEIVE   → Accelerometer spike + GPS + camera frame       │
+│  PERCEIVE   → Accelerometer spike + GPS context               │
 │  TRIAGE     → Gemma 4 27B or E4B: structured severity JSON   │
 │  PLAN       → Function calling: which services to dispatch   │
 │  ACT        → dispatch_emergency() + lookup_trauma_center()  │
