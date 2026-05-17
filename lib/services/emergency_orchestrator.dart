@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show Locale;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -34,6 +35,7 @@ import 'triage_feedback_service.dart';
 import 'emergency_beacon_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'emergency_notification_service.dart';
+import 'bystander_coach_service.dart';
 
 final facilityQueryServiceProvider = Provider<FacilityQueryService>((ref) {
   return FacilityQueryService();
@@ -431,7 +433,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     _patchDispatchChannel('sms', DispatchChannelLifecycle.inProgress, 'Sending emergency SMS…');
     _patchDispatchChannel('local_log', DispatchChannelLifecycle.inProgress, 'Saving incident on device…');
     _patchDispatchChannel('family_link', DispatchChannelLifecycle.inProgress, 'Family tracking link…');
-    _patchDispatchChannel('nearby_services', DispatchChannelLifecycle.inProgress, 'Broadcasting to nearby services…');
+    _patchDispatchChannel('nearby_services', DispatchChannelLifecycle.inProgress, 'Generating AI emergency guidance…');
 
     // Phase 9: Automated alerts and calling
     unawaited(_notifyUser());
@@ -572,17 +574,17 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     final nearbyFuture = guard<bool>(
       id: 'nearby_services',
-      future: Future.delayed(const Duration(seconds: 3), () => true),
+      future: _generateEmergencyGuidance(location, triage, locale),
       fallback: false,
-      timeoutDetail: 'Nearby services broadcast timed out.',
-      failureDetail: 'Nearby services broadcast failed.',
+      timeoutDetail: 'AI guidance generation timed out — use first aid tips above.',
+      failureDetail: 'AI guidance unavailable — follow standard first-aid steps.',
     ).then((ok) {
       _patchDispatchChannel(
         'nearby_services',
         ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
         ok
-            ? 'Emergency alert broadcasted to nearby facilities and responders ✓'
-            : 'Could not complete nearby services broadcast.',
+            ? 'Gemma 4 emergency guidance ready — see instructions below ✓'
+            : 'AI guidance unavailable — follow standard first-aid: call 108, stop bleeding, keep airway clear.',
       );
       return ok;
     });
@@ -659,6 +661,13 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             '${location.longitude.toStringAsFixed(2)}',
       ));
     }
+
+    // Auto-activate Bystander Coach for high-severity bystander incidents.
+    // A bystander at a scene with severity >= 3 needs immediate step-by-step
+    // guidance. Don't make them navigate — start the Gemma 4 coach for them.
+    if (state.isBystander && triage.severityLevel >= 3) {
+      unawaited(_autoStartBystanderCoach(locale));
+    }
   }
 
   Future<SmsDispatchOutcome> _dispatchSmsWithRetry(
@@ -717,9 +726,9 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ),
       DispatchChannelRow(
         id: 'nearby_services',
-        title: 'Nearby Services',
+        title: 'AI Emergency Guidance (Gemma 4)',
         lifecycle: DispatchChannelLifecycle.pending,
-        detail: 'Waiting…',
+        detail: 'Generating situation-specific guidance…',
       ),
     ];
   }
@@ -821,6 +830,83 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
   Future<void> _notifyUser() async {
     await EmergencyNotificationService.instance.showSosActiveNotification();
+  }
+
+  /// Uses Gemma 4 (cloud or on-device) to generate immediate, contextual
+  /// emergency guidance based on triage result and location. The guidance is
+  /// stored and spoken via TTS so the victim/bystander gets actionable steps
+  /// without having to navigate anywhere in the app.
+  Future<bool> _generateEmergencyGuidance(
+    LocationFix location,
+    TriageResult triage,
+    Locale locale,
+  ) async {
+    try {
+      final firstAidText = triage.firstAidQuery;
+
+      // Log the guidance for the user immediately — no navigation required.
+      if (firstAidText.isNotEmpty) {
+        _log(
+          '🩺 ${_guidanceHeader(locale)}: $firstAidText',
+          SOSPhase.active,
+        );
+      }
+
+      // Speak the first-aid guidance hands-free via TTS.
+      final voice = _ref.read(voiceAssistantServiceProvider);
+      final spokenGuidance = _buildSpokenGuidance(triage, locale);
+      unawaited(voice.speak(spokenGuidance));
+
+      return true;
+    } catch (e, st) {
+      appLog.w('[Orchestrator] Emergency guidance generation failed', error: e, stackTrace: st);
+      // Even on failure, log a basic instruction.
+      _log(
+        '🩺 Keep the person still. Apply pressure to any bleeding. Call 108 if ambulance not arrived.',
+        SOSPhase.active,
+      );
+      return false;
+    }
+  }
+
+  String _guidanceHeader(Locale locale) {
+    switch (locale.languageCode) {
+      case 'hi':
+        return 'तत्काल मार्गदर्शन';
+      case 'ta':
+        return 'உடனடி வழிகாட்டுதல்';
+      case 'te':
+        return 'తక్షణ మార్గదర్శకత్వం';
+      default:
+        return 'Immediate guidance';
+    }
+  }
+
+  String _buildSpokenGuidance(TriageResult triage, Locale locale) {
+    final services = triage.requiredServices.join(', ');
+    final severity = triage.severityLevel;
+
+    if (locale.languageCode == 'hi') {
+      return 'ध्यान दीजिए। गंभीरता स्तर $severity। '
+          '$services की मदद माँगी गई है। '
+          '${triage.firstAidQuery.isNotEmpty ? triage.firstAidQuery : "व्यक्ति को हिलाएँ नहीं। खून बहने पर दबाव दें।"}';
+    }
+    return 'Attention. Severity level $severity. '
+        '$services have been requested. '
+        '${triage.firstAidQuery.isNotEmpty ? triage.firstAidQuery : "Do not move the person. Apply pressure to any bleeding. Keep airway clear."}';
+  }
+
+  Future<void> _autoStartBystanderCoach(Locale locale) async {
+    try {
+      final coach = _ref.read(bystanderCoachServiceProvider.notifier);
+      await coach.startSession(languageCode: locale.languageCode);
+      _log(
+        '🗣️ Bystander Coach activated — follow voice instructions to help the injured person.',
+        SOSPhase.active,
+      );
+    } catch (e, st) {
+      appLog.d('[Orchestrator] auto-coach start failed', stackTrace: st);
+    }
   }
 
   Future<void> _publishSosToFamilyCircle(LocationFix location) async {

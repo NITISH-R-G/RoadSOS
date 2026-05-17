@@ -154,27 +154,71 @@ class VoiceAssistantService {
   }
 
   bool _matchesCancel(String words) {
+    // English cancel tokens — broad set to catch panicked/injured speech
     if (words.contains('cancel') ||
         words.contains('stop') ||
         words.contains('abort') ||
-        words.contains('no')) {
+        words.contains('don\'t') ||
+        words.contains('dont') ||
+        words.contains('false') ||
+        words.contains('mistake') ||
+        words.contains('wrong') ||
+        words.contains('wait') ||
+        words.contains('hold') ||
+        words.contains('no no') ||
+        words.contains('not emergency') ||
+        words.contains('i\'m fine') ||
+        words.contains('im fine') ||
+        words.contains('i am fine') ||
+        words.contains('i\'m ok') ||
+        words.contains('im ok') ||
+        words.contains('i am ok') ||
+        words.contains('nevermind') ||
+        words.contains('never mind')) {
       return true;
     }
+    // Single "no" only matches if it's a standalone word or start of sentence
+    // to avoid false positives from words containing "no" (e.g. "notify")
+    if (RegExp(r'\bno\b').hasMatch(words)) return true;
+
     switch (_locale.languageCode) {
       case 'hi':
         return words.contains('ruko') ||
             words.contains('band') ||
             words.contains('nahi') ||
+            words.contains('mat') ||
+            words.contains('galti') ||
+            words.contains('theek') ||
             words.contains('रुको') ||
-            words.contains('नहीं');
+            words.contains('नहीं') ||
+            words.contains('बंद') ||
+            words.contains('मत') ||
+            words.contains('गलती') ||
+            words.contains('ठीक हूँ');
       case 'ta':
-        return words.contains('நிறுத்து') || words.contains('niruthu');
+        return words.contains('நிறுத்து') ||
+            words.contains('niruthu') ||
+            words.contains('vendam') ||
+            words.contains('வேண்டாம்') ||
+            words.contains('நல்லா');
       case 'te':
-        return words.contains('ఆపు') || words.contains('apu');
+        return words.contains('ఆపు') ||
+            words.contains('apu') ||
+            words.contains('vaddu') ||
+            words.contains('వద్దు') ||
+            words.contains('bagunna');
       case 'bn':
-        return words.contains('থামো') || words.contains('thamo');
+        return words.contains('থামো') ||
+            words.contains('thamo') ||
+            words.contains('না') ||
+            words.contains('na') ||
+            words.contains('ভুল');
       case 'mr':
-        return words.contains('थांब') || words.contains('thamb');
+        return words.contains('थांब') ||
+            words.contains('thamb') ||
+            words.contains('nako') ||
+            words.contains('नको') ||
+            words.contains('चूक');
       default:
         return false;
     }

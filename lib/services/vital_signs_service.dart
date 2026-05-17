@@ -99,7 +99,11 @@ class VitalSignsLogger extends StateNotifier<VitalSigns?> {
 // Keep backward-compatible alias used by existing UI code.
 typedef VitalSignsService = VitalSignsLogger;
 
+/// IMPORTANT: NOT autoDispose — vitals must persist across screen navigation
+/// so they can be included in the structured SMS dispatch payload. With
+/// autoDispose, a bystander entering vitals on the VitalScanScreen would lose
+/// all data the moment they navigated back to the dispatch panel.
 final vitalSignsProvider =
-    StateNotifierProvider.autoDispose<VitalSignsLogger, VitalSigns?>((ref) {
+    StateNotifierProvider<VitalSignsLogger, VitalSigns?>((ref) {
   return VitalSignsLogger();
 });
