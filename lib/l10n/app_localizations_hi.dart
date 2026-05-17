@@ -142,6 +142,23 @@ class AppLocalizationsHi extends AppLocalizations {
   String get firstAidGuidance => 'प्राथमिक उपचार मार्गदर्शन';
 
   @override
+  String get firstAidScreenTitle => 'प्राथमिक उपचार गाइड';
+
+  @override
+  String get firstAidSearchHint => 'चोट या लक्षण लिखें…';
+
+  @override
+  String get firstAidLookupTitle => 'आपातकालीन प्राथमिक उपचार खोज';
+
+  @override
+  String get firstAidLookupSubtitle =>
+      'ऑफ़लाइन मार्गदर्शन लाइब्रेरी खोजने के लिए चोट लिखें।\nयह केवल मार्गदर्शन है — वास्तविक चिकित्सा मदद के लिए 108/112 पर कॉल करें।';
+
+  @override
+  String get firstAidLoadError =>
+      'इस डिवाइस पर प्राथमिक उपचार मार्गदर्शन लोड नहीं हो सका।';
+
+  @override
   String get noAiBadge => 'ऑफ़लाइन';
 
   @override

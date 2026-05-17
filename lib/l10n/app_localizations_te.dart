@@ -142,6 +142,23 @@ class AppLocalizationsTe extends AppLocalizations {
   String get firstAidGuidance => 'మొదటి చికిత్స';
 
   @override
+  String get firstAidScreenTitle => 'ప్రథమ చికిత్స మార్గదర్శిని';
+
+  @override
+  String get firstAidSearchHint => 'గాయం లేదా లక్షణాన్ని వ్రాయండి…';
+
+  @override
+  String get firstAidLookupTitle => 'అత్యవసర ప్రథమ చికిత్స శోధన';
+
+  @override
+  String get firstAidLookupSubtitle =>
+      'ఆఫ్‌లైన్ మార్గదర్శక గ్రంథాలయంలో వెతకడానికి గాయాన్ని నమోదు చేయండి.\nఇది మార్గదర్శకమే — నిజమైన వైద్య సహాయం కోసం 108/112 కు కాల్ చేయండి.';
+
+  @override
+  String get firstAidLoadError =>
+      'ఈ పరికరంలో ప్రథమ చికిత్స మార్గదర్శకాన్ని లోడ్ చేయలేకపోయాం.';
+
+  @override
   String get noAiBadge => 'OFFLINE';
 
   @override

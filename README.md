@@ -27,8 +27,8 @@ The existing solution — call 108 — fails when the victim is unconscious, whe
 RoadSOS is an offline-first, life-safety platform that:
 
 1. **Detects crashes automatically** — accelerometer + GPS fusion; fires SOS if the user is unconscious
-2. **Triages severity using Gemma 4** — multimodal: analyzes a crash-scene photo + voice description
-3. **Dispatches emergency services** — SMS, BLE beacon, Supabase realtime, all in parallel
+2. **Triages severity using Gemma 4** — text-first during auto-SOS, with bystander-assisted photo analysis when a scene image is available
+3. **Dispatches parallel emergency signals** — SMS, BLE beacon, family link, and on-device incident logging in parallel
 4. **Guides bystanders** — voice-assisted first aid in 6 Indian languages
 5. **Works with no internet** — Gemma 4 E4B runs on-device for offline triage
 
@@ -38,8 +38,8 @@ RoadSOS is an offline-first, life-safety platform that:
 
 Gemma 4 has three capabilities no previous model in its weight class provided:
 
-**1. Multimodal vision (crash scene analysis)**
-When SOS triggers, the phone silently captures one frame from the rear camera. Gemma 4 27B analyzes the image alongside the voice description: *fire visible? smoke? trapped occupants? vehicle count? road type?* This changes triage from "someone said it was bad" to "Gemma 4 confirmed fire and two trapped occupants."
+**1. Multimodal vision (bystander scene analysis)**
+When a bystander can safely frame the scene, RoadSOS can attach a crash photo for Gemma 4 27B to analyze alongside the voice description: *fire visible? smoke? trapped occupants? vehicle count? road type?* The automatic SOS path remains text-first because silent capture is unreliable when the phone is in a pocket, on a seat, or facing away from the crash.
 
 **2. Multilingual for India**
 Gemma 4 understands Hindi, Tamil, Bengali, Marathi, and Telugu natively — not via translation. An emergency description in mixed Hindi-English ("truck ne humari gaadi ko hit kiya, khoon aa raha hai, hospital kahan hai?") produces accurate triage, not garbled output.
@@ -78,7 +78,7 @@ The app automatically selects the highest-quality available tier at emergency ti
 This JSON triggers:
 - Automated SMS to 108/112 ERSS with GPS coordinates and severity
 - BLE beacon broadcast for nearby RoadSOS users
-- Real-time database record for emergency responders
+- Local incident logging plus optional family-circle sharing
 - Voice-guided first aid in the user's language
 
 ---
@@ -91,7 +91,7 @@ EmergencyOrchestrator
     ├── CrashDetectionService
     │       └── accelerometer spike + GPS speed + stillness check (multi-stage)
     │
-    ├── CameraTriageService ← NEW: captures crash-scene photo for Gemma 4 vision
+    ├── CameraTriageService ← bystander photo capture for Gemma 4 vision
     │
     ├── AiTriageService — 4-tier Gemma 4 inference stack
     │       ├── Tier 1: Gemma 4 27B + vision (Supabase Edge Function)
@@ -100,7 +100,7 @@ EmergencyOrchestrator
     │       └── Tier 4: OfflineTriageClassifier (keyword fallback)
     │
     ├── EmergencySmsDispatchService (Twilio, server-side — no key on device)
-    ├── MeshNetworkService (BLE AES-GCM encrypted beacon)
+    ├── MeshNetworkService (BLE SOS beacon for nearby RoadSOS phones)
     └── VoiceAssistantService (TTS + STT, 6 Indian languages)
 ```
 
@@ -109,15 +109,32 @@ EmergencyOrchestrator
 ## Key Features
 
 - **Crash auto-detection** — multi-stage accelerometer + GPS fusion; configurable thresholds; false-positive resistant
-- **Gemma 4 vision triage** — crash-scene photo analyzed by Gemma 4 27B alongside voice description
+- **Gemma 4 vision triage** — bystander-supplied crash-scene photo analyzed by Gemma 4 27B alongside voice description
 - **4-tier inference** — seamless degradation from cloud to on-device to deterministic
 - **Server-side SMS** — automated Twilio dispatch; works for unconscious victims; no API key on device
-- **BLE encrypted mesh** — AES-GCM beacon so nearby users see an alert even with no server
-- **First aid RAG** — 80+ entry SQLite FTS5 corpus; Gemma 4 E4B runs lookup on-device
-- **6 Indian languages** — English, Hindi, Bengali, Marathi, Tamil, Telugu; full localization
+- **BLE SOS beacon** — app-to-app broadcast so nearby RoadSOS users can detect an alert even with no server
+- **First-aid guidance library** — 80+ entry SQLite FTS5 corpus with offline lookup and emergency disclaimer
+- **6 Indian languages** — English, Hindi, Bengali, Marathi, Tamil, Telugu across the core emergency surfaces
 - **Voice SOS** — TTS + STT for hands-busy emergencies
 - **Offline maps** — PowerSync regional hospital/trauma center data; works offline
 - **Good Samaritan guidance** — Indian law explained in-app so bystanders know they're protected
+
+---
+
+## Feature Status
+
+RoadSOS is safer when its limits are explicit. Current status:
+
+| Feature | Status | Reality check |
+|---------|--------|---------------|
+| Crash auto-detection | **Partial** | Requires motion sensors, permissions, and usable GPS speed context; not foolproof in tunnels, denied-permission cases, or cold-start GPS loss. |
+| Gemma 4 auto-SOS triage | **Real** | Text-first triage runs in the emergency pipeline with cloud -> on-device -> heuristic -> keyword fallback. |
+| Gemma 4 vision triage | **Partial** | Works only when a bystander supplies a scene photo; automatic silent camera capture is not used in the auto-SOS path. |
+| SMS emergency dispatch | **Partial** | Real when the carrier/backend path is configured and reachable; request acceptance is not the same as confirmed ambulance arrival. |
+| BLE SOS beacon | **Partial** | Nearby RoadSOS phones can detect the broadcast, but this is not a substitute for EMS dispatch and is not a multi-hop public mesh. |
+| Nearby responder relay | **Planned / not configured** | The app shows this as skipped when no real responder relay is wired. |
+| Offline first-aid guidance | **Real** | Uses the bundled SQLite/FTS guidance library with emergency disclaimers; it is guidance, not medical advice. |
+| Family circle / tracking | **Partial** | Useful when the user already has a signed-in family circle and connectivity; not guaranteed in every emergency. |
 
 ---
 
@@ -162,7 +179,7 @@ AGENT LOOP (fires within 10 seconds of crash detection):
 └─────────────────────────────────────────────────────────────┘
 ```
 
-Gemma 4's function calling is what makes the PLAN → ACT step real. The model doesn't describe what should happen — it calls `dispatch_emergency(severity=5, services=["ambulance","fire_department","rescue"], gps="28.62,77.37", sms="RoadSOS SOS...")`. The Kaggle notebook (Cell 11) shows this live.
+Gemma 4's structured output is what makes the PLAN → ACT step real. In the app, the model returns typed JSON (severity, services, first-aid focus), and the Dart dispatch pipeline executes the actual SMS / BLE / family-link actions. The Kaggle notebook (Cell 11) shows the structured triage flow.
 
 ---
 
@@ -172,7 +189,7 @@ Gemma 4's function calling is what makes the PLAN → ACT step real. The model d
 |------------------|--------|-----------------|
 | **Impact & Vision** | 40% | 170,000 deaths/year. 350M+ target users. MIT licensed for any state EMS. Deployable with zero custom infra. |
 | **Video Storytelling** | 30% | Full 3-min script in `VIDEO_SCRIPT.md`. Emotional hook → live demo → wow moment → scale. Keyword vs Gemma split-screen. |
-| **Technical Depth** | 30% | 4-tier inference routing. Real flutter_gemma LiteRT integration. Function calling agent (Cell 11). BLE AES-GCM mesh. Server-side Twilio SMS. 80-entry RAG corpus. |
+| **Technical Depth** | 30% | 4-tier inference routing. Real flutter_gemma LiteRT integration. Structured triage demo (Cell 11). BLE SOS beacon. Server-side Twilio SMS. 80-entry RAG corpus. |
 
 **Track alignment:**
 - **Safety & Trust** — primary track; crash detection + dispatch + bystander guidance is pure safety infrastructure
@@ -270,13 +287,13 @@ RoadSOS exists because the difference between life and death on an Indian highwa
 These are the five questions experienced hackathon judges ask every safety-AI project. Answered here so they're in the repo, not just in the video.
 
 **"Is this just GPT-4 with a safety prompt?"**  
-No — GPT-4 doesn't run on a phone with no internet. Gemma 4 E4B does, via MediaPipe LiteRT. The offline tier is the entire point: 60% of fatal crashes in India happen where GPT-4 has no signal. See Cell 11 for function calling proof.
+No — GPT-4 doesn't run on a phone with no internet. Gemma 4 E4B does, via MediaPipe LiteRT. The offline tier is the entire point: 60% of fatal crashes in India happen where GPT-4 has no signal. See Cell 11 for structured triage proof.
 
 **"Does the offline mode actually work?"**  
 `gemma_local_service.dart` calls `FlutterGemmaPlugin.instance.init()` with the local model path. `gemma_model_manager.dart` handles the 2.4 GB download with resume support. Switch the phone to airplane mode — Tiers 3 and 4 always work, Tier 2 works once the model is downloaded.
 
 **"Is the SMS dispatch real?"**  
-The Twilio relay is a Supabase Edge Function (`supabase/functions/triage-gemini/`). The API key lives server-side. The app sends no credentials. An unconscious victim's phone fires the SMS because the app detected the crash — not because they pressed anything.
+The Twilio relay is a Supabase Edge Function (`supabase/functions/sms-dispatch/`). The API key lives server-side. The app sends no credentials. An unconscious victim's phone can request SMS dispatch because the app detected the crash — not because they pressed anything.
 
 **"What about false positives — won't the accelerometer trigger while off-road?"**  
 Multi-stage detection: accelerometer spike AND sudden GPS velocity drop AND absence of deliberate phone movement afterward. Three independent signals must agree. False positive rate in testing: < 1 per 200 hours of driving.

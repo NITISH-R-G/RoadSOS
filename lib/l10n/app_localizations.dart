@@ -352,6 +352,36 @@ abstract class AppLocalizations {
   /// **'FIRST AID GUIDANCE'**
   String get firstAidGuidance;
 
+  /// No description provided for @firstAidScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First aid guide'**
+  String get firstAidScreenTitle;
+
+  /// No description provided for @firstAidSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe injury or symptom…'**
+  String get firstAidSearchHint;
+
+  /// No description provided for @firstAidLookupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency first-aid lookup'**
+  String get firstAidLookupTitle;
+
+  /// No description provided for @firstAidLookupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Type an injury to search the offline guidance library.\nFor guidance only — call 108/112 for real medical help.'**
+  String get firstAidLookupSubtitle;
+
+  /// No description provided for @firstAidLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load first-aid guidance on this device.'**
+  String get firstAidLoadError;
+
   /// No description provided for @noAiBadge.
   ///
   /// In en, this message translates to:

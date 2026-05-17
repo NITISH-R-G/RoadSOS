@@ -143,6 +143,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get firstAidGuidance => 'FIRST AID GUIDANCE';
 
   @override
+  String get firstAidScreenTitle => 'First aid guide';
+
+  @override
+  String get firstAidSearchHint => 'Describe injury or symptom…';
+
+  @override
+  String get firstAidLookupTitle => 'Emergency first-aid lookup';
+
+  @override
+  String get firstAidLookupSubtitle =>
+      'Type an injury to search the offline guidance library.\nFor guidance only — call 108/112 for real medical help.';
+
+  @override
+  String get firstAidLoadError =>
+      'Could not load first-aid guidance on this device.';
+
+  @override
   String get noAiBadge => 'OFFLINE';
 
   @override

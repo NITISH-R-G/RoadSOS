@@ -142,6 +142,23 @@ class AppLocalizationsBn extends AppLocalizations {
   String get firstAidGuidance => 'প্রাথমিক চিকিৎসা';
 
   @override
+  String get firstAidScreenTitle => 'প্রাথমিক চিকিৎসা গাইড';
+
+  @override
+  String get firstAidSearchHint => 'আঘাত বা উপসর্গ লিখুন…';
+
+  @override
+  String get firstAidLookupTitle => 'জরুরি প্রাথমিক চিকিৎসা খোঁজ';
+
+  @override
+  String get firstAidLookupSubtitle =>
+      'অফলাইন নির্দেশিকা লাইব্রেরি খুঁজতে আঘাত লিখুন।\nএটি শুধু দিকনির্দেশনা — প্রকৃত চিকিৎসা সহায়তার জন্য 108/112 নম্বরে কল করুন।';
+
+  @override
+  String get firstAidLoadError =>
+      'এই ডিভাইসে প্রাথমিক চিকিৎসার নির্দেশনা লোড করা যায়নি।';
+
+  @override
   String get noAiBadge => 'OFFLINE';
 
   @override

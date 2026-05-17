@@ -50,8 +50,7 @@ class CrashDetectionService {
 
   final Ref _ref;
 
-  GyroscopeFusionService get _gyro =>
-      _ref.read(gyroscopeFusionServiceProvider);
+  GyroscopeFusionService get _gyro => _ref.read(gyroscopeFusionServiceProvider);
 
   BluetoothVehicleMonitor get _btMonitor =>
       _ref.read(bluetoothVehicleMonitorProvider);
@@ -70,9 +69,9 @@ class CrashDetectionService {
     stopMonitoring();
     // Gyroscope and BT monitor lifecycle managed by their providers.
     _startGpsSpeed();
-    _accelSub = SensorsPlatform.instance
-        .userAccelerometerEventStream()
-        .listen(_onAccelerometer);
+    _accelSub = SensorsPlatform.instance.userAccelerometerEventStream().listen(
+      _onAccelerometer,
+    );
   }
 
   Future<void> _startGpsSpeed() async {
@@ -103,10 +102,7 @@ class CrashDetectionService {
           accuracy: LocationAccuracy.bestForNavigation,
           distanceFilter: 0,
         ),
-      ).listen(
-        _onPosition,
-        onError: (Object _) => _gpsSpeedUsable = false,
-      );
+      ).listen(_onPosition, onError: (Object _) => _gpsSpeedUsable = false);
     } catch (_) {
       _gpsSpeedUsable = false;
     }
@@ -198,9 +194,10 @@ class CrashDetectionService {
       }
       if (minAfter.isInfinite) minAfter = _speedHistory.last.kmh;
 
-      final approach  = maxBefore >= CrashTuning.minApproachSpeedKmh;
-      final halted    = minAfter  <= CrashTuning.stoppedSpeedKmh;
-      final sharpDrop = (maxBefore - minAfter) >= CrashTuning.suddenDecelDeltaKmh;
+      final approach = maxBefore >= CrashTuning.minApproachSpeedKmh;
+      final halted = minAfter <= CrashTuning.stoppedSpeedKmh;
+      final sharpDrop =
+          (maxBefore - minAfter) >= CrashTuning.suddenDecelDeltaKmh;
 
       if (!approach || !(halted || sharpDrop)) {
         appLog.d(
@@ -230,18 +227,16 @@ class CrashDetectionService {
       // ── Gate 5: Multi-signal confidence scoring ────────────────────────
       final confidence = CrashConfidenceEngine.score(
         CrashSignals(
-          accelPeakMs2:              peakMs2,
-          gyroPeakRadPerSec:         gyroPeakRadPerSec,
-          speedBeforeKmh:            maxBefore,
-          speedDropKmh:              maxBefore - minAfter,
+          accelPeakMs2: peakMs2,
+          gyroPeakRadPerSec: gyroPeakRadPerSec,
+          speedBeforeKmh: maxBefore,
+          speedDropKmh: maxBefore - minAfter,
           bluetoothVehicleDisconnect: _btMonitor.recentDisconnect,
-          postImpactDeviceStill:     still,
+          postImpactDeviceStill: still,
         ),
       );
 
-      appLog.w(
-        'CRASH CONFIRMED — $confidence',
-      );
+      appLog.w('CRASH CONFIRMED — $confidence');
 
       // LOW confidence after 4 gates is theoretically impossible but guarded.
       if (confidence.tier == CrashConfidenceTier.low) {
@@ -266,17 +261,54 @@ class CrashDetectionService {
         'confidence=${confidence.score.toStringAsFixed(3)} [${confidence.tierLabel}]',
       );
 
-      _ref.read(emergencyOrchestratorProvider.notifier).triggerSOS();
+      final crashSeverityHint = _severityHintFromSignals(
+        confidence: confidence,
+        peakMs2: peakMs2,
+        gyroPeakRadPerSec: gyroPeakRadPerSec,
+        speedDropKmh: maxBefore - minAfter,
+      );
+      appLog.d(
+        'Crash severity hint=$crashSeverityHint '
+        '(confidence=${confidence.score.toStringAsFixed(3)} '
+        'peak=${peakMs2.toStringAsFixed(1)} drop=${(maxBefore - minAfter).toStringAsFixed(1)} '
+        'gyro=${gyroPeakRadPerSec.toStringAsFixed(2)})',
+      );
+
+      _ref
+          .read(emergencyOrchestratorProvider.notifier)
+          .triggerSOS(crashSeverityHint: crashSeverityHint);
     } finally {
       _evaluationInFlight = false;
     }
   }
 
+  int _severityHintFromSignals({
+    required CrashConfidenceResult confidence,
+    required double peakMs2,
+    required double gyroPeakRadPerSec,
+    required double speedDropKmh,
+  }) {
+    if (confidence.tier == CrashConfidenceTier.high &&
+        (confidence.score >= 0.82 ||
+            peakMs2 >= 70 ||
+            speedDropKmh >= 65 ||
+            gyroPeakRadPerSec >= 4.5)) {
+      return 5;
+    }
+    if (confidence.tier == CrashConfidenceTier.high ||
+        peakMs2 >= 55 ||
+        speedDropKmh >= 40 ||
+        gyroPeakRadPerSec >= 3.5) {
+      return 4;
+    }
+    return 3;
+  }
+
   Future<bool> _measureStillness() async {
     final magnitudes = <double>[];
-    final sub = SensorsPlatform.instance
-        .userAccelerometerEventStream()
-        .listen((e) => magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z)));
+    final sub = SensorsPlatform.instance.userAccelerometerEventStream().listen(
+      (e) => magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z)),
+    );
 
     await Future<void>.delayed(
       Duration(milliseconds: CrashTuning.stillnessSampleWindowMs),

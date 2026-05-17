@@ -142,6 +142,23 @@ class AppLocalizationsTa extends AppLocalizations {
   String get firstAidGuidance => 'முதலுதவி';
 
   @override
+  String get firstAidScreenTitle => 'முதலுதவி வழிகாட்டி';
+
+  @override
+  String get firstAidSearchHint => 'காயம் அல்லது அறிகுறியை எழுதுங்கள்…';
+
+  @override
+  String get firstAidLookupTitle => 'அவசர முதலுதவி தேடல்';
+
+  @override
+  String get firstAidLookupSubtitle =>
+      'ஆஃப்லைன் வழிகாட்டி நூலகத்தில் தேட காயத்தை உள்ளிடுங்கள்.\nஇது வழிகாட்டலுக்கே — உண்மையான மருத்துவ உதவிக்கு 108/112 ஐ அழைக்கவும்.';
+
+  @override
+  String get firstAidLoadError =>
+      'இந்த சாதனத்தில் முதலுதவி வழிகாட்டலை ஏற்ற முடியவில்லை.';
+
+  @override
   String get noAiBadge => 'OFFLINE';
 
   @override

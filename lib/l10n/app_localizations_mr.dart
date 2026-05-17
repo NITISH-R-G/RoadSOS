@@ -142,6 +142,23 @@ class AppLocalizationsMr extends AppLocalizations {
   String get firstAidGuidance => 'प्रथमोपचार';
 
   @override
+  String get firstAidScreenTitle => 'प्राथमिक उपचार मार्गदर्शक';
+
+  @override
+  String get firstAidSearchHint => 'इजा किंवा लक्षण लिहा…';
+
+  @override
+  String get firstAidLookupTitle => 'आपत्कालीन प्राथमिक उपचार शोध';
+
+  @override
+  String get firstAidLookupSubtitle =>
+      'ऑफलाइन मार्गदर्शन लायब्ररी शोधण्यासाठी इजा लिहा.\nहे फक्त मार्गदर्शन आहे — खऱ्या वैद्यकीय मदतीसाठी 108/112 वर कॉल करा.';
+
+  @override
+  String get firstAidLoadError =>
+      'या डिव्हाइसवर प्राथमिक उपचार मार्गदर्शन लोड करता आले नाही.';
+
+  @override
   String get noAiBadge => 'OFFLINE';
 
   @override
