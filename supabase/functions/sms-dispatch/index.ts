@@ -58,7 +58,9 @@ function buildSmsBody(body: ReqBody, emergencyNumber: string): string {
       ? `maps.google.com/?q=${body.latitude.toFixed(5)},${body.longitude.toFixed(5)}`
       : "";
 
-  const core = `RoadSOS EMERGENCY ${sev}${svcs}${loc}${maps}`.trim();
+  const payloadText = body.payload?.trim() ? `CTX: ${body.payload.trim()} ` : "";
+
+  const core = `RoadSOS EMERGENCY ${sev}${svcs}${loc}${payloadText}${maps}`.trim();
   return core.slice(0, 1500);
 }
 

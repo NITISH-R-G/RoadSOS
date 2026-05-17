@@ -481,8 +481,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         'mesh',
         meshOk ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
         meshOk
-            ? 'Mesh beacon active — nearby app users can detect you ✓'
-            : 'Mesh did not start — Bluetooth off, unsupported, or failed.',
+            ? 'BLE beacon active — nearby RoadSOS users within ~30m can detect you ✓'
+            : 'BLE beacon did not start — Bluetooth off, unsupported, or failed.',
       );
       return meshOk;
     });
@@ -572,7 +572,11 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
     final nearbyFuture = guard<bool>(
       id: 'nearby_services',
-      future: Future.delayed(const Duration(seconds: 3), () => true),
+      future: _broadcastToNearbyServices(
+        incidentId: state.incidentId ?? '',
+        location: location,
+        triage: triage,
+      ),
       fallback: false,
       timeoutDetail: 'Nearby services broadcast timed out.',
       failureDetail: 'Nearby services broadcast failed.',
@@ -581,8 +585,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         'nearby_services',
         ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
         ok
-            ? 'Emergency alert broadcasted to nearby facilities and responders ✓'
-            : 'Could not complete nearby services broadcast.',
+            ? 'Emergency alert sent to Supabase + nearby responders ✓'
+            : 'Nearby broadcast skipped — no Supabase session or network.',
       );
       return ok;
     });
@@ -650,6 +654,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     }
 
     // Phase 7: post-dispatch voice briefing — the driver hears what was sent.
+    // CRITICAL: tell the driver whether SMS actually succeeded. Never falsely
+    // reassure an injured person that help is coming when dispatch failed.
     if (state.wasInDrivingMode) {
       final voice = _ref.read(voiceAssistantServiceProvider);
       unawaited(voice.speakTriageSummary(
@@ -657,6 +663,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         services: triage.requiredServices,
         locationCoords: '${location.latitude.toStringAsFixed(2)}, '
             '${location.longitude.toStringAsFixed(2)}',
+        smsSucceeded: anyConfirmed,
       ));
     }
   }
@@ -693,7 +700,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     return const [
       DispatchChannelRow(
         id: 'mesh',
-        title: 'Mesh beacon (BLE)',
+        title: 'BLE beacon (nearby alert)',
         lifecycle: DispatchChannelLifecycle.pending,
         detail: 'Waiting…',
       ),
@@ -717,7 +724,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ),
       DispatchChannelRow(
         id: 'nearby_services',
-        title: 'Nearby Services',
+        title: 'Nearby services (Supabase)',
         lifecycle: DispatchChannelLifecycle.pending,
         detail: 'Waiting…',
       ),
@@ -799,23 +806,61 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   void cancelSOS() => cancelSos();
 
   Future<void> _callEmergencyContact() async {
+    // Always attempt to dial 112 (India ERSS) first — this is the real
+    // emergency dispatch path that connects to police/ambulance/fire.
+    // The user's saved contact is secondary (family notification).
+    if (!kIsWeb) {
+      await _dialNumber('112', desc: 'ERSS 112');
+    }
+
     final profile = _ref.read(userProfileProvider);
     final contact = profile.emergencyContact.trim();
     if (contact.isEmpty) {
-      appLog.w('[Orchestrator] No emergency contact found to call.');
+      appLog.w('[Orchestrator] No personal emergency contact — 112 dialed.');
       return;
     }
 
-    final uri = Uri.parse('tel:$contact');
+    await _dialNumber(contact, desc: 'emergency contact');
+  }
+
+  Future<void> _dialNumber(String number, {required String desc}) async {
+    final uri = Uri.parse('tel:$number');
     try {
       if (await canLaunchUrl(uri)) {
-        appLog.i('[Orchestrator] Initiating automated call to $contact');
+        appLog.i('[Orchestrator] Dialing $desc ($number)');
         await launchUrl(uri);
       } else {
-        appLog.w('[Orchestrator] Could not launch dialer for $contact');
+        appLog.w('[Orchestrator] Could not launch dialer for $desc');
       }
     } catch (e, st) {
-      appLog.e('[Orchestrator] Error launching dialer', error: e, stackTrace: st);
+      appLog.e('[Orchestrator] Error dialing $desc', error: e, stackTrace: st);
+    }
+  }
+
+  Future<bool> _broadcastToNearbyServices({
+    required String incidentId,
+    required LocationFix location,
+    required TriageResult triage,
+  }) async {
+    if (!_hasSupabaseSession()) return false;
+    try {
+      final client = Supabase.instance.client;
+      final userId = client.auth.currentUser?.id;
+      await client.from('sos_broadcasts').insert({
+        'incident_id': incidentId,
+        'user_id': userId,
+        'latitude': location.latitude,
+        'longitude': location.longitude,
+        'severity': triage.severityLevel,
+        'services_needed': triage.requiredServices.join(','),
+        'status': 'active',
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      });
+      appLog.i('[Orchestrator] SOS broadcast inserted into Supabase');
+      return true;
+    } catch (e, st) {
+      appLog.w('[Orchestrator] Nearby services broadcast failed', error: e, stackTrace: st);
+      return false;
     }
   }
 

@@ -424,7 +424,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           icon: Icons.camera_enhance,
           color: const Color(0xFFF59220),
           title: 'Capture Scene',
-          subtitle: 'Document crash with AI-powered photo analysis',
+          subtitle: 'Photo + Gemma 4 vision triage + witness interview',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(
@@ -506,8 +506,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           context,
           icon: Icons.monitor_heart,
           color: const Color(0xFFE8281A),
-          title: 'Vital Scan',
-          subtitle: 'Check heart rate & oxygen saturation',
+          title: 'Vital Entry',
+          subtitle: 'Log pulse, breathing rate & SpO₂ for dispatcher relay',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const VitalScanScreen()),
@@ -534,8 +534,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           context,
           icon: Icons.forum,
           color: const Color(0xFF9C27B0),
-          title: 'Mesh Chat',
-          subtitle: 'Offline Bluetooth messaging — no signal needed',
+          title: 'BLE Chat',
+          subtitle: 'Nearby Bluetooth messaging (~30m range, no internet needed)',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const MeshChatScreen()),

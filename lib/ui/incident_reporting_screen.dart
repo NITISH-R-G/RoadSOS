@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -5,8 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/ai_triage_service.dart';
 import '../services/app_locale_controller.dart';
+import '../services/camera_triage_service.dart';
+import '../services/location_service.dart';
+import '../services/emergency_orchestrator.dart';
 import '../services/roadsos_assistant_service.dart';
+
 class IncidentReportingScreen extends ConsumerStatefulWidget {
   const IncidentReportingScreen({super.key});
 
@@ -21,6 +27,8 @@ class _IncidentReportingScreenState
   final _picker = ImagePicker();
   Uint8List? _sceneImageBytes;
   bool _sceneCaptureBusy = false;
+  bool _analysisRunning = false;
+  String? _analysisResult;
 
   @override
   Widget build(BuildContext context) {
@@ -40,11 +48,71 @@ class _IncidentReportingScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader('MULTIMODAL: DIGITAL TWIN'),
+            // Emergency quick-action bar — most useful actions first
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'QUICK ACTIONS',
+                    style: TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            onPressed: _sceneCaptureBusy ? null : _captureScene,
+                            icon: const Icon(Icons.camera_alt, size: 18),
+                            label: const Text('PHOTO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFF59220),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              final sosState = ref.read(emergencyOrchestratorProvider);
+                              if (sosState.phase == SOSPhase.idle) {
+                                ref.read(emergencyOrchestratorProvider.notifier).startSos(isBystander: true);
+                              }
+                            },
+                            icon: const Icon(Icons.emergency, size: 18),
+                            label: const Text('SOS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildSectionHeader('SCENE PHOTO'),
             const SizedBox(height: 12),
             _buildSceneCaptureCard(l10n),
             const SizedBox(height: 32),
-            _buildSectionHeader('AI INTERVIEW: SITUATIONAL NUANCE'),
+            _buildSectionHeader('WITNESS INTERVIEW (GEMMA 4)'),
             const SizedBox(height: 12),
             _buildVoiceInterviewCard(assistantState, l10n),
             const SizedBox(height: 32),
@@ -118,12 +186,37 @@ class _IncidentReportingScreenState
                 backgroundColor: _sceneImageBytes != null ? Colors.green : Colors.blue,
               ),
             ),
-            if (_sceneImageBytes != null)
+            if (_sceneImageBytes != null && _analysisRunning)
+              const Padding(
+                padding: EdgeInsets.only(top: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                    SizedBox(width: 8),
+                    Text(
+                      'Gemma 4 analyzing scene…',
+                      style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            if (_sceneImageBytes != null && !_analysisRunning && _analysisResult != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  'Photo attached to this report (not auto-analyzed in this build).',
+                  _analysisResult!,
                   style: const TextStyle(
+                      color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            if (_sceneImageBytes != null && !_analysisRunning && _analysisResult == null)
+              const Padding(
+                padding: EdgeInsets.only(top: 12),
+                child: Text(
+                  'Photo attached — tap to send for AI analysis.',
+                  style: TextStyle(
                       color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
@@ -182,10 +275,63 @@ class _IncidentReportingScreenState
       }
     }
 
-    if (!kIsWeb && mounted) {
+    if (!kIsWeb && mounted && _sceneImageBytes != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Scene photo attached.')),
+        const SnackBar(content: Text('Scene photo attached — analyzing with Gemma 4…')),
       );
+      _analyzeWithGemma4();
+    }
+  }
+
+  Future<void> _analyzeWithGemma4() async {
+    if (_sceneImageBytes == null) return;
+    setState(() {
+      _analysisRunning = true;
+      _analysisResult = null;
+    });
+
+    try {
+      final base64Jpeg = base64Encode(_sceneImageBytes!);
+      final photo = CapturedScenePhoto(
+        base64Jpeg: base64Jpeg,
+        sizeBytes: _sceneImageBytes!.length,
+        capturedAt: DateTime.now().toUtc(),
+      );
+
+      final aiTriage = ref.read(aiTriageServiceProvider);
+      final lang = ref.read(appLocaleProvider).languageCode;
+
+      LocationFix? loc;
+      try {
+        loc = await ref.read(locationServiceProvider).getCurrentLocation()
+            .timeout(const Duration(seconds: 8));
+      } catch (_) {}
+
+      final locationStr = loc != null
+          ? '${loc.latitude},${loc.longitude}'
+          : 'unknown';
+
+      final result = await aiTriage.triageWithScenePhoto(
+        audioTranscript: 'Bystander scene photo analysis',
+        locationString: locationStr,
+        accelerometerSeverityHint: 3,
+        scenePhoto: photo,
+        languageCode: lang,
+      ).timeout(const Duration(seconds: 15));
+
+      if (!mounted) return;
+      setState(() {
+        _analysisRunning = false;
+        _analysisResult = 'Gemma 4 analysis: Severity ${result.severityLevel}/5 — '
+            '${result.requiredServices.join(", ")} needed. '
+            '(${result.sourceLabel})';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _analysisRunning = false;
+        _analysisResult = 'AI analysis unavailable — photo saved for manual review.';
+      });
     }
   }
 

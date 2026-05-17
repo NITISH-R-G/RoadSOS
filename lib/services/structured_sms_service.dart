@@ -6,6 +6,7 @@ import 'gemma_local_service.dart';
 import 'india_emergency_routing.dart';
 import 'location_service.dart';
 import 'user_profile_service.dart';
+import 'vital_signs_service.dart';
 
 /// Hard cap for the SMS body — 1 standard SMS segment is 160 GSM-7 chars.
 /// We aim well below this (≈150) so carrier headers / encoding shifts do not
@@ -55,7 +56,7 @@ class StructuredSmsService {
 
     final servicesShort = _shortServices(triage.requiredServices);
     final profileShort = _shortProfile(profile);
-    final vitals = _vitalsPlaceholder();
+    final vitals = _resolveVitals();
 
     final deterministic = _buildDeterministic(
       stateCode: stateCode,
@@ -144,9 +145,20 @@ class StructuredSmsService {
     return 'B$btShort A:$allergyShort';
   }
 
-  /// Vitals placeholder until [VitalSignsService] exposes a live snapshot.
-  /// Question marks tell the dispatcher "unknown — please probe on callback".
-  String _vitalsPlaceholder() => 'C?B?Bl?';
+  /// Returns vitals from VitalSignsService if a bystander recorded them,
+  /// otherwise question marks tell the dispatcher "unknown — please probe".
+  String _resolveVitals() {
+    try {
+      final vitals = _ref.read(vitalSignsProvider);
+      if (vitals != null) {
+        final hr = vitals.bpm;
+        final rr = vitals.respiratoryRate;
+        final spo2 = vitals.bloodOxygen.toStringAsFixed(0);
+        return 'HR${hr}RR${rr}O$spo2';
+      }
+    } catch (_) {}
+    return 'C?B?Bl?';
+  }
 
   String _truncateGsm7Safe(String input, int maxLen) {
     final cleaned = input.replaceAll(RegExp(r'\s+'), ' ').trim();

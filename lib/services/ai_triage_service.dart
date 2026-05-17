@@ -270,11 +270,19 @@ class AiTriageService {
     int severityHint = 3,
   }) async {
     final locationString = '${location.latitude},${location.longitude}';
-    final ctx = transcript.trim().isEmpty
-        ? (isBystander
-            ? 'Bystander reporting roadside emergency'
-            : 'Emergency SOS triggered')
-        : transcript;
+    String ctx;
+    if (transcript.trim().isNotEmpty) {
+      ctx = transcript;
+    } else if (isBystander) {
+      ctx = 'Bystander reporting roadside emergency at $locationString. '
+          'Severity hint from sensors: $severityHint/5. '
+          'Unknown number of victims. Assess and triage.';
+    } else {
+      ctx = 'Automatic crash SOS triggered at $locationString. '
+          'Accelerometer severity: $severityHint/5. '
+          'Driver may be incapacitated — no verbal input available. '
+          'Assume worst case: possible unconscious victim in vehicle.';
+    }
 
     return triageEmergency(
       audioTranscript: ctx,

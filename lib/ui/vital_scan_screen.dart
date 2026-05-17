@@ -102,7 +102,8 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
           ],
           const SizedBox(height: 24),
           Text(
-            AppLocalizations.of(context)!.vitalAlignFinger,
+            'Bystander-entered values are relayed to 108/112 dispatchers. '
+            'This is not a medical device — use a pulse oximeter if available.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 12),
           ),

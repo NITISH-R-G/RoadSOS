@@ -68,14 +68,16 @@ class VoiceAssistantService {
 
   /// Announces the completed triage after dispatch — post-SOS voice briefing.
   ///
-  /// Spoken immediately after the pipeline completes so the driver/victim
-  /// knows what was dispatched without needing to look at the screen.
+  /// [smsSucceeded] controls whether the announcement says "dispatched" or
+  /// warns the user to dial manually. An injured driver relying on audio must
+  /// never be falsely reassured that help is on the way when SMS failed.
   Future<void> speakTriageSummary({
     required int severity,
     required List<String> services,
     required String locationCoords,
+    bool smsSucceeded = false,
   }) async {
-    final msg = _localizedTriageSummary(severity, services, locationCoords);
+    final msg = _localizedTriageSummary(severity, services, locationCoords, smsSucceeded);
     await _tts.setSpeechRate(0.46);
     await speak(msg);
     await _tts.setSpeechRate(0.48);
@@ -89,6 +91,10 @@ class VoiceAssistantService {
         return 'அவசர SOS $seconds வினாடிகளில். நிறுத்த "நிறுத்து" என்று சொல்லுங்கள்.';
       case 'te':
         return 'అత్యవసర SOS $seconds సెకన్లలో. ఆపడానికి "ఆపు" అని చెప్పండి.';
+      case 'bn':
+        return 'জরুরি SOS $seconds সেকেন্ডে। বাতিল করতে "থামো" বলুন।';
+      case 'mr':
+        return 'आणीबाणी SOS $seconds सेकंदात। थांबवण्यासाठी "थांब" म्हणा।';
       default:
         return 'Emergency SOS in $seconds seconds. $locationHint. '
             'Say "cancel" to stop.';
@@ -99,15 +105,48 @@ class VoiceAssistantService {
     int severity,
     List<String> services,
     String location,
+    bool smsSucceeded,
   ) {
     final svcText = services.map(_serviceLabel).join(' and ');
     switch (_locale.languageCode) {
       case 'hi':
-        return 'SOS भेजा गया। $svcText बुलाया गया। गंभीरता स्तर $severity। '
-            'स्थान: $location। शांत रहें।';
+        if (smsSucceeded) {
+          return 'SOS भेजा गया। $svcText बुलाया गया। गंभीरता स्तर $severity। '
+              'स्थान: $location। शांत रहें।';
+        }
+        return 'SOS संदेश भेजने में विफल। कृपया 112 डायल करें। '
+            'गंभीरता स्तर $severity। स्थान: $location।';
+      case 'bn':
+        if (smsSucceeded) {
+          return 'SOS পাঠানো হয়েছে। $svcText অনুরোধ করা হয়েছে। তীব্রতা $severity। '
+              'অবস্থান: $location। শান্ত থাকুন।';
+        }
+        return 'SOS বার্তা পাঠানো যায়নি। অনুগ্রহ করে 112 ডায়াল করুন।';
+      case 'mr':
+        if (smsSucceeded) {
+          return 'SOS पाठवला। $svcText मागवला। तीव्रता $severity। '
+              'स्थान: $location। शांत रहा।';
+        }
+        return 'SOS संदेश पाठवता आला नाही। कृपया 112 डायल करा।';
+      case 'ta':
+        if (smsSucceeded) {
+          return 'SOS அனுப்பப்பட்டது. $svcText கோரப்பட்டது. தீவிரம் $severity. '
+              'இடம்: $location. அமைதியாக இருங்கள்.';
+        }
+        return 'SOS செய்தி அனுப்ப முடியவில்லை. 112 அழைக்கவும்.';
+      case 'te':
+        if (smsSucceeded) {
+          return 'SOS పంపబడింది. $svcText అభ్యర్థించబడింది. తీవ్రత $severity. '
+              'స్థానం: $location. ప్రశాంతంగా ఉండండి.';
+        }
+        return 'SOS సందేశం పంపడం విఫలమైంది. దయచేసి 112 డయల్ చేయండి.';
       default:
-        return 'SOS dispatched. $svcText requested. Severity level $severity. '
-            'Location: $location. Stay calm and do not move if injured.';
+        if (smsSucceeded) {
+          return 'SOS dispatched. $svcText requested. Severity level $severity. '
+              'Location: $location. Stay calm and do not move if injured.';
+        }
+        return 'SOS message could not be sent automatically. '
+            'Please dial 112 now. Severity level $severity. Location: $location.';
     }
   }
 
