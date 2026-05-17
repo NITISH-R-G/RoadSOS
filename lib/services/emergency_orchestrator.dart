@@ -32,6 +32,7 @@ import 'gyroscope_fusion_service.dart';
 import 'triage_validation_agent.dart';
 import 'triage_feedback_service.dart';
 import 'emergency_beacon_service.dart';
+import 'nearby_services_broadcast_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'emergency_notification_service.dart';
 
@@ -570,21 +571,29 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return family;
     });
 
-    final nearbyFuture = guard<bool>(
+    final nearbyFuture = guard<NearbyBroadcastOutcome>(
       id: 'nearby_services',
-      future: Future.delayed(const Duration(seconds: 3), () => true),
-      fallback: false,
+      future: _ref.read(nearbyServicesBroadcastServiceProvider).broadcast(
+            incidentId: state.incidentId ?? '',
+            latitude: location.latitude,
+            longitude: location.longitude,
+            severity: triage.severityLevel,
+            requiredServices: triage.requiredServices,
+            nearbyFacilityCount: state.nearbyFacilities.length,
+          ),
+      fallback: const NearbyBroadcastOutcome(
+        ok: false,
+        detail: 'Nearby services broadcast timed out.',
+      ),
       timeoutDetail: 'Nearby services broadcast timed out.',
       failureDetail: 'Nearby services broadcast failed.',
-    ).then((ok) {
+    ).then((outcome) {
       _patchDispatchChannel(
         'nearby_services',
-        ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
-        ok
-            ? 'Emergency alert broadcasted to nearby facilities and responders ✓'
-            : 'Could not complete nearby services broadcast.',
+        outcome.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        outcome.detail,
       );
-      return ok;
+      return outcome;
     });
 
     List<Object?> results;
@@ -595,7 +604,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         persistedFuture,
         familyFuture,
         nearbyFuture,
-      ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 1));
+      ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 2));
     } catch (e, st) {
       // Absolute guard: never hang in dispatching.
       appLog.w('[Orchestrator] Dispatch futures did not complete in time', error: e, stackTrace: st);
