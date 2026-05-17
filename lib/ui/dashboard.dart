@@ -904,11 +904,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (confirmed != true) return;
     if (!context.mounted) return;
 
-    // Bystander mode = the safety-validation agent treats it as severity 2
-    // baseline; even if dispatch fails (no Supabase / no SMS perm), the
-    // countdown + status panel still walk the same code path the real SOS
-    // does, which is the entire point of the demo.
-    await ref.read(emergencyOrchestratorProvider.notifier).startSos(isBystander: true);
+    // Demo mode must never call the live SOS pipeline. It uses a separate
+    // simulated orchestrator path that marks every dispatch channel as skipped.
+    await ref.read(emergencyOrchestratorProvider.notifier).startDemoSos();
 
     // Auto-open the Bystander Coach so the rehearsal hits the on-device
     // Gemma-4 voice flow without the user having to tap a second time.

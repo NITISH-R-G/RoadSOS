@@ -76,6 +76,7 @@ class SOSState {
   final String? incidentId;
   final List<Facility> nearbyFacilities;
   final bool isBystander;
+  final bool isDemo;
   final List<DispatchChannelRow> dispatchChannels;
   final bool isBeaconActive;
 
@@ -91,6 +92,7 @@ class SOSState {
     this.incidentId,
     this.nearbyFacilities = const [],
     this.isBystander = false,
+    this.isDemo = false,
     this.dispatchChannels = const [],
     this.isBeaconActive = false,
     this.wasInDrivingMode = false,
@@ -105,6 +107,7 @@ class SOSState {
     String? incidentId,
     List<Facility>? nearbyFacilities,
     bool? isBystander,
+    bool? isDemo,
     List<DispatchChannelRow>? dispatchChannels,
     bool? isBeaconActive,
     bool? wasInDrivingMode,
@@ -118,6 +121,7 @@ class SOSState {
       incidentId: incidentId ?? this.incidentId,
       nearbyFacilities: nearbyFacilities ?? this.nearbyFacilities,
       isBystander: isBystander ?? this.isBystander,
+      isDemo: isDemo ?? this.isDemo,
       dispatchChannels: dispatchChannels ?? this.dispatchChannels,
       isBeaconActive: isBeaconActive ?? this.isBeaconActive,
       wasInDrivingMode: wasInDrivingMode ?? this.wasInDrivingMode,
@@ -156,8 +160,6 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   static const Duration _dispatchChannelTimeout = Duration(seconds: 8);
 
   EmergencyOrchestrator(this._ref) : super(const SOSState()) {
-     
-    
     _restoreState();
     _ref.read(crashDetectionServiceProvider).startMonitoring();
     // Phase 8: ensure RL bias is loaded before any SOS fires.
@@ -188,7 +190,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     appLog.d('🚒 [ORCHESTRATOR] $message');
   }
 
-  Future<void> startSos({bool isBystander = false}) async {
+  Future<void> startSos({bool isBystander = false, bool isDemo = false}) async {
     if (state.phase != SOSPhase.idle) return;
 
     final isDriving = _ref.read(drivingModeProvider) == DrivingMode.driving;
@@ -197,23 +199,24 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       phase: SOSPhase.countdown,
       countdownSeconds: 10,
       isBystander: isBystander,
+      isDemo: isDemo,
       incidentId: _uuid.v4(),
       dispatchChannels: const [],
       wasInDrivingMode: isDriving,
     );
 
     final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
-    _log(
-      isBystander
-          ? l10n.orchestratorBystanderStarted
-          : l10n.orchestratorSelfSosStarted,
-      SOSPhase.countdown,
-    );
+    final startMessage = isDemo
+        ? 'Demo SOS rehearsal started — simulated only, no dispatch side effects.'
+        : isBystander
+            ? l10n.orchestratorBystanderStarted
+            : l10n.orchestratorSelfSosStarted;
+    _log(startMessage, SOSPhase.countdown);
 
     // Phase 7: hands-free countdown announcement when driving.
     // Spoken once at the start — no per-tick repetition to avoid interfering
     // with voice cancel listening which runs in parallel.
-    if (isDriving) {
+    if (isDriving && !isDemo) {
       final voice = _ref.read(voiceAssistantServiceProvider);
       unawaited(voice.speakHandsFreeCountdown(10, 'Location being acquired'));
 
@@ -236,10 +239,16 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         state = state.copyWith(countdownSeconds: state.countdownSeconds - 1);
       } else {
         timer.cancel();
-        _executeEmergencyPipeline();
+        if (isDemo) {
+          _executeDemoPipeline();
+        } else {
+          _executeEmergencyPipeline();
+        }
       }
     });
   }
+
+  Future<void> startDemoSos() => startSos(isBystander: true, isDemo: true);
 
   void cancelSos() {
     _countdownTimer?.cancel();
@@ -314,6 +323,11 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       _patchDispatchChannel('mesh', DispatchChannelLifecycle.skipped, 'Skipped — no usable GPS fix.');
       _patchDispatchChannel('family_link', DispatchChannelLifecycle.skipped, 'Skipped — no usable GPS fix.');
       _patchDispatchChannel('local_log', DispatchChannelLifecycle.failed, 'Not saved — no usable GPS fix.');
+      _patchDispatchChannel(
+        'nearby_services',
+        DispatchChannelLifecycle.skipped,
+        'Not automated in this build — call 112/108 or use the hospital list manually.',
+      );
       _patchDispatchChannel('sms', DispatchChannelLifecycle.inProgress, 'Sending emergency SMS (no GPS)…');
       final smsOutcome = await _dispatchSmsWithRetry(
         l10n.orchestratorSmsNoGpsPayload,
@@ -431,7 +445,11 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     _patchDispatchChannel('sms', DispatchChannelLifecycle.inProgress, 'Sending emergency SMS…');
     _patchDispatchChannel('local_log', DispatchChannelLifecycle.inProgress, 'Saving incident on device…');
     _patchDispatchChannel('family_link', DispatchChannelLifecycle.inProgress, 'Family tracking link…');
-    _patchDispatchChannel('nearby_services', DispatchChannelLifecycle.inProgress, 'Broadcasting to nearby services…');
+    _patchDispatchChannel(
+      'nearby_services',
+      DispatchChannelLifecycle.skipped,
+      'Not automated in this build — use 112/108 and share the nearest hospital list manually.',
+    );
 
     // Phase 9: Automated alerts and calling
     unawaited(_notifyUser());
@@ -570,23 +588,6 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return family;
     });
 
-    final nearbyFuture = guard<bool>(
-      id: 'nearby_services',
-      future: Future.delayed(const Duration(seconds: 3), () => true),
-      fallback: false,
-      timeoutDetail: 'Nearby services broadcast timed out.',
-      failureDetail: 'Nearby services broadcast failed.',
-    ).then((ok) {
-      _patchDispatchChannel(
-        'nearby_services',
-        ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
-        ok
-            ? 'Emergency alert broadcasted to nearby facilities and responders ✓'
-            : 'Could not complete nearby services broadcast.',
-      );
-      return ok;
-    });
-
     List<Object?> results;
     try {
       results = await Future.wait([
@@ -594,7 +595,6 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         smsFuture,
         persistedFuture,
         familyFuture,
-        nearbyFuture,
       ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 1));
     } catch (e, st) {
       // Absolute guard: never hang in dispatching.
@@ -659,6 +659,77 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             '${location.longitude.toStringAsFixed(2)}',
       ));
     }
+  }
+
+  Future<void> _executeDemoPipeline() async {
+    final location = LocationFix(
+      latitude: 28.6139,
+      longitude: 77.2090,
+      accuracy: 12,
+      source: 'demo',
+      timestamp: DateTime.now(),
+    );
+    final triage = TriageResult(
+      functionCall: 'dispatch_emergency_demo',
+      location: '${location.latitude},${location.longitude}',
+      severityLevel: 4,
+      requiredServices: const ['ambulance', 'police'],
+      firstAidQuery: 'Demo: airway, bleeding control, spinal precautions',
+      compressedPayload: 'DEMO_ONLY_NO_DISPATCH',
+      thinkingTrace:
+          'Simulated Gemma 4 rehearsal output. No SMS, BLE, cloud write, phone call, or WebRTC action was attempted.',
+      source: TriageSource.webDemo,
+      confidence: 1,
+    );
+
+    _log(
+      'Demo: using simulated crash location and simulated triage output.',
+      SOSPhase.gpsLocking,
+    );
+    state = state.copyWith(location: location, phase: SOSPhase.triaging);
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    state = state.copyWith(triageResult: triage);
+    _log(
+      'Demo: simulated triage complete — no medical or dispatch action taken.',
+      SOSPhase.triaging,
+    );
+
+    state = state.copyWith(
+      phase: SOSPhase.dispatching,
+      dispatchChannels: _initialDispatchRows(),
+    );
+    _patchDispatchChannel(
+      'mesh',
+      DispatchChannelLifecycle.skipped,
+      'Demo only — BLE beacon was not started.',
+    );
+    _patchDispatchChannel(
+      'sms',
+      DispatchChannelLifecycle.skipped,
+      'Demo only — no SMS, 112, 108, or dialer action was attempted.',
+    );
+    _patchDispatchChannel(
+      'local_log',
+      DispatchChannelLifecycle.skipped,
+      'Demo only — incident was not saved as a real emergency.',
+    );
+    _patchDispatchChannel(
+      'family_link',
+      DispatchChannelLifecycle.skipped,
+      'Demo only — Family Circle and WebRTC were not contacted.',
+    );
+    _patchDispatchChannel(
+      'nearby_services',
+      DispatchChannelLifecycle.skipped,
+      'Demo only — no nearby facility or responder broadcast was sent.',
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+
+    state = state.copyWith(phase: SOSPhase.active);
+    _log(
+      'Demo session active — this is a rehearsal. In a real crash, call 112/108 if automated SMS is not confirmed.',
+      SOSPhase.active,
+    );
   }
 
   Future<SmsDispatchOutcome> _dispatchSmsWithRetry(

@@ -75,10 +75,10 @@ The app automatically selects the highest-quality available tier at emergency ti
 }
 ```
 
-This JSON triggers:
-- Automated SMS to 108/112 ERSS with GPS coordinates and severity
-- BLE beacon broadcast for nearby RoadSOS users
-- Real-time database record for emergency responders
+This JSON triggers the live pipeline to attempt:
+- SMS to configured emergency relay/device channels, with explicit success/failure status
+- BLE beacon broadcast for nearby RoadSOS users, with explicit success/failure status
+- Local incident logging and Family Circle link creation, when configured
 - Voice-guided first aid in the user's language
 
 ---
@@ -100,7 +100,7 @@ EmergencyOrchestrator
     │       └── Tier 4: OfflineTriageClassifier (keyword fallback)
     │
     ├── EmergencySmsDispatchService (Twilio, server-side — no key on device)
-    ├── MeshNetworkService (BLE AES-GCM encrypted beacon)
+    ├── MeshNetworkService (BLE beacon, beta; encryption integration pending)
     └── VoiceAssistantService (TTS + STT, 6 Indian languages)
 ```
 
@@ -112,12 +112,25 @@ EmergencyOrchestrator
 - **Gemma 4 vision triage** — crash-scene photo analyzed by Gemma 4 27B alongside voice description
 - **4-tier inference** — seamless degradation from cloud to on-device to deterministic
 - **Server-side SMS** — automated Twilio dispatch; works for unconscious victims; no API key on device
-- **BLE encrypted mesh** — AES-GCM beacon so nearby users see an alert even with no server
+- **BLE mesh beacon (Beta)** — nearby RoadSOS users can detect alerts when Bluetooth works; payload encryption is not wired into the live mesh path yet
 - **First aid RAG** — 80+ entry SQLite FTS5 corpus; Gemma 4 E4B runs lookup on-device
 - **6 Indian languages** — English, Hindi, Bengali, Marathi, Tamil, Telugu; full localization
 - **Voice SOS** — TTS + STT for hands-busy emergencies
 - **Offline maps** — PowerSync regional hospital/trauma center data; works offline
 - **Good Samaritan guidance** — Indian law explained in-app so bystanders know they're protected
+
+---
+
+## Functional Reality Check
+
+RoadSOS is safety-critical software. A feature name is not enough; the app must show what is real, beta, simulated, or manual-action-only.
+
+- **Real emergency path:** SOS countdown, location acquisition, Gemma 4 triage fallback stack, SMS attempt status, BLE beacon attempt status, local incident log attempt, and Family Circle link attempt all report explicit success/failure/skipped states.
+- **Demo Mode:** fully simulated. It no longer calls the live SOS pipeline and cannot send SMS, dial 112/108, start BLE broadcast, write a real incident, or ring Family Circle.
+- **Nearby Services:** not automated in this build. The dispatch panel now marks this as skipped/manual action instead of pretending a responder/facility broadcast succeeded.
+- **BLE mesh:** beta. The app attempts BLE broadcast, but users must not treat it as a guaranteed dispatch channel, and live mesh payload encryption still needs to be wired before production claims.
+- **Gemma 4:** used for cloud/on-device triage when configured and available; deterministic local tiers remain mandatory because an accident app must still respond when model, network, or device resources fail.
+- **No 100% guarantee:** RoadSOS can reduce time-to-help, but it cannot guarantee rescue in every situation. The UI must always tell the user when manual action is needed.
 
 ---
 
@@ -172,7 +185,7 @@ Gemma 4's function calling is what makes the PLAN → ACT step real. The model d
 |------------------|--------|-----------------|
 | **Impact & Vision** | 40% | 170,000 deaths/year. 350M+ target users. MIT licensed for any state EMS. Deployable with zero custom infra. |
 | **Video Storytelling** | 30% | Full 3-min script in `VIDEO_SCRIPT.md`. Emotional hook → live demo → wow moment → scale. Keyword vs Gemma split-screen. |
-| **Technical Depth** | 30% | 4-tier inference routing. Real flutter_gemma LiteRT integration. Function calling agent (Cell 11). BLE AES-GCM mesh. Server-side Twilio SMS. 80-entry RAG corpus. |
+| **Technical Depth** | 30% | 4-tier inference routing. Real flutter_gemma LiteRT integration. Function calling agent (Cell 11). BLE mesh beta with encryption still pending. Server-side/device SMS status reporting. 80-entry RAG corpus. |
 
 **Track alignment:**
 - **Safety & Trust** — primary track; crash detection + dispatch + bystander guidance is pure safety infrastructure
