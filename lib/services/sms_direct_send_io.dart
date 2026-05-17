@@ -13,9 +13,9 @@ import '../logging/app_log.dart';
 /// - `url_launcher` is already a dependency; `sms:` URIs open the native
 ///   Messaging app with the number and body pre-filled.
 ///
-/// The native SMS app always works — no special permission, no Android version
-/// restriction, no Google Play policy risk. The user taps Send once;
-/// the pre-filled message is 160–220 chars (well within one SMS).
+/// The native SMS app path is a manual fallback: it opens a pre-filled
+/// composer and the user still must tap Send. Opening this composer is not
+/// proof that an emergency SMS was sent.
 ///
 /// For automated background dispatch (Twilio / Edge Function), see
 /// [EmergencySmsDispatchService._dispatchAndroid] — that path fires first and

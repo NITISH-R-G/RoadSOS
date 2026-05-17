@@ -22,6 +22,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 type ReqBody = {
   payload: string;
+  body?: string;
   latitude?: number;
   longitude?: number;
   severity_level?: number;
@@ -37,14 +38,34 @@ function json(status: number, body: unknown) {
   });
 }
 
-function resolveEmergencyNumber(countryCode?: string, override?: string): string {
+function resolveEmergencyNumber(
+  countryCode?: string,
+  override?: string,
+  services: string[] = []
+): string {
   if (override?.trim()) return override.trim();
   const uses911 = new Set(["US", "CA", "MX"]);
   if (countryCode && uses911.has(countryCode)) return "911";
+  if (countryCode === "IN") {
+    const normalized = new Set(services.map((s) => s.toLowerCase()));
+    const needsFire = normalized.has("fire_department");
+    const needsAmbulance = normalized.has("ambulance");
+    const needsPolice = normalized.has("police");
+
+    if (needsFire && !needsAmbulance && !needsPolice) return "101";
+    if (needsAmbulance && !needsFire && !needsPolice) return "108";
+    if (needsPolice && !needsAmbulance && !needsFire) return "100";
+    return "112";
+  }
   return "112";
 }
 
 function buildSmsBody(body: ReqBody, emergencyNumber: string): string {
+  const clientBody = typeof body.body === "string" ? body.body.trim() : "";
+  if (clientBody) {
+    return clientBody.slice(0, 1500);
+  }
+
   const loc =
     body.latitude != null && body.longitude != null
       ? `GPS: ${body.latitude.toFixed(5)},${body.longitude.toFixed(5)} `
@@ -58,7 +79,8 @@ function buildSmsBody(body: ReqBody, emergencyNumber: string): string {
       ? `maps.google.com/?q=${body.latitude.toFixed(5)},${body.longitude.toFixed(5)}`
       : "";
 
-  const core = `RoadSOS EMERGENCY ${sev}${svcs}${loc}${maps}`.trim();
+  const payload = body.payload?.trim() ? `MSG: ${body.payload.trim()}` : "";
+  const core = `RoadSOS EMERGENCY ${sev}${svcs}${loc}${maps} ${payload}`.trim();
   return core.slice(0, 1500);
 }
 
@@ -135,12 +157,19 @@ Deno.serve(async (req: Request) => {
   const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID")?.trim();
   const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN")?.trim();
   const twilioFrom = Deno.env.get("TWILIO_FROM_NUMBER")?.trim();
+  const dispatchBearer = Deno.env.get("SMS_DISPATCH_ANON_KEY")?.trim();
 
-  if (!twilioSid || !twilioToken || !twilioFrom) {
+  if (!twilioSid || !twilioToken || !twilioFrom || !dispatchBearer) {
     return json(500, {
       error: "server_misconfigured",
-      detail: "Missing TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_FROM_NUMBER",
+      detail:
+        "Missing TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_FROM_NUMBER / SMS_DISPATCH_ANON_KEY",
     });
+  }
+
+  const auth = req.headers.get("authorization") ?? "";
+  if (auth !== `Bearer ${dispatchBearer}`) {
+    return json(401, { error: "unauthorized" });
   }
 
   let body: ReqBody;
@@ -156,7 +185,8 @@ Deno.serve(async (req: Request) => {
 
   const emergencyNumber = resolveEmergencyNumber(
     body.country_code,
-    body.destination ?? Deno.env.get("EMERGENCY_NUMBER_OVERRIDE")
+    Deno.env.get("EMERGENCY_NUMBER_OVERRIDE"),
+    body.required_services ?? []
   );
 
   const smsBody = buildSmsBody(body, emergencyNumber);

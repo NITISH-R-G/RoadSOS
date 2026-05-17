@@ -14,6 +14,7 @@
   "triageResultTitle": "AI ట్రయేజ్ ఫలితం",
   "triageDegradedTitle": "AI (ఆఫ్‌లైన్)",
   "firstAidGuidance": "మొదటి చికిత్స",
+  "triageMedicalDisclaimer": "కేవలం మార్గదర్శనం — ఇది వైద్య నిర్ధారణ కాదు. అత్యవసర సహాయం కోసం 108/112 కు కాల్ చేయండి.",
   "settingsLanguage": "భాష",
   "settingsLanguageSubtitle": "UI మరియు వాయిస్",
   "incidentVoiceHint": "మీరు చూసేది చెప్పండి…",

@@ -94,5 +94,35 @@ void main() {
       expect(r.overrideNotes, isNotEmpty);
       expect(r.triage.wasOverridden, isTrue);
     });
+
+    test('rebuilds compressed payload after safety overrides', () {
+      final raw = _base(severity: 2, services: ['police']);
+      final r = triageValidationAgent.validate(
+        raw: raw,
+        drivingMode: DrivingMode.driving,
+        gyroPeakRadPerSec: 0,
+        accelSeverityHint: 2,
+      );
+
+      expect(r.triage.compressedPayload, contains('SEV:3'));
+      expect(r.triage.compressedPayload, contains('AMB'));
+      expect(r.triage.compressedPayload, isNot(contains('payload')));
+    });
+
+    test('clamps invalid severity and drops unsupported services', () {
+      final raw = _base(severity: 8, services: ['helicopter', 'ambulance']);
+      final r = triageValidationAgent.validate(
+        raw: raw,
+        drivingMode: DrivingMode.stationary,
+        gyroPeakRadPerSec: 0,
+        accelSeverityHint: 1,
+      );
+
+      expect(r.triage.severityLevel, 5);
+      expect(r.triage.requiredServices, isNot(contains('helicopter')));
+      expect(r.triage.requiredServices, contains('ambulance'));
+      expect(r.flags, contains('invalid_severity_clamped'));
+      expect(r.flags, contains('invalid_service_dropped'));
+    });
   });
 }

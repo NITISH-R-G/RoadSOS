@@ -205,6 +205,14 @@ class TriageResultCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.triageMedicalDisclaimer,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onPrimaryContainer.withAlpha(210),
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
                 ],
               ),
             ),

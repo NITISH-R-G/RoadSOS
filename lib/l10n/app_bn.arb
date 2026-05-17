@@ -14,6 +14,7 @@
   "triageResultTitle": "AI ট্রায়েজ ফল",
   "triageDegradedTitle": "AI (অফলাইন)",
   "firstAidGuidance": "প্রাথমিক চিকিৎসা",
+  "triageMedicalDisclaimer": "শুধু নির্দেশনা — এটি চিকিৎসা নির্ণয় নয়। জরুরি সাহায্যের জন্য 108/112-এ কল করুন।",
   "settingsLanguage": "ভাষা",
   "settingsLanguageSubtitle": "ইন্টারফেস ও ভয়েস",
   "incidentVoiceHint": "যা দেখছেন বলুন…",

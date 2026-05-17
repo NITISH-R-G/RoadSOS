@@ -20,5 +20,12 @@ void main() {
       final newState = state.copyWith(phase: SOSPhase.active);
       expect(newState.incidentId, 'test-123');
     });
+
+    test('copyWith preserves demo mode unless changed', () {
+      const state = SOSState(isDemoMode: true);
+      final newState = state.copyWith(phase: SOSPhase.dispatching);
+      expect(newState.isDemoMode, true);
+      expect(newState.copyWith(isDemoMode: false).isDemoMode, false);
+    });
   });
 }

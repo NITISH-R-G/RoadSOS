@@ -58,6 +58,7 @@
   "severityUnknown": "UNKNOWN",
   "dispatchedServices": "DISPATCHED SERVICES",
   "firstAidGuidance": "FIRST AID GUIDANCE",
+  "triageMedicalDisclaimer": "Guidance only — not a medical diagnosis. Call 108/112 for emergency help.",
   "noAiBadge": "OFFLINE",
   "settingsTitle": "SETTINGS",
   "sectionConnectivity": "CONNECTIVITY",

@@ -142,6 +142,10 @@ class AppLocalizationsTe extends AppLocalizations {
   String get firstAidGuidance => 'మొదటి చికిత్స';
 
   @override
+  String get triageMedicalDisclaimer =>
+      'కేవలం మార్గదర్శనం — ఇది వైద్య నిర్ధారణ కాదు. అత్యవసర సహాయం కోసం 108/112 కు కాల్ చేయండి.';
+
+  @override
   String get noAiBadge => 'OFFLINE';
 
   @override

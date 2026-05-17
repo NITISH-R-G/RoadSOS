@@ -143,6 +143,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get firstAidGuidance => 'FIRST AID GUIDANCE';
 
   @override
+  String get triageMedicalDisclaimer =>
+      'Guidance only — not a medical diagnosis. Call 108/112 for emergency help.';
+
+  @override
   String get noAiBadge => 'OFFLINE';
 
   @override

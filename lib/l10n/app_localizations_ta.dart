@@ -142,6 +142,10 @@ class AppLocalizationsTa extends AppLocalizations {
   String get firstAidGuidance => 'முதலுதவி';
 
   @override
+  String get triageMedicalDisclaimer =>
+      'வழிகாட்டுதல் மட்டும் — இது மருத்துவ நோயறிதல் அல்ல. அவசர உதவிக்கு 108/112 அழைக்கவும்.';
+
+  @override
   String get noAiBadge => 'OFFLINE';
 
   @override
