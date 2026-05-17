@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -6,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:roadsos/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/app_locale_controller.dart';
+import '../services/camera_triage_service.dart';
+import '../services/last_scene_photo_store.dart';
 import '../services/roadsos_assistant_service.dart';
 class IncidentReportingScreen extends ConsumerStatefulWidget {
   const IncidentReportingScreen({super.key});
@@ -121,9 +124,9 @@ class _IncidentReportingScreenState
             if (_sceneImageBytes != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  'Photo attached to this report (not auto-analyzed in this build).',
-                  style: const TextStyle(
+                child: const Text(
+                  'Photo armed — Gemma 4 27B vision will analyze it on the next SOS.',
+                  style: TextStyle(
                       color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
@@ -136,55 +139,66 @@ class _IncidentReportingScreenState
 
   Future<void> _captureScene() async {
     setState(() => _sceneCaptureBusy = true);
+    Uint8List? bytes;
     try {
       final file = await _picker.pickImage(
         source: ImageSource.camera,
         imageQuality: 72,
         maxWidth: 1600,
       );
-      if (file == null) {
-        if (!mounted) return;
-        setState(() => _sceneCaptureBusy = false);
-        return;
-      }
-
-      final bytes = await file.readAsBytes();
-      if (!mounted) return;
-      setState(() {
-        _sceneImageBytes = bytes;
-        _sceneCaptureBusy = false;
-      });
+      if (file != null) bytes = await file.readAsBytes();
     } catch (_) {
-      // On emulators/devices without camera, fall back to gallery.
+      // On emulators / devices without camera, silently fall back to gallery.
+    }
+
+    if (bytes == null) {
       try {
         final file = await _picker.pickImage(
           source: ImageSource.gallery,
           imageQuality: 72,
           maxWidth: 1600,
         );
-        if (file == null) {
-          if (!mounted) return;
-          setState(() => _sceneCaptureBusy = false);
-          return;
-        }
-        final bytes = await file.readAsBytes();
-        if (!mounted) return;
-        setState(() {
-          _sceneImageBytes = bytes;
-          _sceneCaptureBusy = false;
-        });
+        if (file != null) bytes = await file.readAsBytes();
       } catch (e) {
         if (!mounted) return;
         setState(() => _sceneCaptureBusy = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not capture a scene photo on this device.')),
         );
+        return;
       }
     }
 
+    if (bytes == null) {
+      if (!mounted) return;
+      setState(() => _sceneCaptureBusy = false);
+      return;
+    }
+
+    // Arm the photo for the next SOS — orchestrator will pull this through to
+    // Gemma 4 27B vision. Drops automatically after 120s so a stale photo
+    // never contaminates an unrelated emergency.
+    ref.read(lastScenePhotoStoreProvider).store(
+          CapturedScenePhoto(
+            base64Jpeg: base64Encode(bytes),
+            sizeBytes: bytes.length,
+            capturedAt: DateTime.now().toUtc(),
+          ),
+        );
+
+    if (!mounted) return;
+    setState(() {
+      _sceneImageBytes = bytes;
+      _sceneCaptureBusy = false;
+    });
+
     if (!kIsWeb && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Scene photo attached.')),
+        const SnackBar(
+          content: Text(
+            'Scene photo armed for Gemma 4 vision (active for the next 2 minutes).',
+          ),
+        ),
       );
     }
   }
