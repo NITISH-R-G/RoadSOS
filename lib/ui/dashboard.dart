@@ -424,7 +424,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           icon: Icons.camera_enhance,
           color: const Color(0xFFF59220),
           title: 'Capture Scene',
-          subtitle: 'Document crash with AI-powered photo analysis',
+          subtitle: 'Arm a crash photo — Gemma 4 27B vision uses it on next SOS',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(
@@ -437,7 +437,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           icon: Icons.health_and_safety,
           color: const Color(0xFF4CAF50),
           title: 'Responder View',
-          subtitle: 'Live map with nearby SOS signals',
+          subtitle: 'This device\u2019s live SOS dashboard + BLE mesh peers',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const ResponderDashboard()),
@@ -507,7 +507,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           icon: Icons.monitor_heart,
           color: const Color(0xFFE8281A),
           title: 'Vital Scan',
-          subtitle: 'Check heart rate & oxygen saturation',
+          subtitle: 'Log bystander-observed pulse / SpO\u2082 for the 112 SMS',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const VitalScanScreen()),

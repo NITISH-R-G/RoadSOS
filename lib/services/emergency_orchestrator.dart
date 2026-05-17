@@ -32,6 +32,8 @@ import 'gyroscope_fusion_service.dart';
 import 'triage_validation_agent.dart';
 import 'triage_feedback_service.dart';
 import 'emergency_beacon_service.dart';
+import 'last_scene_photo_store.dart';
+import 'nearby_services_broadcast_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'emergency_notification_service.dart';
 
@@ -355,6 +357,22 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     _log(l10n.orchestratorAiBrief, SOSPhase.triaging);
     state = state.copyWith(phase: SOSPhase.triaging);
 
+    // Real sensor-derived severity hint from the most recent crash detection.
+    // Falls back to a conservative default (bystander=2, driver=3) when no
+    // recent crash signature exists (manual SOS button press).
+    final crashHint =
+        _ref.read(crashDetectionServiceProvider).recentSeverityHint();
+    final severityHint =
+        crashHint ?? (state.isBystander ? 2 : 3);
+
+    // Opportunistic scene photo: if the user (or a bystander, or the
+    // Capture Scene screen) recently captured a crash-scene photo, hand it to
+    // Gemma 4 27B vision. Without this, the documented "Tier 1 + vision"
+    // pipeline never fired on the auto-SOS path — `scenePhoto` was hardcoded
+    // to null.
+    final scenePhotoStore = _ref.read(lastScenePhotoStoreProvider);
+    final scenePhoto = scenePhotoStore.takeIfFresh();
+
     TriageResult rawTriage;
     try {
       rawTriage = await _ref
@@ -363,6 +381,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             location: location,
             isBystander: state.isBystander,
             languageCode: locale.languageCode,
+            severityHint: severityHint,
+            scenePhoto: scenePhoto,
           )
           .timeout(_sosTriageTimeout);
     } catch (e, st) {
@@ -397,7 +417,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       raw: rawTriage,
       drivingMode: _ref.read(drivingModeProvider),
       gyroPeakRadPerSec: gyroPeak,
-      accelSeverityHint: state.isBystander ? 2 : 3,
+      accelSeverityHint: severityHint,
     );
 
     final triage = validation.triage;
@@ -570,21 +590,29 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return family;
     });
 
-    final nearbyFuture = guard<bool>(
+    final nearbyFuture = guard<NearbyBroadcastOutcome>(
       id: 'nearby_services',
-      future: Future.delayed(const Duration(seconds: 3), () => true),
-      fallback: false,
+      future: _ref.read(nearbyServicesBroadcastServiceProvider).broadcast(
+            incidentId: state.incidentId ?? '',
+            latitude: location.latitude,
+            longitude: location.longitude,
+            severity: triage.severityLevel,
+            requiredServices: triage.requiredServices,
+            nearbyFacilityCount: state.nearbyFacilities.length,
+          ),
+      fallback: const NearbyBroadcastOutcome(
+        ok: false,
+        detail: 'Nearby services broadcast timed out.',
+      ),
       timeoutDetail: 'Nearby services broadcast timed out.',
       failureDetail: 'Nearby services broadcast failed.',
-    ).then((ok) {
+    ).then((outcome) {
       _patchDispatchChannel(
         'nearby_services',
-        ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
-        ok
-            ? 'Emergency alert broadcasted to nearby facilities and responders ✓'
-            : 'Could not complete nearby services broadcast.',
+        outcome.ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
+        outcome.detail,
       );
-      return ok;
+      return outcome;
     });
 
     List<Object?> results;
@@ -595,7 +623,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         persistedFuture,
         familyFuture,
         nearbyFuture,
-      ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 1));
+      ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 2));
     } catch (e, st) {
       // Absolute guard: never hang in dispatching.
       appLog.w('[Orchestrator] Dispatch futures did not complete in time', error: e, stackTrace: st);
@@ -604,6 +632,10 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     }
 
     final smsOutcome = results[1] as SmsDispatchOutcome;
+
+    // One incident = one photo. Always release the stash so the next event
+    // starts clean, regardless of whether vision tier was reached.
+    scenePhotoStore.clear();
 
     await SosActivityLogService.instance.append(
       SosActivityRecord(

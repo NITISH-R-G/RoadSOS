@@ -66,6 +66,40 @@ class CrashDetectionService {
   DateTime? _lastConfirmedSos;
   DateTime? _lastSpikeHandled;
 
+  /// Last confidence result computed by the detector. Used by
+  /// [EmergencyOrchestrator] so AI triage receives a real, sensor-derived
+  /// severity hint instead of a hardcoded 3.
+  CrashConfidenceResult? _lastConfidence;
+  DateTime? _lastConfidenceAt;
+
+  /// Returns a 1..5 severity hint derived from the most recent crash
+  /// detection event, OR null if no event happened in the last 30s. Callers
+  /// must clamp / default if null.
+  ///
+  /// Mapping:
+  ///   high   tier (≥ 0.65) → 5
+  ///   medium tier (≥ 0.35) → 4 (or 3 if accel < 50 m/s²)
+  ///   low    tier          → 3 (still serious enough to dispatch)
+  int? recentSeverityHint() {
+    final c = _lastConfidence;
+    final t = _lastConfidenceAt;
+    if (c == null || t == null) return null;
+    if (DateTime.now().difference(t).inSeconds > 30) return null;
+
+    switch (c.tier) {
+      case CrashConfidenceTier.high:
+        return 5;
+      case CrashConfidenceTier.medium:
+        final accelContribution = c.breakdown['accel'] ?? 0.0;
+        return accelContribution > 0.13 ? 4 : 3;
+      case CrashConfidenceTier.low:
+        return 3;
+    }
+  }
+
+  /// Latest raw confidence (or null) for diagnostics / explainability UI.
+  CrashConfidenceResult? get lastConfidence => _lastConfidence;
+
   void startMonitoring() {
     stopMonitoring();
     // Gyroscope and BT monitor lifecycle managed by their providers.
@@ -238,6 +272,8 @@ class CrashDetectionService {
           postImpactDeviceStill:     still,
         ),
       );
+      _lastConfidence = confidence;
+      _lastConfidenceAt = DateTime.now();
 
       appLog.w(
         'CRASH CONFIRMED — $confidence',

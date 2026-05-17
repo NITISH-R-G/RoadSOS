@@ -186,13 +186,96 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
     }
   }
 
-  String _detectSceneContext(String input) {
+  /// Local keyword fallback — used only when Gemma 4 cloud is unreachable.
+  /// Intentionally conservative: defaults to `unknown` so a fresh scene falls
+  /// into the generic five-question script when offline.
+  String _detectSceneContextLocal(String input) {
     final lower = input.toLowerCase();
     if (lower.contains('pedestrian') || lower.contains('पैदल')) return 'pedestrian_hit';
     if (lower.contains('rollover') || lower.contains('पलटा') || lower.contains('overturned')) return 'rollover';
     if (lower.contains('fire') || lower.contains('आग') || lower.contains('smoke') || lower.contains('धुआँ')) return 'fire_hazard';
     if (lower.contains('collision') || lower.contains('टक्कर') || lower.contains('crash')) return 'vehicle_collision';
     return 'unknown';
+  }
+
+  /// Use Gemma 4 27B (cloud) to bucket the bystander's first description into
+  /// one of: vehicle_collision | pedestrian_hit | rollover | fire_hazard |
+  /// unknown. Falls back to the local keyword classifier if the cloud is
+  /// unreachable, the model misbehaves, or web demo mode is active.
+  Future<String> _detectSceneContext(String input) async {
+    if (kIsWeb || input.trim().isEmpty) {
+      return _detectSceneContextLocal(input);
+    }
+    const allowed = <String>{
+      'vehicle_collision',
+      'pedestrian_hit',
+      'rollover',
+      'fire_hazard',
+      'unknown',
+    };
+    final prompt =
+        'You are a triage scene classifier for a road-accident app in India.\n'
+        'Bystander first description (any Indian language allowed):\n"""$input"""\n\n'
+        'Pick the SINGLE best label from: vehicle_collision, pedestrian_hit, '
+        'rollover, fire_hazard, unknown.\n'
+        'Respond with ONLY that one word, no punctuation, no quotes, no '
+        'explanation. If genuinely ambiguous, respond unknown.';
+    try {
+      final out = (await _gemma4Generate(prompt))?.toLowerCase().trim();
+      if (out == null || out.isEmpty) return _detectSceneContextLocal(input);
+      // Find the first allowed label appearing anywhere in the model output.
+      for (final label in allowed) {
+        if (out == label || out.startsWith(label) || out.contains(label)) {
+          return label;
+        }
+      }
+      return _detectSceneContextLocal(input);
+    } catch (_) {
+      return _detectSceneContextLocal(input);
+    }
+  }
+
+  /// Use Gemma 4 27B (cloud) to compose the FIRST adaptive triage question
+  /// instead of reading the canned scripted first question. Falls back to the
+  /// scripted question only when the cloud is unreachable.
+  Future<String?> _composeFirstQuestionWithGemma({
+    required String sceneContext,
+    required String previousAnswer,
+    required String languageCode,
+  }) async {
+    if (kIsWeb || previousAnswer.trim().isEmpty) return null;
+    final langLabel = switch (languageCode) {
+      'hi' => 'Hindi',
+      'ta' => 'Tamil',
+      'te' => 'Telugu',
+      'bn' => 'Bengali',
+      'mr' => 'Marathi',
+      _ => 'English',
+    };
+    final prompt =
+        'You are an emergency triage assistant for RoadSOS (India). Scene '
+        'classified as: $sceneContext. The bystander just said:\n'
+        '"""$previousAnswer"""\n\n'
+        'Ask the SINGLE most critical follow-up question to gather the next '
+        'piece of dispatch-relevant information. Constraints:\n'
+        '- One question, under 18 words.\n'
+        '- $langLabel. Plain words. No prefix, no quotes, no markdown.\n'
+        '- If unresponsive victim suspected, ask about breathing/consciousness '
+        'first.\n';
+    try {
+      final raw = (await _gemma4Generate(prompt))?.trim();
+      if (raw == null || raw.isEmpty) return null;
+      // Take the first line, strip leading "Q:" / "1)" etc.
+      var line = raw.split('\n').firstWhere(
+            (l) => l.trim().isNotEmpty,
+            orElse: () => '',
+          ).trim();
+      line = line.replaceFirst(RegExp(r'^(\d+[\.\)]\s*|q[:\-]\s*)', caseSensitive: false), '');
+      if (line.length > 240) line = '${line.substring(0, 240)}…';
+      return line.isEmpty ? null : line;
+    } catch (_) {
+      return null;
+    }
   }
 
   void setSceneContext(String context) {
@@ -215,10 +298,23 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
     String languageCode = 'en',
   }) async {
     if (state.history.isEmpty) {
-      final detectedContext = _detectSceneContext(previousAnswer);
+      state = state.copyWith(isThinking: true);
+
+      // Gemma 4 27B classifies the scene from the bystander's free-form first
+      // line. Falls back to keyword classifier when cloud is unreachable.
+      final detectedContext = await _detectSceneContext(previousAnswer);
+
       final questions = languageCode == 'hi' ? _sceneQuestionsHi : _sceneQuestionsEn;
       final sceneQuestions = questions[detectedContext] ?? questions['unknown']!;
-      final firstQuestion = sceneQuestions.first;
+
+      // First question is also Gemma-composed for true adaptive follow-up.
+      // Falls back to the scripted first scene question only when cloud fails.
+      final gemmaFirst = await _composeFirstQuestionWithGemma(
+        sceneContext: detectedContext,
+        previousAnswer: previousAnswer,
+        languageCode: languageCode,
+      );
+      final firstQuestion = gemmaFirst ?? sceneQuestions.first;
 
       state = state.copyWith(
         isThinking: false,

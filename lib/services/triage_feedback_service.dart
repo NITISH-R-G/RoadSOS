@@ -4,7 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../logging/app_log.dart';
 
-/// Phase 8 — RL-based optimization: bounded user feedback loop.
+/// Phase 8 — Bounded preference calibration (NOT reinforcement learning).
+///
+/// Earlier docs called this "RL-based optimisation" — the implementation is
+/// an exponential moving average over a user-supplied severity bias, never
+/// touches model weights, and is bounded to [-1.0, +1.0]. Use the more
+/// accurate term "preference calibration" in new docs and READMEs.
 ///
 /// After an SOS is resolved the user is shown a two-question prompt:
 ///   Q1. "Was the severity estimate correct?"  (too low / just right / too high)

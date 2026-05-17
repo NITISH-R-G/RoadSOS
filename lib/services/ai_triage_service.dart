@@ -199,6 +199,7 @@ class AiTriageService {
     required String locationString,
     required int accelerometerSeverityHint,
     String languageCode = 'en',
+    CapturedScenePhoto? scenePhoto,
   }) async {
     if (kIsWeb) {
       return _buildClassifierTriage(
@@ -208,8 +209,6 @@ class AiTriageService {
         languageCode: languageCode,
       );
     }
-
-    const CapturedScenePhoto? scenePhoto = null;
 
     final skipCloud = _connectivityAwareTriage &&
         _connectivity.currentQuality == NetworkQuality.none;
@@ -268,6 +267,7 @@ class AiTriageService {
     String transcript = '',
     String languageCode = 'en',
     int severityHint = 3,
+    CapturedScenePhoto? scenePhoto,
   }) async {
     final locationString = '${location.latitude},${location.longitude}';
     final ctx = transcript.trim().isEmpty
@@ -281,6 +281,7 @@ class AiTriageService {
       locationString: locationString,
       accelerometerSeverityHint: severityHint.clamp(1, 5),
       languageCode: languageCode,
+      scenePhoto: scenePhoto,
     );
   }
 

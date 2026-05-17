@@ -7,11 +7,15 @@ import 'package:just_audio/just_audio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../logging/app_log.dart';
 
-/// Professional Hardware SOS Beacon.
+/// Hardware SOS Beacon — no AI involved.
 ///
-/// When active, the Gemma 4 agent takes over:
-/// 1. Flashlight: Pulses international Morse Code SOS (... --- ...)
-/// 2. Siren: Plays a piercing high-frequency locator tone at max volume.
+/// Pure platform driver. When the orchestrator transitions to SOSPhase.active
+/// it asks this service to:
+///   1. Flashlight: pulse international Morse SOS (... --- ...)
+///   2. Audio: play a synthesised high-frequency locator tone at max volume.
+///
+/// Earlier doc comment misleadingly described this as "the Gemma 4 agent
+/// takes over" — there is no ML on this code path. Beacon = strobe + siren.
 class EmergencyBeaconService {
   EmergencyBeaconService._();
   static final EmergencyBeaconService instance = EmergencyBeaconService._();
