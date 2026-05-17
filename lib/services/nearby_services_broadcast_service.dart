@@ -80,7 +80,11 @@ class NearbyServicesBroadcastService {
     try {
       client = Supabase.instance.client;
     } catch (e, st) {
-      appLog.w('[NearbyBroadcast] Supabase not initialised', error: e, stackTrace: st);
+      appLog.w(
+        '[NearbyBroadcast] Supabase not initialised',
+        error: e,
+        stackTrace: st,
+      );
       return const NearbyBroadcastOutcome(
         ok: false,
         detail: 'Skipped — Supabase realtime not configured on this build.',
@@ -165,13 +169,16 @@ class NearbyServicesBroadcastService {
       appLog.w('[NearbyBroadcast] Broadcast failed', error: e, stackTrace: st);
       return NearbyBroadcastOutcome(
         ok: false,
-        detail: 'Failed — realtime broadcast error: ${e.toString().substring(0, e.toString().length.clamp(0, 80))}',
+        detail:
+            'Failed — realtime broadcast error: ${e.toString().substring(0, e.toString().length.clamp(0, 80))}',
       );
     } finally {
       if (channel != null) {
         try {
           await client.removeChannel(channel);
-        } catch (_) {/* best-effort */}
+        } catch (_) {
+          /* best-effort */
+        }
       }
     }
   }
@@ -179,5 +186,5 @@ class NearbyServicesBroadcastService {
 
 final nearbyServicesBroadcastServiceProvider =
     Provider<NearbyServicesBroadcastService>((ref) {
-  return NearbyServicesBroadcastService(ref);
-});
+      return NearbyServicesBroadcastService(ref);
+    });

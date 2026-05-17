@@ -53,8 +53,9 @@ class _CallView extends StatelessWidget {
       VoiceCallPhase.error => 'ERROR',
       _ => '',
     };
-    final emergencyTint =
-        state.isEmergency ? const Color(0xFFE8281A) : const Color(0xFF00B8A0);
+    final emergencyTint = state.isEmergency
+        ? const Color(0xFFE8281A)
+        : const Color(0xFF00B8A0);
 
     return Padding(
       padding: const EdgeInsets.all(24),

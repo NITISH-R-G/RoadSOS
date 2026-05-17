@@ -42,8 +42,7 @@ class GemmaAutoStatus {
   final int total;
   final String? errorMessage;
 
-  double get fraction =>
-      total <= 0 ? 0.0 : (received / total).clamp(0.0, 1.0);
+  double get fraction => total <= 0 ? 0.0 : (received / total).clamp(0.0, 1.0);
 
   GemmaAutoStatus copyWith({
     GemmaAutoState? state,
@@ -77,7 +76,7 @@ class GemmaAutoStatus {
 ///     resumes after a kill / crash.
 class GemmaAutoDownloader extends StateNotifier<GemmaAutoStatus> {
   GemmaAutoDownloader()
-      : super(const GemmaAutoStatus(state: GemmaAutoState.idle)) {
+    : super(const GemmaAutoStatus(state: GemmaAutoState.idle)) {
     _bootstrap();
   }
 
@@ -217,5 +216,5 @@ class GemmaAutoDownloader extends StateNotifier<GemmaAutoStatus> {
 
 final gemmaAutoDownloaderProvider =
     StateNotifierProvider<GemmaAutoDownloader, GemmaAutoStatus>((ref) {
-  return GemmaAutoDownloader();
-});
+      return GemmaAutoDownloader();
+    });

@@ -57,18 +57,18 @@ class VoiceCallState {
   }) {
     return VoiceCallState(
       phase: phase ?? this.phase,
-      callId:
-          identical(callId, _sentinel) ? this.callId : callId as String?,
-      peerId:
-          identical(peerId, _sentinel) ? this.peerId : peerId as String?,
-      peerName:
-          identical(peerName, _sentinel) ? this.peerName : peerName as String?,
+      callId: identical(callId, _sentinel) ? this.callId : callId as String?,
+      peerId: identical(peerId, _sentinel) ? this.peerId : peerId as String?,
+      peerName: identical(peerName, _sentinel)
+          ? this.peerName
+          : peerName as String?,
       isEmergency: isEmergency ?? this.isEmergency,
       errorMessage: identical(errorMessage, _sentinel)
           ? this.errorMessage
           : errorMessage as String?,
-      startedAt:
-          identical(startedAt, _sentinel) ? this.startedAt : startedAt as DateTime?,
+      startedAt: identical(startedAt, _sentinel)
+          ? this.startedAt
+          : startedAt as DateTime?,
       muted: muted ?? this.muted,
       speakerOn: speakerOn ?? this.speakerOn,
     );
@@ -170,8 +170,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
               );
               unawaited(_ringPulse());
             } catch (e, st) {
-              appLog.w('[WebRTC] ring decode failed',
-                  error: e, stackTrace: st);
+              appLog.w('[WebRTC] ring decode failed', error: e, stackTrace: st);
             }
           },
         )
@@ -273,10 +272,12 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
         throw StateError('No SDP offer found for call $callId');
       }
       final payload = (rows.first as Map)['payload'] as Map;
-      await _pc!.setRemoteDescription(RTCSessionDescription(
-        payload['sdp'] as String,
-        payload['type'] as String,
-      ));
+      await _pc!.setRemoteDescription(
+        RTCSessionDescription(
+          payload['sdp'] as String,
+          payload['type'] as String,
+        ),
+      );
       await _drainPendingIce();
 
       final answer = await _pc!.createAnswer({
@@ -289,10 +290,13 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
         'sdp': answer.sdp,
       });
 
-      await client.from('voice_calls').update({
-        'state': 'answered',
-        'answered_at': DateTime.now().toUtc().toIso8601String(),
-      }).eq('id', callId);
+      await client
+          .from('voice_calls')
+          .update({
+            'state': 'answered',
+            'answered_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', callId);
     } catch (e, st) {
       appLog.w('[WebRTC] answer failed', error: e, stackTrace: st);
       await _teardown();
@@ -352,7 +356,12 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
       final peerId = state.peerId;
       if (callId == null || peerId == null) return;
       unawaited(
-        _sendSignal(callId, peerId, 'ice', cand.toMap() as Map<String, dynamic>),
+        _sendSignal(
+          callId,
+          peerId,
+          'ice',
+          cand.toMap() as Map<String, dynamic>,
+        ),
       );
     };
     _pc!.onConnectionState = (RTCPeerConnectionState s) {
@@ -409,10 +418,12 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     if (_pc == null) return;
     switch (kind) {
       case 'answer':
-        await _pc!.setRemoteDescription(RTCSessionDescription(
-          payload['sdp'] as String,
-          payload['type'] as String,
-        ));
+        await _pc!.setRemoteDescription(
+          RTCSessionDescription(
+            payload['sdp'] as String,
+            payload['type'] as String,
+          ),
+        );
         await _drainPendingIce();
         break;
       case 'ice':
@@ -465,11 +476,14 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     if (!_hasSession) return;
     try {
       final client = Supabase.instance.client;
-      await client.from('voice_calls').update({
-        'state': newState,
-        'ended_at': DateTime.now().toUtc().toIso8601String(),
-        'ended_by': client.auth.currentUser!.id,
-      }).eq('id', callId);
+      await client
+          .from('voice_calls')
+          .update({
+            'state': newState,
+            'ended_at': DateTime.now().toUtc().toIso8601String(),
+            'ended_by': client.auth.currentUser!.id,
+          })
+          .eq('id', callId);
     } catch (e) {
       appLog.d('[WebRTC] _markCall failed: $e');
     }
@@ -522,5 +536,5 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
 
 final webRtcVoiceCallServiceProvider =
     StateNotifierProvider<WebRtcVoiceCallService, VoiceCallState>((ref) {
-  return WebRtcVoiceCallService(ref);
-});
+      return WebRtcVoiceCallService(ref);
+    });

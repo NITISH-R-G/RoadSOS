@@ -10,6 +10,7 @@ import '../services/app_locale_controller.dart';
 import '../services/camera_triage_service.dart';
 import '../services/last_scene_photo_store.dart';
 import '../services/roadsos_assistant_service.dart';
+
 class IncidentReportingScreen extends ConsumerStatefulWidget {
   const IncidentReportingScreen({super.key});
 
@@ -33,8 +34,10 @@ class _IncidentReportingScreenState
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(l10n.sceneIntelligenceTitle,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+        title: Text(
+          l10n.sceneIntelligenceTitle,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -52,7 +55,8 @@ class _IncidentReportingScreenState
             _buildVoiceInterviewCard(assistantState, l10n),
             const SizedBox(height: 32),
             // Show guidance steps after interview is complete
-            if (assistantState.showingGuidance && assistantState.guidanceSteps.isNotEmpty) ...[
+            if (assistantState.showingGuidance &&
+                assistantState.guidanceSteps.isNotEmpty) ...[
               _buildSectionHeader('ACTION GUIDANCE: NEXT STEPS'),
               const SizedBox(height: 12),
               _buildGuidanceCard(assistantState, l10n),
@@ -95,7 +99,11 @@ class _IncidentReportingScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             if (_sceneImageBytes == null)
-              Icon(Icons.camera_enhance, size: 40, color: Colors.white.withValues(alpha: 0.3))
+              Icon(
+                Icons.camera_enhance,
+                size: 40,
+                color: Colors.white.withValues(alpha: 0.3),
+              )
             else
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -115,10 +123,20 @@ class _IncidentReportingScreenState
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Icon(_sceneImageBytes != null ? Icons.check : Icons.add_a_photo),
-              label: Text(_sceneImageBytes != null ? 'SCENE ATTACHED' : 'CAPTURE / ATTACH PHOTO'),
+                  : Icon(
+                      _sceneImageBytes != null
+                          ? Icons.check
+                          : Icons.add_a_photo,
+                    ),
+              label: Text(
+                _sceneImageBytes != null
+                    ? 'SCENE ATTACHED'
+                    : 'CAPTURE / ATTACH PHOTO',
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _sceneImageBytes != null ? Colors.green : Colors.blue,
+                backgroundColor: _sceneImageBytes != null
+                    ? Colors.green
+                    : Colors.blue,
               ),
             ),
             if (_sceneImageBytes != null)
@@ -127,7 +145,10 @@ class _IncidentReportingScreenState
                 child: const Text(
                   'Photo armed — Gemma 4 27B vision will analyze it on the next SOS.',
                   style: TextStyle(
-                      color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
+                    color: Colors.green,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -163,7 +184,9 @@ class _IncidentReportingScreenState
         if (!mounted) return;
         setState(() => _sceneCaptureBusy = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not capture a scene photo on this device.')),
+          const SnackBar(
+            content: Text('Could not capture a scene photo on this device.'),
+          ),
         );
         return;
       }
@@ -178,7 +201,9 @@ class _IncidentReportingScreenState
     // Arm the photo for the next SOS — orchestrator will pull this through to
     // Gemma 4 27B vision. Drops automatically after 120s so a stale photo
     // never contaminates an unrelated emergency.
-    ref.read(lastScenePhotoStoreProvider).store(
+    ref
+        .read(lastScenePhotoStoreProvider)
+        .store(
           CapturedScenePhoto(
             base64Jpeg: base64Encode(bytes),
             sizeBytes: bytes.length,
@@ -203,9 +228,15 @@ class _IncidentReportingScreenState
     }
   }
 
-  Widget _buildVoiceInterviewCard(AssistantState assistant, AppLocalizations l10n) {
+  Widget _buildVoiceInterviewCard(
+    AssistantState assistant,
+    AppLocalizations l10n,
+  ) {
     final lang = ref.read(appLocaleProvider).languageCode;
-    final totalQuestions = _getTotalQuestionsForScene(assistant.sceneContext, lang);
+    final totalQuestions = _getTotalQuestionsForScene(
+      assistant.sceneContext,
+      lang,
+    );
     final progress = '${assistant.questionIndex} / $totalQuestions';
 
     return Container(
@@ -222,15 +253,24 @@ class _IncidentReportingScreenState
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: Colors.green.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Text(
                   'Scene: ${_getSceneLabel(assistant.sceneContext, lang)}',
-                  style: const TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -243,17 +283,28 @@ class _IncidentReportingScreenState
                 children: [
                   Text(
                     lang == 'hi' ? 'प्रश्न प्रगति:' : 'Question Progress:',
-                    style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.blue.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       progress,
-                      style: const TextStyle(fontSize: 9, color: Colors.blue, fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                 ],
@@ -262,11 +313,15 @@ class _IncidentReportingScreenState
           // Main question text
           Text(
             assistant.lastResponse.isEmpty
-                ? (lang == 'hi' 
-                    ? 'कृपया घटना का वर्णन करें'
-                    : 'Please describe the incident')
+                ? (lang == 'hi'
+                      ? 'कृपया घटना का वर्णन करें'
+                      : 'Please describe the incident')
                 : assistant.lastResponse,
-            style: const TextStyle(fontSize: 15, color: Colors.white, height: 1.5),
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.white,
+              height: 1.5,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
@@ -278,11 +333,17 @@ class _IncidentReportingScreenState
                   controller: _voiceInputController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: lang == 'hi' ? 'बोलें या टाइप करें…' : 'Speak or type…',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                    hintText: lang == 'hi'
+                        ? 'बोलें या टाइप करें…'
+                        : 'Speak or type…',
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.3),
+                    ),
                     filled: true,
                     fillColor: Colors.black,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   enabled: !assistant.interviewComplete,
                 ),
@@ -293,7 +354,9 @@ class _IncidentReportingScreenState
                     ? null
                     : () {
                         if (_voiceInputController.text.isNotEmpty) {
-                          ref.read(roadsosAssistantProvider.notifier).getNextWitnessQuestion(
+                          ref
+                              .read(roadsosAssistantProvider.notifier)
+                              .getNextWitnessQuestion(
                                 _voiceInputController.text,
                                 languageCode: lang,
                               );
@@ -306,7 +369,11 @@ class _IncidentReportingScreenState
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Icon(assistant.interviewComplete ? Icons.done_all : Icons.send),
+                    : Icon(
+                        assistant.interviewComplete
+                            ? Icons.done_all
+                            : Icons.send,
+                      ),
               ),
             ],
           ),
@@ -319,13 +386,19 @@ class _IncidentReportingScreenState
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Colors.green.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Text(
                   lang == 'hi'
                       ? '✓ साक्षात्कार पूर्ण। सभी महत्वपूर्ण जानकारी एकत्र की गई।'
                       : '✓ Interview complete. All critical information collected.',
-                  style: const TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -413,7 +486,10 @@ class _IncidentReportingScreenState
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.green.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
@@ -458,7 +534,9 @@ class _IncidentReportingScreenState
                   children: [
                     InkWell(
                       onTap: () {
-                        ref.read(roadsosAssistantProvider.notifier).completeGuidanceStep(step.stepNumber);
+                        ref
+                            .read(roadsosAssistantProvider.notifier)
+                            .completeGuidanceStep(step.stepNumber);
                       },
                       child: Container(
                         padding: const EdgeInsets.all(12),
@@ -487,7 +565,11 @@ class _IncidentReportingScreenState
                               ),
                               child: Center(
                                 child: step.completed
-                                    ? const Icon(Icons.check, color: Colors.green, size: 20)
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.green,
+                                        size: 20,
+                                      )
                                     : Text(
                                         step.stepNumber.toString(),
                                         style: const TextStyle(
@@ -509,8 +591,12 @@ class _IncidentReportingScreenState
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w900,
-                                      color: step.completed ? Colors.green : Colors.white,
-                                      decoration: step.completed ? TextDecoration.lineThrough : null,
+                                      color: step.completed
+                                          ? Colors.green
+                                          : Colors.white,
+                                      decoration: step.completed
+                                          ? TextDecoration.lineThrough
+                                          : null,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -518,7 +604,9 @@ class _IncidentReportingScreenState
                                     step.description,
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Colors.white.withValues(alpha: step.completed ? 0.5 : 0.7),
+                                      color: Colors.white.withValues(
+                                        alpha: step.completed ? 0.5 : 0.7,
+                                      ),
                                       height: 1.3,
                                     ),
                                   ),

@@ -9,7 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../services/app_locale_controller.dart';
-import '../services/emergency_orchestrator.dart' show voiceAssistantServiceProvider;
+import '../services/emergency_orchestrator.dart'
+    show voiceAssistantServiceProvider;
 import '../services/proactive_monitor_service.dart';
 import '../services/safe_walk_navigator_service.dart';
 
@@ -48,12 +49,13 @@ class _SafeWalkNavigatorScreenState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Start the dead-man + Family Circle publish (existing behaviour).
-      ref.read(proactiveMonitorProvider.notifier).startSafeWalk(
-            widget.destinationName,
-            widget.deadManDuration,
-          );
+      ref
+          .read(proactiveMonitorProvider.notifier)
+          .startSafeWalk(widget.destinationName, widget.deadManDuration);
       // Start route + GPS stream + bearing math.
-      await ref.read(safeWalkNavigatorProvider.notifier).start(
+      await ref
+          .read(safeWalkNavigatorProvider.notifier)
+          .start(
             destination: widget.destination,
             destinationName: widget.destinationName,
           );
@@ -66,14 +68,16 @@ class _SafeWalkNavigatorScreenState
       });
       // Welcome cue.
       final locale = ref.read(appLocaleProvider).languageCode;
-      await _speak(
-        switch (locale) {
-          'hi' => 'सुरक्षित चलना शुरू। मैं आपको ${widget.destinationName} तक मार्गदर्शन करूँगा।',
-          'ta' => 'பாதுகாப்பான நடைபயணம் தொடங்கியது. ${widget.destinationName}க்கு உங்களை அழைத்துச் செல்கிறேன்.',
-          'te' => 'సురక్షిత నడక ప్రారంభం. ${widget.destinationName}కు మిమ్మల్ని తీసుకువెళతాను.',
-          _ => 'Safe Walk navigation started. Guiding you to ${widget.destinationName}.',
-        },
-      );
+      await _speak(switch (locale) {
+        'hi' =>
+          'सुरक्षित चलना शुरू। मैं आपको ${widget.destinationName} तक मार्गदर्शन करूँगा।',
+        'ta' =>
+          'பாதுகாப்பான நடைபயணம் தொடங்கியது. ${widget.destinationName}க்கு உங்களை அழைத்துச் செல்கிறேன்.',
+        'te' =>
+          'సురక్షిత నడక ప్రారంభం. ${widget.destinationName}కు మిమ్మల్ని తీసుకువెళతాను.',
+        _ =>
+          'Safe Walk navigation started. Guiding you to ${widget.destinationName}.',
+      });
     });
   }
 
@@ -130,12 +134,7 @@ class _SafeWalkNavigatorScreenState
           children: [
             _liveMap(nav),
             _topHud(nav),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: _bottomPanel(nav),
-            ),
+            Positioned(left: 0, right: 0, bottom: 0, child: _bottomPanel(nav)),
           ],
         ),
       ),
@@ -147,25 +146,30 @@ class _SafeWalkNavigatorScreenState
   Widget _liveMap(SafeWalkNavState nav) {
     final markers = <Marker>[];
     if (nav.lastFix != null) {
-      markers.add(Marker(
-        point: nav.lastFix!,
-        width: 56,
-        height: 56,
-        child: const _MeDot(),
-      ));
+      markers.add(
+        Marker(
+          point: nav.lastFix!,
+          width: 56,
+          height: 56,
+          child: const _MeDot(),
+        ),
+      );
     }
     if (nav.destination != null) {
-      markers.add(Marker(
-        point: nav.destination!,
-        width: 44,
-        height: 44,
-        child: const Icon(Icons.flag, color: Color(0xFFE8281A), size: 36),
-      ));
+      markers.add(
+        Marker(
+          point: nav.destination!,
+          width: 44,
+          height: 44,
+          child: const Icon(Icons.flag, color: Color(0xFFE8281A), size: 36),
+        ),
+      );
     }
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
-        initialCenter: nav.lastFix ?? nav.destination ?? const LatLng(12.97, 77.59),
+        initialCenter:
+            nav.lastFix ?? nav.destination ?? const LatLng(12.97, 77.59),
         initialZoom: 17,
         interactionOptions: const InteractionOptions(
           flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
@@ -178,13 +182,15 @@ class _SafeWalkNavigatorScreenState
           maxZoom: 19,
         ),
         if (nav.route.length >= 2)
-          PolylineLayer(polylines: [
-            Polyline(
-              points: nav.route,
-              strokeWidth: 6,
-              color: const Color(0xFF00B8A0),
-            ),
-          ]),
+          PolylineLayer(
+            polylines: [
+              Polyline(
+                points: nav.route,
+                strokeWidth: 6,
+                color: const Color(0xFF00B8A0),
+              ),
+            ],
+          ),
         if (markers.isNotEmpty) MarkerLayer(markers: markers),
       ],
     );
@@ -233,8 +239,8 @@ class _SafeWalkNavigatorScreenState
                       nav.routingDegraded
                           ? 'Route offline · straight-line guidance'
                           : nav.steps.isEmpty
-                              ? 'Acquiring route…'
-                              : _currentInstruction(nav),
+                          ? 'Acquiring route…'
+                          : _currentInstruction(nav),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -274,7 +280,9 @@ class _SafeWalkNavigatorScreenState
   // ── Bottom panel: arrow + distance + ETA + buttons ─────────────────────
 
   Widget _bottomPanel(SafeWalkNavState nav) {
-    final relativeBearing = _wrap360(nav.bearingToDestinationDeg - nav.deviceHeadingDeg);
+    final relativeBearing = _wrap360(
+      nav.bearingToDestinationDeg - nav.deviceHeadingDeg,
+    );
     final etaMin = (nav.estimatedSecondsRemaining / 60).ceil();
     final distM = nav.distanceToDestinationMeters;
     final distLabel = distM >= 1000
@@ -321,7 +329,11 @@ class _SafeWalkNavigatorScreenState
                 ),
               ),
               if (nav.arrived)
-                const Icon(Icons.flag_circle, color: Color(0xFF00B8A0), size: 36),
+                const Icon(
+                  Icons.flag_circle,
+                  color: Color(0xFF00B8A0),
+                  size: 36,
+                ),
             ],
           ),
           const SizedBox(height: 16),

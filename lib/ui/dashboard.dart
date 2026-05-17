@@ -424,7 +424,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           icon: Icons.camera_enhance,
           color: const Color(0xFFF59220),
           title: 'Capture Scene',
-          subtitle: 'Arm a crash photo — Gemma 4 27B vision uses it on next SOS',
+          subtitle:
+              'Arm a crash photo — Gemma 4 27B vision uses it on next SOS',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(
@@ -451,7 +452,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           subtitle: 'Offline extraction guide by vehicle type',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const VehicleRescueScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const VehicleRescueScreen(),
+            ),
           ),
         ),
         _toolCard(
@@ -462,7 +465,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           subtitle: 'On-device Gemma 4 walks you through first aid — offline',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const BystanderCoachScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const BystanderCoachScreen(),
+            ),
           ),
         ),
         _toolCard(
@@ -908,7 +913,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // baseline; even if dispatch fails (no Supabase / no SMS perm), the
     // countdown + status panel still walk the same code path the real SOS
     // does, which is the entire point of the demo.
-    await ref.read(emergencyOrchestratorProvider.notifier).startSos(isBystander: true);
+    await ref
+        .read(emergencyOrchestratorProvider.notifier)
+        .startSos(isBystander: true);
 
     // Auto-open the Bystander Coach so the rehearsal hits the on-device
     // Gemma-4 voice flow without the user having to tap a second time.
@@ -982,11 +989,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     );
                     if (response.statusCode == 200) {
                       final List<dynamic> data = json.decode(response.body);
-                      return data.whereType<Map>().map((m) => _NominatimHit(
-                            displayName: m['display_name'] as String,
-                            lat: double.tryParse(m['lat']?.toString() ?? '') ?? 0,
-                            lon: double.tryParse(m['lon']?.toString() ?? '') ?? 0,
-                          ));
+                      return data.whereType<Map>().map(
+                        (m) => _NominatimHit(
+                          displayName: m['display_name'] as String,
+                          lat: double.tryParse(m['lat']?.toString() ?? '') ?? 0,
+                          lon: double.tryParse(m['lon']?.toString() ?? '') ?? 0,
+                        ),
+                      );
                     }
                   } catch (e) {
                     appLog.w('Error fetching location suggestions: $e');

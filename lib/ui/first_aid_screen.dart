@@ -52,7 +52,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
 
   Future<void> _lookupFirstAid(String query) async {
     if (query.trim().isEmpty) return;
-    
+
     setState(() {
       _isLoading = true;
       _result = '';
@@ -89,8 +89,6 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,7 +117,10 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
                       fillColor: const Color(0xFF1A1A2E),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -155,18 +156,26 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.white10),
                   boxShadow: [
-                    BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: 2),
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
                   ],
                 ),
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: _suggestions.length,
-                  separatorBuilder: (context, index) => const Divider(color: Colors.white10, height: 1),
+                  separatorBuilder: (context, index) =>
+                      const Divider(color: Colors.white10, height: 1),
                   itemBuilder: (context, index) {
                     final suggestion = _suggestions[index];
                     return ListTile(
                       dense: true,
-                      title: Text(suggestion, style: const TextStyle(color: Colors.white70)),
+                      title: Text(
+                        suggestion,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
                       onTap: () {
                         _textController.text = suggestion;
                         _lookupFirstAid(suggestion);
@@ -195,16 +204,25 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                   decoration: BoxDecoration(
                     color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.redAccent,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _error!,
-                          style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -221,7 +239,9 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A1A2E),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
+                    border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.25),
+                    ),
                   ),
                   child: SingleChildScrollView(
                     child: Column(
@@ -229,7 +249,11 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.medical_services_outlined, color: Colors.redAccent, size: 18),
+                            const Icon(
+                              Icons.medical_services_outlined,
+                              color: Colors.redAccent,
+                              size: 18,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'Verified Medical Solutions',
@@ -247,11 +271,28 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                           data: _result,
                           selectable: true,
                           styleSheet: MarkdownStyleSheet(
-                            p: const TextStyle(color: Colors.white, height: 1.6, fontSize: 15),
-                            strong: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
-                            listBullet: const TextStyle(color: Colors.redAccent),
-                            h1: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                            h2: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                            p: const TextStyle(
+                              color: Colors.white,
+                              height: 1.6,
+                              fontSize: 15,
+                            ),
+                            strong: const TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            listBullet: const TextStyle(
+                              color: Colors.redAccent,
+                            ),
+                            h1: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            h2: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -272,8 +313,11 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
                           color: Colors.red.withValues(alpha: 0.05),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.health_and_safety,
-                            size: 80, color: Colors.red),
+                        child: const Icon(
+                          Icons.health_and_safety,
+                          size: 80,
+                          color: Colors.red,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       const Text(

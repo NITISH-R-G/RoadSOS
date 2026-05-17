@@ -24,24 +24,19 @@ Future<bool> sendSmsDirectAndroidImpl(String number, String message) async {
   if (!Platform.isAndroid) return false;
 
   // Truncate to one SMS length; carrier routing adds ~40 char overhead.
-  final body = message.length > 160 ? '${message.substring(0, 157)}...' : message;
+  final body = message.length > 160
+      ? '${message.substring(0, 157)}...'
+      : message;
 
   // Encode body per RFC 5724 — url_launcher handles the Uri encoding.
-  final uri = Uri(
-    scheme: 'sms',
-    path: number,
-    queryParameters: {'body': body},
-  );
+  final uri = Uri(scheme: 'sms', path: number, queryParameters: {'body': body});
 
   try {
     if (!await canLaunchUrl(uri)) {
       appLog.w('[SmsDirect] Cannot launch SMS URI — no messaging app found');
       return false;
     }
-    final launched = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (launched) {
       appLog.d('[SmsDirect] SMS app opened for $number (user must tap Send)');
     } else {

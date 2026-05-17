@@ -46,7 +46,11 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
         elevation: 0,
         title: const Text(
           'FAMILY CIRCLE',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 14),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.5,
+            fontSize: 14,
+          ),
         ),
         actions: [
           IconButton(
@@ -81,7 +85,8 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
             )
           : FloatingActionButton.extended(
               backgroundColor: const Color(0xFF5C7CFA),
-              onPressed: () => _showInviteDialog(context, notifier, state.circles.first.id),
+              onPressed: () =>
+                  _showInviteDialog(context, notifier, state.circles.first.id),
               icon: const Icon(Icons.person_add),
               label: const Text('INVITE BY SMS'),
             ),
@@ -108,14 +113,14 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
                 loc.isSos
                     ? Icons.warning
                     : loc.isSafeWalk
-                        ? Icons.directions_walk
-                        : Icons.person_pin_circle,
+                    ? Icons.directions_walk
+                    : Icons.person_pin_circle,
                 size: 32,
                 color: loc.isSos
                     ? const Color(0xFFE8281A)
                     : loc.isSafeWalk
-                        ? const Color(0xFF00B8A0)
-                        : const Color(0xFF5C7CFA),
+                    ? const Color(0xFF00B8A0)
+                    : const Color(0xFF5C7CFA),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -156,7 +161,10 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
     );
   }
 
-  Widget _publishingControls(FamilyCircleState state, FamilyCircleService notifier) {
+  Widget _publishingControls(
+    FamilyCircleState state,
+    FamilyCircleService notifier,
+  ) {
     final mode = state.publishingMode;
     final profile = ref.read(userProfileProvider);
 
@@ -172,7 +180,9 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
                 Text(
                   state.publishing ? 'YOU ARE LIVE' : 'YOU ARE PRIVATE',
                   style: TextStyle(
-                    color: state.publishing ? const Color(0xFF00B8A0) : Colors.white60,
+                    color: state.publishing
+                        ? const Color(0xFF00B8A0)
+                        : Colors.white60,
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.4,
@@ -182,8 +192,8 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
                 Text(
                   state.publishing
                       ? mode == FamilyPublishMode.sos
-                          ? 'Sharing SOS location with circle'
-                          : 'Sharing Safe Walk position with circle'
+                            ? 'Sharing SOS location with circle'
+                            : 'Sharing Safe Walk position with circle'
                       : 'Circle peers cannot see your location',
                   style: const TextStyle(color: Colors.white, fontSize: 13),
                 ),
@@ -197,7 +207,10 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
                 side: const BorderSide(color: Color(0xFFE8281A)),
               ),
               onPressed: notifier.stopPublishing,
-              icon: const Icon(Icons.stop_circle_outlined, color: Color(0xFFE8281A)),
+              icon: const Icon(
+                Icons.stop_circle_outlined,
+                color: Color(0xFFE8281A),
+              ),
               label: const Text('STOP'),
             )
           else
@@ -209,11 +222,11 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
               onPressed: state.circles.isEmpty
                   ? null
                   : () => notifier.startPublishing(
-                        mode: FamilyPublishMode.safeWalk,
-                        displayName: profile.fullName.trim().isEmpty
-                            ? 'Me'
-                            : profile.fullName.trim(),
-                      ),
+                      mode: FamilyPublishMode.safeWalk,
+                      displayName: profile.fullName.trim().isEmpty
+                          ? 'Me'
+                          : profile.fullName.trim(),
+                    ),
               icon: const Icon(Icons.location_on),
               label: const Text('GO LIVE'),
             ),
@@ -266,7 +279,8 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
               CircleAvatar(
                 backgroundColor: const Color(0xFF5C7CFA),
                 child: Text(
-                  (m.displayName.isNotEmpty ? m.displayName[0] : '?').toUpperCase(),
+                  (m.displayName.isNotEmpty ? m.displayName[0] : '?')
+                      .toUpperCase(),
                   style: const TextStyle(color: Colors.white),
                 ),
               ),
@@ -285,23 +299,26 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
                     if (m.phoneE164 != null)
                       Text(
                         m.phoneE164!,
-                        style: const TextStyle(color: Colors.white60, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 12,
+                        ),
                       ),
                     const SizedBox(height: 4),
                     Text(
                       live == null
                           ? 'Not sharing right now'
                           : live.isSos
-                              ? 'SOS · ${_age(live.updatedAt)} ago'
-                              : live.isSafeWalk
-                                  ? 'Safe Walk · ${_age(live.updatedAt)} ago'
-                                  : 'Live · ${_age(live.updatedAt)} ago',
+                          ? 'SOS · ${_age(live.updatedAt)} ago'
+                          : live.isSafeWalk
+                          ? 'Safe Walk · ${_age(live.updatedAt)} ago'
+                          : 'Live · ${_age(live.updatedAt)} ago',
                       style: TextStyle(
                         color: live == null
                             ? Colors.white38
                             : live.isSos
-                                ? const Color(0xFFE8281A)
-                                : const Color(0xFF00B8A0),
+                            ? const Color(0xFFE8281A)
+                            : const Color(0xFF00B8A0),
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
                       ),
@@ -315,25 +332,20 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
                   onPressed: () async {
                     final res = await ref
                         .read(webRtcVoiceCallServiceProvider.notifier)
-                        .startCall(
-                          calleeId: m.userId,
-                          peerName: m.displayName,
-                        );
+                        .startCall(calleeId: m.userId, peerName: m.displayName);
                     if (!context.mounted) return;
                     if (res.error != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(res.error!)),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(res.error!)));
                     }
                   },
-                  icon: const Icon(Icons.headset_mic,
-                      color: Color(0xFF5C7CFA)),
+                  icon: const Icon(Icons.headset_mic, color: Color(0xFF5C7CFA)),
                 ),
                 if (m.phoneE164 != null)
                   IconButton(
                     tooltip: 'PSTN call',
-                    onPressed: () =>
-                        launchUrl(Uri.parse('tel:${m.phoneE164}')),
+                    onPressed: () => launchUrl(Uri.parse('tel:${m.phoneE164}')),
                     icon: const Icon(Icons.call, color: Color(0xFF00B8A0)),
                   ),
               ],
@@ -378,7 +390,10 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('CANCEL'),
+          ),
           FilledButton(
             onPressed: () async {
               final name = controller.text.trim();
@@ -387,8 +402,9 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
               final err = await notifier.createCircle(name);
               if (!context.mounted) return;
               if (err != null) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(err)));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(err)));
               }
             },
             child: const Text('CREATE'),
@@ -416,7 +432,10 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('CANCEL'),
+          ),
           FilledButton(
             onPressed: () async {
               final raw = controller.text.trim();
@@ -434,8 +453,9 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
               );
               if (!context.mounted) return;
               if (res.error != null) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(res.error!)));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(res.error!)));
                 return;
               }
               final body =
@@ -446,11 +466,15 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
                 sent = await sendSmsDirectAndroid(phone, body);
               }
               if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(sent
-                    ? 'Invite SMS sent to +91$phone'
-                    : 'Invite ready — message copied to clipboard'),
-              ));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    sent
+                        ? 'Invite SMS sent to +91$phone'
+                        : 'Invite ready — message copied to clipboard',
+                  ),
+                ),
+              );
             },
             child: const Text('SEND'),
           ),
@@ -474,7 +498,10 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
           textCapitalization: TextCapitalization.characters,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('CANCEL'),
+          ),
           FilledButton(
             onPressed: () async {
               final code = controller.text.trim().toUpperCase();
@@ -483,8 +510,9 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
               final err = await notifier.redeemInvite(code);
               if (!context.mounted) return;
               if (err != null) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(err)));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(err)));
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Joined circle ✓')),

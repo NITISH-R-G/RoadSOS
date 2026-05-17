@@ -13,11 +13,8 @@ import 'gemma_local_service.dart';
 enum BystanderCoachPhase { idle, listening, thinking, speaking, error }
 
 class BystanderCoachTurn {
-  BystanderCoachTurn({
-    required this.role,
-    required this.text,
-    DateTime? at,
-  }) : at = at ?? DateTime.now();
+  BystanderCoachTurn({required this.role, required this.text, DateTime? at})
+    : at = at ?? DateTime.now();
 
   /// 'bystander' for the helper at the scene, 'coach' for the AI agent.
   final String role;
@@ -51,8 +48,9 @@ class BystanderCoachState {
       phase: phase ?? this.phase,
       turns: turns ?? this.turns,
       partial: partial ?? this.partial,
-      errorMessage:
-          identical(errorMessage, _sentinel) ? this.errorMessage : errorMessage as String?,
+      errorMessage: identical(errorMessage, _sentinel)
+          ? this.errorMessage
+          : errorMessage as String?,
       languageCode: languageCode ?? this.languageCode,
     );
   }
@@ -259,7 +257,10 @@ Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not suppor
   String _postProcess(String raw) {
     // Strip code fences / leading "Coach:" labels Gemma sometimes emits.
     var t = raw.replaceAll(RegExp(r'^```[a-z]*'), '').replaceAll('```', '');
-    t = t.replaceAll(RegExp(r'^\s*(coach|assistant|response)\s*:\s*', caseSensitive: false), '');
+    t = t.replaceAll(
+      RegExp(r'^\s*(coach|assistant|response)\s*:\s*', caseSensitive: false),
+      '',
+    );
     // Hard cap to keep TTS short and readable on small screens.
     if (t.length > 360) t = '${t.substring(0, 360)}…';
     return t.trim();
@@ -311,5 +312,5 @@ Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not suppor
 
 final bystanderCoachServiceProvider =
     StateNotifierProvider<BystanderCoachService, BystanderCoachState>((ref) {
-  return BystanderCoachService(ref);
-});
+      return BystanderCoachService(ref);
+    });

@@ -54,7 +54,11 @@ Future<void> ensureSupabaseAnonymousSession(SupabaseClient client) async {
           return;
         }
       } catch (e, st) {
-        appLog.w('Session refresh failed; re-authenticating', error: e, stackTrace: st);
+        appLog.w(
+          'Session refresh failed; re-authenticating',
+          error: e,
+          stackTrace: st,
+        );
       }
     }
     await client.auth.signInAnonymously();

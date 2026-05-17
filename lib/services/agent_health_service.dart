@@ -64,13 +64,13 @@ class AgentHealthSnapshot {
     AgentReadiness? sms,
     AgentReadiness? ble,
   }) => AgentHealthSnapshot(
-        gemmaCloud: gemmaCloud ?? this.gemmaCloud,
-        gemmaOnDevice: gemmaOnDevice ?? this.gemmaOnDevice,
-        gps: gps ?? this.gps,
-        sms: sms ?? this.sms,
-        ble: ble ?? this.ble,
-        checkedAt: DateTime.now(),
-      );
+    gemmaCloud: gemmaCloud ?? this.gemmaCloud,
+    gemmaOnDevice: gemmaOnDevice ?? this.gemmaOnDevice,
+    gps: gps ?? this.gps,
+    sms: sms ?? this.sms,
+    ble: ble ?? this.ble,
+    checkedAt: DateTime.now(),
+  );
 }
 
 class AgentHealthService {
@@ -186,8 +186,7 @@ class AgentHealthService {
       final code = response.statusCode;
       // 200/204 = OK, 401/405 = server alive but method/auth gating expected
       final ready = code == 200 || code == 204 || code == 401 || code == 405;
-      final result =
-          ready ? AgentReadiness.ready : AgentReadiness.degraded;
+      final result = ready ? AgentReadiness.ready : AgentReadiness.degraded;
       _gemmaCloudCached = result;
       _gemmaCloudCachedAt = DateTime.now();
       return result;
@@ -226,7 +225,8 @@ class AgentHealthService {
       // Primary: server relay (Twilio / Edge) — no Android SEND_SMS required.
       final relayUrl = dotenv.env['SMS_DISPATCH_URL']?.trim() ?? '';
       final relayKey = dotenv.env['SMS_DISPATCH_ANON_KEY']?.trim() ?? '';
-      if (relayUrl.isNotEmpty && relayKey.isNotEmpty) return AgentReadiness.ready;
+      if (relayUrl.isNotEmpty && relayKey.isNotEmpty)
+        return AgentReadiness.ready;
 
       // Fallback: open SMS app intent (no permission). If relay isn't configured,
       // we mark this as degraded (still usable, but requires user interaction).

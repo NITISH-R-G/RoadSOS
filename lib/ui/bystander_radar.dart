@@ -86,16 +86,19 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
           perm == LocationPermission.deniedForever) {
         return;
       }
-      _posSub = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 5,
-        ),
-      ).listen((p) {
-        if (!mounted) return;
-        setState(() => _myFix = p);
-      });
-    } catch (_) {/* permission or platform — radar still renders dots */}
+      _posSub =
+          Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              distanceFilter: 5,
+            ),
+          ).listen((p) {
+            if (!mounted) return;
+            setState(() => _myFix = p);
+          });
+    } catch (_) {
+      /* permission or platform — radar still renders dots */
+    }
   }
 
   @override
@@ -111,8 +114,9 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
     // Stream of unique sender IDs from MeshNetworkService — used purely for
     // the "PEERS DETECTED: N" caption so the radar always shows a count even
     // when no decoded packets arrived yet.
-    final beaconsStream =
-        ref.watch(meshNetworkServiceProvider).discoveredBeacons;
+    final beaconsStream = ref
+        .watch(meshNetworkServiceProvider)
+        .discoveredBeacons;
 
     return StreamBuilder<List<String>>(
       stream: beaconsStream,
@@ -222,9 +226,7 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
         Positioned(
           left: x - 6,
           top: y - 6,
-          child: _IncidentDot(
-            severity: decoded?.severity,
-          ),
+          child: _IncidentDot(severity: decoded?.severity),
         ),
       );
     }
@@ -317,17 +319,15 @@ class _IncidentDot extends StatelessWidget {
     final colour = severity == null
         ? Colors.red
         : (severity! >= 4
-            ? Colors.red
-            : (severity! >= 3 ? Colors.orange : Colors.amber));
+              ? Colors.red
+              : (severity! >= 3 ? Colors.orange : Colors.amber));
     return Container(
       width: 12,
       height: 12,
       decoration: BoxDecoration(
         color: colour,
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(color: colour, blurRadius: 10, spreadRadius: 2),
-        ],
+        boxShadow: [BoxShadow(color: colour, blurRadius: 10, spreadRadius: 2)],
       ),
     );
   }
@@ -337,7 +337,8 @@ double _haversineMeters(double lat1, double lon1, double lat2, double lon2) {
   const r = 6371000.0;
   final dlat = (lat2 - lat1) * math.pi / 180;
   final dlon = (lon2 - lon1) * math.pi / 180;
-  final a = math.sin(dlat / 2) * math.sin(dlat / 2) +
+  final a =
+      math.sin(dlat / 2) * math.sin(dlat / 2) +
       math.cos(lat1 * math.pi / 180) *
           math.cos(lat2 * math.pi / 180) *
           math.sin(dlon / 2) *
@@ -350,7 +351,8 @@ double _bearingDeg(double lat1, double lon1, double lat2, double lon2) {
   final phi2 = lat2 * math.pi / 180;
   final dlon = (lon2 - lon1) * math.pi / 180;
   final y = math.sin(dlon) * math.cos(phi2);
-  final x = math.cos(phi1) * math.sin(phi2) -
+  final x =
+      math.cos(phi1) * math.sin(phi2) -
       math.sin(phi1) * math.cos(phi2) * math.cos(dlon);
   final theta = math.atan2(y, x);
   return (theta * 180 / math.pi + 360) % 360;

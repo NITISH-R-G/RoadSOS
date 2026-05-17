@@ -8,6 +8,7 @@
 /// This model intentionally tracks *request acceptance* rather than "delivered".
 enum SmsDispatchProofLevel {
   none,
+
   /// We successfully handed the request to either the OS (SEND_SMS) or a backend relay (HTTP 2xx).
   accepted,
 }

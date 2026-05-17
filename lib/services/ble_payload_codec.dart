@@ -21,13 +21,13 @@ class BlePayloadCodec {
   static const int _version = 0x01;
 
   // Service bitmask definitions (matches AiTriageService._allowedServices)
-  static const int bitAmbulance     = 0x01;
-  static const int bitPolice        = 0x02;
-  static const int bitFire          = 0x04;
-  static const int bitRescue        = 0x08;
-  static const int bitTowing        = 0x10;
-  static const int bitPunctureShop  = 0x20;
-  static const int bitShowroom      = 0x40;
+  static const int bitAmbulance = 0x01;
+  static const int bitPolice = 0x02;
+  static const int bitFire = 0x04;
+  static const int bitRescue = 0x08;
+  static const int bitTowing = 0x10;
+  static const int bitPunctureShop = 0x20;
+  static const int bitShowroom = 0x40;
 
   /// Encode a SOS event to a compact 12-byte BLE payload.
   static Uint8List encode({
@@ -76,13 +76,20 @@ class BlePayloadCodec {
     var bits = 0;
     for (final s in services) {
       switch (s) {
-        case 'ambulance':     bits |= bitAmbulance;
-        case 'police':        bits |= bitPolice;
-        case 'fire_department': bits |= bitFire;
-        case 'rescue':        bits |= bitRescue;
-        case 'towing':        bits |= bitTowing;
-        case 'puncture_shop': bits |= bitPunctureShop;
-        case 'showroom':      bits |= bitShowroom;
+        case 'ambulance':
+          bits |= bitAmbulance;
+        case 'police':
+          bits |= bitPolice;
+        case 'fire_department':
+          bits |= bitFire;
+        case 'rescue':
+          bits |= bitRescue;
+        case 'towing':
+          bits |= bitTowing;
+        case 'puncture_shop':
+          bits |= bitPunctureShop;
+        case 'showroom':
+          bits |= bitShowroom;
       }
     }
     return bits == 0 ? bitAmbulance : bits; // Always at least ambulance
@@ -90,13 +97,13 @@ class BlePayloadCodec {
 
   static List<String> _servicesFromBitmask(int bits) {
     final out = <String>[];
-    if (bits & bitAmbulance    != 0) out.add('ambulance');
-    if (bits & bitPolice       != 0) out.add('police');
-    if (bits & bitFire         != 0) out.add('fire_department');
-    if (bits & bitRescue       != 0) out.add('rescue');
-    if (bits & bitTowing       != 0) out.add('towing');
+    if (bits & bitAmbulance != 0) out.add('ambulance');
+    if (bits & bitPolice != 0) out.add('police');
+    if (bits & bitFire != 0) out.add('fire_department');
+    if (bits & bitRescue != 0) out.add('rescue');
+    if (bits & bitTowing != 0) out.add('towing');
     if (bits & bitPunctureShop != 0) out.add('puncture_shop');
-    if (bits & bitShowroom     != 0) out.add('showroom');
+    if (bits & bitShowroom != 0) out.add('showroom');
     return out.isEmpty ? ['ambulance'] : out;
   }
 }
