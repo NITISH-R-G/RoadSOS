@@ -18,12 +18,12 @@ class _FirstAidEntry {
     required this.body,
     required this.tags,
     required this.source,
-  })  : titleLower = title.toLowerCase(),
-        tagsLower = tags.toLowerCase(),
-        // ⚡ Bolt Optimization: Pre-compute lowercased fields and search haystack
-        // during initialization to eliminate redundant String allocations and
-        // expensive .toLowerCase() calls inside frequent search loops.
-        searchHaystackLower = '$title $body $tags'.toLowerCase();
+  }) : titleLower = title.toLowerCase(),
+       tagsLower = tags.toLowerCase(),
+       // ⚡ Bolt Optimization: Pre-compute lowercased fields and search haystack
+       // during initialization to eliminate redundant String allocations and
+       // expensive .toLowerCase() calls inside frequent search loops.
+       searchHaystackLower = '$title $body $tags'.toLowerCase();
 
   final String id;
   final String title;
@@ -85,14 +85,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
 
     if (count == 0 && _corpusEntries!.isNotEmpty) {
       final parameterSets = _corpusEntries!
-          .map(
-            (entry) => [
-              entry.title,
-              entry.body,
-              entry.tags,
-              entry.source,
-            ],
-          )
+          .map((entry) => [entry.title, entry.body, entry.tags, entry.source])
           .toList();
 
       await appDb.executeBatch('''
@@ -314,11 +307,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
       }
     }
     row ??= _corpusEntries!.first;
-    return _formatResult(
-      title: row.title,
-      body: row.body,
-      source: row.source,
-    );
+    return _formatResult(title: row.title, body: row.body, source: row.source);
   }
 
   List<String> _tokenize(String q) {
