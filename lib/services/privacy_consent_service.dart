@@ -13,7 +13,9 @@ class PrivacyConsentService {
     return p.getString(_kConsentAt) != null;
   }
 
-  static Future<void> recordConsent({required bool extendedCloudRetention}) async {
+  static Future<void> recordConsent({
+    required bool extendedCloudRetention,
+  }) async {
     final p = await SharedPreferences.getInstance();
     await p.setString(_kConsentAt, DateTime.now().toUtc().toIso8601String());
     await p.setBool(_kExtendedRetention, extendedCloudRetention);

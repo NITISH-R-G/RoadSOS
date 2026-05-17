@@ -30,10 +30,7 @@ class PredictiveSosPreloader {
   /// Fire-and-forget — do not await.
   static Future<void> onDrivingModeActivated() async {
     appLog.d('[Preloader] Driving mode activated — pre-warming connections');
-    await Future.wait<void>([
-      _prewarmSupabaseEdge(),
-      _prewarmGps(),
-    ]);
+    await Future.wait<void>([_prewarmSupabaseEdge(), _prewarmGps()]);
     appLog.d('[Preloader] Pre-warm complete');
   }
 

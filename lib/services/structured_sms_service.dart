@@ -48,11 +48,17 @@ class StructuredSmsService {
     UserProfile? profileOverride,
     bool useGemma = true,
   }) async {
-    final route = resolveIndiaEmergencyRoute(location.latitude, location.longitude);
+    final route = resolveIndiaEmergencyRoute(
+      location.latitude,
+      location.longitude,
+    );
     final stateCode = route?.stateCode ?? 'IN';
     final UserProfile profile =
         profileOverride ?? _ref.read(userProfileProvider);
-    final idShort = incidentId.replaceAll('-', '').padRight(8, '0').substring(0, 8);
+    final idShort = incidentId
+        .replaceAll('-', '')
+        .padRight(8, '0')
+        .substring(0, 8);
 
     final servicesShort = _shortServices(triage.requiredServices);
     final profileShort = _shortProfile(profile);
@@ -132,14 +138,17 @@ class StructuredSmsService {
     final bt = p.bloodType.trim();
     final hasBt = bt.isNotEmpty && bt.toLowerCase() != 'unknown';
     final allergies = p.allergies.trim();
-    final hasAllergy = allergies.isNotEmpty &&
+    final hasAllergy =
+        allergies.isNotEmpty &&
         allergies.toLowerCase() != 'none' &&
         allergies.toLowerCase() != 'n/a';
 
     if (!hasBt && !hasAllergy) return '?';
 
     final allergyShort = hasAllergy
-        ? allergies.length > 12 ? allergies.substring(0, 12) : allergies
+        ? allergies.length > 12
+              ? allergies.substring(0, 12)
+              : allergies
         : 'None';
     final btShort = hasBt ? bt : '?';
     return 'B$btShort A:$allergyShort';
@@ -216,10 +225,10 @@ class StructuredSmsService {
 
       final raw = await gemma.generate(prompt);
       if (raw == null) return null;
-      final line = raw.trim().split('\n').firstWhere(
-            (l) => l.contains('RSOS|'),
-            orElse: () => '',
-          );
+      final line = raw
+          .trim()
+          .split('\n')
+          .firstWhere((l) => l.contains('RSOS|'), orElse: () => '');
       if (line.isEmpty) return null;
       return line.trim();
     } catch (e, st) {

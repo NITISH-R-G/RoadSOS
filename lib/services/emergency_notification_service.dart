@@ -7,13 +7,15 @@ import '../logging/app_log.dart';
 /// Service to handle emergency-specific local notifications.
 class EmergencyNotificationService {
   EmergencyNotificationService._();
-  static final EmergencyNotificationService instance = EmergencyNotificationService._();
+  static final EmergencyNotificationService instance =
+      EmergencyNotificationService._();
 
   static const String _channelId = 'roadsos_emergency';
   static const String _channelName = 'Emergency Alerts';
   static const int _sosActiveNotificationId = 9110;
 
-  final FlutterLocalNotificationsPlugin _local = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _local =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   Future<void> ensureInitialized() async {
@@ -38,7 +40,9 @@ class EmergencyNotificationService {
         enableVibration: true,
       );
       await _local
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(channel);
     }
   }

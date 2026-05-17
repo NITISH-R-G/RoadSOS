@@ -69,7 +69,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (!seen && mounted) {
         await Navigator.push<void>(
           context,
-          MaterialPageRoute<void>(builder: (_) => const GoodSamaritanLawScreen()),
+          MaterialPageRoute<void>(
+            builder: (_) => const GoodSamaritanLawScreen(),
+          ),
         );
         await NearbySosPreferences.setGoodSamaritanSeen(true);
       }
@@ -108,7 +110,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(l10n.settingsTitle, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+        title: Text(
+          l10n.settingsTitle,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+        ),
         backgroundColor: Colors.transparent,
       ),
       body: ListView(
@@ -147,7 +152,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             'GPS, triage, SMS/mesh/cloud steps — for insurance or police records',
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute<void>(builder: (_) => const SosActivityLogScreen()),
+              MaterialPageRoute<void>(
+                builder: (_) => const SosActivityLogScreen(),
+              ),
             ),
           ),
           _tile(
@@ -192,7 +199,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Icons.hearing_disabled_outlined,
               'Background volume SOS',
               'Open Accessibility and enable RoadSOS for lock-screen gesture (3× up + 3× down)',
-              onTap: () => ref.read(hardwareTriggerServiceProvider).openAndroidAccessibilitySettings(),
+              onTap: () => ref
+                  .read(hardwareTriggerServiceProvider)
+                  .openAndroidAccessibilitySettings(),
             ),
           ],
           const SizedBox(height: 32),
@@ -200,17 +209,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           SwitchListTile(
             value: _nearbySos,
             onChanged: _onNearbySosChanged,
-            secondary: const Icon(Icons.notifications_active, color: Colors.white70),
-            title: Text(l10n.nearbySosToggleTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            subtitle: Text(l10n.nearbySosToggleSubtitle, style: const TextStyle(color: Colors.white38, fontSize: 12)),
+            secondary: const Icon(
+              Icons.notifications_active,
+              color: Colors.white70,
+            ),
+            title: Text(
+              l10n.nearbySosToggleTitle,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              l10n.nearbySosToggleSubtitle,
+              style: const TextStyle(color: Colors.white38, fontSize: 12),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.balance, color: Colors.greenAccent),
-            title: Text(l10n.nearbySosLearnProtection, style: const TextStyle(color: Colors.white)),
+            title: Text(
+              l10n.nearbySosLearnProtection,
+              style: const TextStyle(color: Colors.white),
+            ),
             trailing: const Icon(Icons.chevron_right, color: Colors.white24),
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute<void>(builder: (_) => const GoodSamaritanLawScreen()),
+              MaterialPageRoute<void>(
+                builder: (_) => const GoodSamaritanLawScreen(),
+              ),
             ),
           ),
           const SizedBox(height: 32),
@@ -221,11 +247,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             secondary: const Icon(Icons.cloud_queue, color: Colors.white70),
             title: Text(
               l10n.settingsExtendedRetentionTitle,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             subtitle: Text(
               l10n.settingsExtendedRetentionSubtitle,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.38), fontSize: 12),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.38),
+                fontSize: 12,
+              ),
             ),
           ),
           _tile(
@@ -234,9 +266,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             l10n.blackBoxTitle,
             l10n.blackBoxSubtitle,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.blackBoxSnack)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.blackBoxSnack)));
             },
           ),
           _tile(
@@ -280,9 +312,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return ListTile(
       onTap: onTap,
       leading: Icon(icon, color: Colors.white70),
-      title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-      subtitle: Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 12)),
-      trailing: trailing ?? const Icon(Icons.chevron_right, color: Colors.white24),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 15,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: Colors.white38, fontSize: 12),
+      ),
+      trailing:
+          trailing ?? const Icon(Icons.chevron_right, color: Colors.white24),
       contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
     );
   }

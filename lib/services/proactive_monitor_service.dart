@@ -65,10 +65,9 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
     // the user has no circle, this becomes a no-op and the timer-only Safe
     // Walk still works.
     unawaited(
-      _ref.read(familyCircleServiceProvider.notifier).startPublishing(
-            mode: FamilyPublishMode.safeWalk,
-            destination: dest,
-          ),
+      _ref
+          .read(familyCircleServiceProvider.notifier)
+          .startPublishing(mode: FamilyPublishMode.safeWalk, destination: dest),
     );
   }
 
@@ -130,6 +129,8 @@ class ProactiveMonitorService extends StateNotifier<ProactiveMonitorState> {
 /// The escalation must survive widget lifecycle changes to guarantee the 60s
 /// SOS escalation fires even when the app is in the background.
 final proactiveMonitorProvider =
-    StateNotifierProvider<ProactiveMonitorService, ProactiveMonitorState>((ref) {
-  return ProactiveMonitorService(ref);
-});
+    StateNotifierProvider<ProactiveMonitorService, ProactiveMonitorState>((
+      ref,
+    ) {
+      return ProactiveMonitorService(ref);
+    });

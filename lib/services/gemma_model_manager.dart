@@ -46,8 +46,7 @@ class GemmaModelManager {
   static const String hfTokenUrl = 'https://huggingface.co/settings/tokens';
 
   /// SharedPreferences keys.
-  static const String prefAutoDownloadOptOut =
-      'gemma_auto_download_opt_out_v1';
+  static const String prefAutoDownloadOptOut = 'gemma_auto_download_opt_out_v1';
   static const String prefAutoDownloadInFlight =
       'gemma_auto_download_in_flight_v1';
 
@@ -120,7 +119,9 @@ class GemmaModelManager {
     int alreadyHave = 0;
     if (tmpFile.existsSync()) {
       alreadyHave = tmpFile.lengthSync();
-      appLog.i('[GemmaModel] Resuming download from ${(alreadyHave / 1e6).round()} MB');
+      appLog.i(
+        '[GemmaModel] Resuming download from ${(alreadyHave / 1e6).round()} MB',
+      );
     }
 
     final headers = <String, String>{
@@ -177,7 +178,9 @@ class GemmaModelManager {
       try {
         await for (final chunk in response.stream) {
           if (cancelToken?.isCancelled ?? false) {
-            appLog.i('[GemmaModel] Download cancelled — partial file kept for resume');
+            appLog.i(
+              '[GemmaModel] Download cancelled — partial file kept for resume',
+            );
             await sink.flush();
             await sink.close();
             return;
@@ -204,7 +207,9 @@ class GemmaModelManager {
 
       // Atomic rename: .download → final path.
       await tmpFile.rename(path);
-      appLog.i('[GemmaModel] ✓ Download complete — ${(finalSize / 1e6).round()} MB at $path');
+      appLog.i(
+        '[GemmaModel] ✓ Download complete — ${(finalSize / 1e6).round()} MB at $path',
+      );
     } finally {
       client.close();
     }

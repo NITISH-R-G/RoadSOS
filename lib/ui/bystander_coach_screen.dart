@@ -15,7 +15,8 @@ class BystanderCoachScreen extends ConsumerStatefulWidget {
   const BystanderCoachScreen({super.key});
 
   @override
-  ConsumerState<BystanderCoachScreen> createState() => _BystanderCoachScreenState();
+  ConsumerState<BystanderCoachScreen> createState() =>
+      _BystanderCoachScreenState();
 }
 
 class _BystanderCoachScreenState extends ConsumerState<BystanderCoachScreen> {
@@ -51,7 +52,11 @@ class _BystanderCoachScreenState extends ConsumerState<BystanderCoachScreen> {
         elevation: 0,
         title: const Text(
           'BYSTANDER COACH',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 14),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.5,
+            fontSize: 14,
+          ),
         ),
         actions: [
           IconButton(
@@ -78,7 +83,10 @@ class _BystanderCoachScreenState extends ConsumerState<BystanderCoachScreen> {
     final (color, label) = switch (phase) {
       BystanderCoachPhase.idle => (const Color(0xFF1F2933), 'READY'),
       BystanderCoachPhase.listening => (const Color(0xFF00B8A0), 'LISTENING'),
-      BystanderCoachPhase.thinking => (const Color(0xFFFFB400), 'THINKING (Gemma 4)'),
+      BystanderCoachPhase.thinking => (
+        const Color(0xFFFFB400),
+        'THINKING (Gemma 4)',
+      ),
       BystanderCoachPhase.speaking => (const Color(0xFFE8281A), 'COACHING'),
       BystanderCoachPhase.error => (const Color(0xFFE8281A), 'ERROR'),
     };
@@ -119,11 +127,7 @@ class _BystanderCoachScreenState extends ConsumerState<BystanderCoachScreen> {
       itemCount: state.turns.length + (state.partial.isEmpty ? 0 : 1),
       itemBuilder: (context, i) {
         if (state.partial.isNotEmpty && i == 0) {
-          return _bubble(
-            text: state.partial,
-            isCoach: false,
-            isPartial: true,
-          );
+          return _bubble(text: state.partial, isCoach: false, isPartial: true);
         }
         final reverseIndex = state.partial.isNotEmpty ? i - 1 : i;
         final turn = state.turns[state.turns.length - 1 - reverseIndex];
@@ -132,14 +136,18 @@ class _BystanderCoachScreenState extends ConsumerState<BystanderCoachScreen> {
     );
   }
 
-  Widget _bubble({required String text, required bool isCoach, bool isPartial = false}) {
+  Widget _bubble({
+    required String text,
+    required bool isCoach,
+    bool isPartial = false,
+  }) {
     final bg = isCoach ? const Color(0xFF1F2933) : const Color(0xFF00322B);
     final align = isCoach ? Alignment.centerLeft : Alignment.centerRight;
     final tag = isPartial
         ? 'YOU · LIVE'
         : isCoach
-            ? 'COACH'
-            : 'YOU';
+        ? 'COACH'
+        : 'YOU';
     return Align(
       alignment: align,
       child: Container(
@@ -189,8 +197,12 @@ class _BystanderCoachScreenState extends ConsumerState<BystanderCoachScreen> {
     );
   }
 
-  Widget _bottomControls(BystanderCoachState state, BystanderCoachService notifier) {
-    final busy = state.phase == BystanderCoachPhase.thinking ||
+  Widget _bottomControls(
+    BystanderCoachState state,
+    BystanderCoachService notifier,
+  ) {
+    final busy =
+        state.phase == BystanderCoachPhase.thinking ||
         state.phase == BystanderCoachPhase.speaking;
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 14),
@@ -262,7 +274,10 @@ class _BystanderCoachScreenState extends ConsumerState<BystanderCoachScreen> {
                 state.phase == BystanderCoachPhase.listening
                     ? 'LISTENING…'
                     : 'TAP TO SPEAK',
-                style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.3),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.3,
+                ),
               ),
             ),
           ),
