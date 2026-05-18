@@ -139,22 +139,103 @@ class GemmaModelManager {
         return; // success
       } on GemmaDownloadException catch (e) {
         lastErr = e;
-        // Only fail-over on auth-ish / rate-limit responses; bubble unknown
-        // errors so the caller can show a clean message.
-        if (e.statusCode != 401 &&
-            e.statusCode != 403 &&
-            e.statusCode != 404 &&
-            e.statusCode != 429) {
-          rethrow;
-        }
-        appLog.w('[GemmaModel] $url failed (${e.statusCode}); trying next mirror');
+        if (!_shouldTryNextMirror(e)) rethrow;
+        appLog.w(
+          '[GemmaModel] $url failed (${e.statusCode ?? "stream"}); trying next mirror',
+        );
+      } catch (e, st) {
+        if (!_isTransientDownloadError(e)) rethrow;
+        lastErr = GemmaDownloadException(userFacingDownloadError(e));
+        appLog.w('[GemmaModel] $url transient error; trying next mirror',
+            error: e, stackTrace: st);
       }
     }
     throw lastErr ??
         const GemmaDownloadException('All Gemma 4 mirrors are unreachable.');
   }
 
+  static const int _maxAttemptsPerMirror = 5;
+
+  /// Short, user-safe message — never dumps signed CDN URLs into the UI.
+  static String userFacingDownloadError(Object error) {
+    final raw = error.toString();
+    if (raw.contains('Connection closed') ||
+        raw.contains('Connection reset') ||
+        raw.contains('Broken pipe')) {
+      return 'Wi-Fi dropped mid-download. Tap the banner to resume — your partial file is kept.';
+    }
+    if (raw.contains('401') || raw.contains('403')) {
+      return 'Mirror refused the download. Tap to retry, or add a Hugging Face read token in Settings.';
+    }
+    if (raw.contains('429')) {
+      return 'Download rate-limited. Wait a minute and tap to retry.';
+    }
+    final stripped = raw.replaceAll(RegExp(r'https?://\S+'), '…');
+    if (stripped.length <= 160) return stripped;
+    return '${stripped.substring(0, 157)}…';
+  }
+
+  static bool _shouldTryNextMirror(GemmaDownloadException e) {
+    final code = e.statusCode;
+    if (code == null || code < 0) return true;
+    return code == 401 ||
+        code == 403 ||
+        code == 404 ||
+        code == 429 ||
+        code == 502 ||
+        code == 503 ||
+        code == 504;
+  }
+
+  static bool _isTransientDownloadError(Object error) {
+    if (error is GemmaDownloadException) return _shouldTryNextMirror(error);
+    if (error is http.ClientException) return true;
+    if (error is IOException) return true;
+    if (error is TimeoutException) return true;
+    final s = error.toString();
+    return s.contains('Connection closed') ||
+        s.contains('Connection reset') ||
+        s.contains('HandshakeException');
+  }
+
   static Future<void> _downloadFromUrl({
+    required String url,
+    String? hfToken,
+    required void Function(int received, int total) onProgress,
+    CancelToken? cancelToken,
+  }) async {
+    Object? lastError;
+    for (var attempt = 0; attempt < _maxAttemptsPerMirror; attempt++) {
+      if (cancelToken?.isCancelled ?? false) return;
+      try {
+        await _downloadFromUrlOnce(
+          url: url,
+          hfToken: hfToken,
+          onProgress: onProgress,
+          cancelToken: cancelToken,
+        );
+        return;
+      } catch (e) {
+        lastError = e;
+        if (cancelToken?.isCancelled ?? false) return;
+        if (!_isTransientDownloadError(e) || attempt == _maxAttemptsPerMirror - 1) {
+          if (e is GemmaDownloadException) rethrow;
+          throw GemmaDownloadException(userFacingDownloadError(e));
+        }
+        final delay = Duration(seconds: 1 << attempt.clamp(0, 4));
+        appLog.w(
+          '[GemmaModel] Attempt ${attempt + 1}/$_maxAttemptsPerMirror failed on $url — '
+          'retrying in ${delay.inSeconds}s (resume supported)',
+          error: e,
+        );
+        await Future<void>.delayed(delay);
+      }
+    }
+    if (lastError is GemmaDownloadException) throw lastError;
+    throw GemmaDownloadException(userFacingDownloadError(lastError!));
+  }
+
+  static Future<void> _downloadFromUrlOnce({
     required String url,
     String? hfToken,
     required void Function(int received, int total) onProgress,
@@ -213,6 +294,13 @@ class GemmaModelManager {
             statusCode: 404,
           );
         }
+        if (response.statusCode >= 500) {
+          throw GemmaDownloadException(
+            'Mirror temporarily unavailable (HTTP ${response.statusCode}). '
+            'Will retry.',
+            statusCode: response.statusCode,
+          );
+        }
         throw GemmaDownloadException(
           'Server returned HTTP ${response.statusCode}: ${body.substring(0, body.length.clamp(0, 200))}',
           statusCode: response.statusCode,
@@ -242,6 +330,10 @@ class GemmaModelManager {
           received += chunk.length;
           onProgress(received, totalBytes);
         }
+      } on http.ClientException catch (e) {
+        throw GemmaDownloadException(userFacingDownloadError(e));
+      } on IOException catch (e) {
+        throw GemmaDownloadException(userFacingDownloadError(e));
       } finally {
         await sink.flush();
         await sink.close();
@@ -253,8 +345,9 @@ class GemmaModelManager {
       final finalSize = tmpFile.lengthSync();
       if (finalSize < expectedMinBytes) {
         throw GemmaDownloadException(
-          'Downloaded file too small (${(finalSize / 1e6).round()} MB — expected ≥ '
-          '${(expectedMinBytes / 1e6).round()} MB). The download may be incomplete.',
+          'Download incomplete (${(finalSize / 1e6).round()} MB of ~'
+          '${(approximateFullBytes / 1e6).round()} MB). Tap to resume.',
+          statusCode: -1,
         );
       }
 

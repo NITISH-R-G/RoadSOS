@@ -104,7 +104,9 @@ class GemmaAutoDownloader extends StateNotifier<GemmaAutoStatus> {
         unawaited(_kick());
       }
       _connSub = _connectivity.onConnectivityChanged.listen((conn) {
-        if (_isWifi(conn) && state.state == GemmaAutoState.waitingForWifi) {
+        if (!_isWifi(conn)) return;
+        if (state.state == GemmaAutoState.waitingForWifi ||
+            state.state == GemmaAutoState.failed) {
           unawaited(_kick());
         }
       });
@@ -126,6 +128,22 @@ class GemmaAutoDownloader extends StateNotifier<GemmaAutoStatus> {
   /// "Download now over cellular").
   Future<void> forceDownload({String? hfToken}) async {
     await _kick(forceCellular: true, hfToken: hfToken);
+  }
+
+  /// Resume after a failure or tap on [GemmaStatusBanner]. Keeps the partial
+  /// `.download` file and uses HTTP Range to continue.
+  Future<void> retryDownload({String? hfToken, bool allowCellular = false}) async {
+    _cancelToken?.cancel();
+    _kicked = false;
+    if (await GemmaModelManager.isModelReady()) {
+      state = state.copyWith(state: GemmaAutoState.ready, errorMessage: null);
+      return;
+    }
+    state = state.copyWith(
+      errorMessage: null,
+      received: await GemmaModelManager.downloadedSoFar(),
+    );
+    await _kick(forceCellular: allowCellular, hfToken: hfToken);
   }
 
   /// User opt-out — stops any in-flight download and prevents auto-retry.
@@ -193,12 +211,14 @@ class GemmaAutoDownloader extends StateNotifier<GemmaAutoStatus> {
       state = state.copyWith(
         state: GemmaAutoState.failed,
         errorMessage: e.message,
+        received: await GemmaModelManager.downloadedSoFar(),
       );
     } catch (e, st) {
       appLog.w('[GemmaAuto] download failed', error: e, stackTrace: st);
       state = state.copyWith(
         state: GemmaAutoState.failed,
-        errorMessage: 'Download failed: $e',
+        errorMessage: GemmaModelManager.userFacingDownloadError(e),
+        received: await GemmaModelManager.downloadedSoFar(),
       );
     } finally {
       final prefs = await SharedPreferences.getInstance();

@@ -395,14 +395,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       children: [
         // Radar + status at the top
         const SizedBox(height: 160, child: MeshRadar()),
-        const SizedBox(height: 8),
-        const Align(
-          alignment: Alignment.centerRight,
-          child: Padding(
-            padding: EdgeInsets.only(right: 4, bottom: 4),
-            child: StatusIndicatorBar(),
-          ),
-        ),
         const SizedBox(height: 16),
 
         // Auto-Gemma install + readiness banner (hides itself when ready).
