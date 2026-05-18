@@ -110,6 +110,7 @@ class FamilyCircleState {
     this.publishing = false,
     this.publishingMode = FamilyPublishMode.off,
     this.publishingDestination,
+    this.isDemoPreview = false,
   });
 
   final List<FamilyCircle> circles;
@@ -120,6 +121,8 @@ class FamilyCircleState {
   final bool publishing;
   final FamilyPublishMode publishingMode;
   final String? publishingDestination;
+  /// Local preview data when Supabase is unavailable or user taps "Try demo".
+  final bool isDemoPreview;
 
   FamilyCircleState copyWith({
     List<FamilyCircle>? circles,
@@ -130,6 +133,7 @@ class FamilyCircleState {
     bool? publishing,
     FamilyPublishMode? publishingMode,
     Object? publishingDestination = _sentinel,
+    bool? isDemoPreview,
   }) {
     return FamilyCircleState(
       circles: circles ?? this.circles,
@@ -144,6 +148,7 @@ class FamilyCircleState {
       publishingDestination: identical(publishingDestination, _sentinel)
           ? this.publishingDestination
           : publishingDestination as String?,
+      isDemoPreview: isDemoPreview ?? this.isDemoPreview,
     );
   }
 
@@ -529,6 +534,74 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rng = Random.secure();
     return List.generate(8, (_) => chars[rng.nextInt(chars.length)]).join();
+  }
+
+  /// Populates a believable circle for demos / offline review. Labelled in UI.
+  void enableDemoPreview() {
+    const circleId = 'demo-family-circle';
+    final now = DateTime.now().toUtc();
+    state = state.copyWith(
+      isDemoPreview: true,
+      busy: false,
+      lastError: null,
+      circles: [
+        FamilyCircle(
+          id: circleId,
+          name: 'Home Circle (demo)',
+          createdBy: 'demo-you',
+          createdAt: now,
+        ),
+      ],
+      members: const [
+        FamilyMember(
+          userId: 'demo-you',
+          circleId: circleId,
+          displayName: 'You',
+          role: 'owner',
+          phoneE164: '+91 98•• •••01',
+        ),
+        FamilyMember(
+          userId: 'demo-mom',
+          circleId: circleId,
+          displayName: 'Mom',
+          role: 'member',
+          phoneE164: '+91 98•• •••02',
+        ),
+        FamilyMember(
+          userId: 'demo-partner',
+          circleId: circleId,
+          displayName: 'Partner',
+          role: 'member',
+          phoneE164: '+91 98•• •••03',
+        ),
+      ],
+      livePositions: {
+        'demo-mom': FamilyLiveLocation(
+          userId: 'demo-mom',
+          displayName: 'Mom',
+          latitude: 12.9716,
+          longitude: 77.5946,
+          updatedAt: now,
+          isSafeWalk: true,
+          destination: 'Koramangala',
+          batteryPct: 78,
+        ),
+        'demo-partner': FamilyLiveLocation(
+          userId: 'demo-partner',
+          displayName: 'Partner',
+          latitude: 12.9784,
+          longitude: 77.6408,
+          updatedAt: now.subtract(const Duration(minutes: 2)),
+          batteryPct: 54,
+        ),
+      },
+    );
+  }
+
+  void clearDemoPreview() {
+    if (!state.isDemoPreview) return;
+    state = const FamilyCircleState();
+    unawaited(refresh());
   }
 
   @override

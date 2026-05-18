@@ -7,7 +7,11 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../database/app_database.dart' show isSupabaseSdkInitialized;
 import '../services/family_circle_service.dart';
+import 'widgets/roadsos_glass.dart';
 import '../services/family_tracking_service.dart';
 import '../services/sms_direct_send.dart';
 import '../services/user_profile_service.dart';
@@ -40,30 +44,49 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
     final notifier = ref.read(familyCircleServiceProvider.notifier);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080A0D),
+      backgroundColor: const Color(0xFF0A0C10),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF080A0D),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text(
-          'FAMILY CIRCLE',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 14),
+          'Family Circle',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: -0.3,
+          ),
         ),
         actions: [
+          if (state.isDemoPreview)
+            TextButton(
+              onPressed: notifier.clearDemoPreview,
+              child: const Text('Exit demo'),
+            ),
           IconButton(
             tooltip: 'Refresh',
             onPressed: state.busy ? null : notifier.refresh,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
           ),
           IconButton(
             tooltip: 'Redeem invite',
             onPressed: () => _showRedeemDialog(context, notifier),
-            icon: const Icon(Icons.qr_code),
+            icon: const Icon(Icons.qr_code_rounded),
           ),
         ],
       ),
-      body: SafeArea(
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0A0C10), Color(0xFF121820)],
+          ),
+        ),
+        child: SafeArea(
         child: Column(
           children: [
+            if (state.isDemoPreview) _demoBanner(),
             if (state.lastError != null) _errorBanner(state.lastError!),
             SizedBox(height: 220, child: _liveMap(state)),
             _publishingControls(state, notifier),
@@ -72,7 +95,8 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
           ],
         ),
       ),
-      floatingActionButton: state.circles.isEmpty
+      ),
+      floatingActionButton: state.circles.isEmpty && !state.isDemoPreview
           ? FloatingActionButton.extended(
               backgroundColor: const Color(0xFF5C7CFA),
               onPressed: () => _showCreateCircleDialog(context, notifier),
@@ -224,15 +248,58 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
 
   // ── Members list ───────────────────────────────────────────────────────────
 
+  Widget _demoBanner() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: RoadSosGlassPanel(
+        borderRadius: BorderRadius.circular(14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        tint: const Color(0x225C7CFA),
+        child: const Row(
+          children: [
+            Icon(Icons.science_outlined, color: Color(0xFF5C7CFA), size: 20),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Demo preview — map & members are simulated. Create a real circle when Supabase is connected.',
+                style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.35),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String? _currentUserId() {
+    if (!isSupabaseSdkInitialized) return null;
+    try {
+      return Supabase.instance.client.auth.currentUser?.id;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Widget _membersList(FamilyCircleState state, FamilyCircleService notifier) {
     if (state.circles.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text(
-            'No circle yet.\n\nTap CREATE CIRCLE to start one — then invite parents, partner, or hostel friends by SMS.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white70, height: 1.4),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Share live location with people you trust.\n\nCreate a circle and invite family by SMS, or try the demo to see how it looks.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, height: 1.45, fontSize: 15),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: notifier.enableDemoPreview,
+                icon: const Icon(Icons.play_circle_outline),
+                label: const Text('Try demo circle'),
+              ),
+            ],
           ),
         ),
       );
@@ -253,14 +320,16 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
       itemBuilder: (context, i) {
         final m = state.members[i];
         final live = state.livePositions[m.userId];
-        final isSelf = m.role == 'owner'; // best-effort; not strict
-        return Container(
+        final uid = _currentUserId();
+        final isSelf = state.isDemoPreview
+            ? m.userId == 'demo-you'
+            : uid != null && m.userId == uid;
+        return RoadSosGlassPanel(
+          borderRadius: BorderRadius.circular(16),
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF11151B),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF1F2933)),
-          ),
+          tint: isSelf
+              ? const Color(0x18FFFFFF)
+              : const Color(0x105C7CFA),
           child: Row(
             children: [
               CircleAvatar(
@@ -313,6 +382,16 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
                 IconButton(
                   tooltip: 'Voice call in app',
                   onPressed: () async {
+                    if (state.isDemoPreview) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Demo preview — voice calls work after you create a real circle.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
                     final res = await ref
                         .read(webRtcVoiceCallServiceProvider.notifier)
                         .startCall(
