@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:roadsos/l10n/app_localizations.dart';
 import '../services/privacy_consent_service.dart';
 import 'privacy_policy_screen.dart';
+import 'roadsos_logo.dart';
 
 /// First-launch explicit consent (DPDP Act, 2023).
 class ConsentScreen extends StatefulWidget {
@@ -35,11 +36,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(
-                Icons.privacy_tip_outlined,
-                size: 48,
-                color: Colors.blueAccent,
-              ),
+              const Center(child: RoadSOSLogo(size: 72)),
               const SizedBox(height: 24),
               Text(
                 l10n.consentTitle,

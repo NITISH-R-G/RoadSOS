@@ -37,6 +37,7 @@ import 'status_indicator.dart';
 import 'vehicle_rescue_screen.dart';
 import 'triage_result_card.dart';
 import 'vital_scan_screen.dart';
+import 'roadsos_logo.dart';
 
 /// Main shell — panic-first design with a discoverable bottom navigation bar.
 ///
@@ -153,19 +154,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: _kRed,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Icon(
-              Icons.emergency_share,
-              color: Colors.white,
-              size: 16,
-            ),
-          ),
+          const RoadSOSLogo(size: 28),
           const SizedBox(width: 10),
           const Text(
             'RoadSOS',
@@ -192,7 +181,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       scrolledUnderElevation: 2,
       title: Row(
         children: [
-          Icon(Icons.emergency_share, color: scheme.error, size: 26),
+          const RoadSOSLogo(size: 26),
           const SizedBox(width: 10),
           Text(
             l10n.dashboardTitle,

@@ -28,6 +28,7 @@ import 'ui/onboarding_gate.dart';
 import 'ui/voice_call_overlay.dart';
 import 'services/gemma_auto_downloader.dart';
 import 'services/webrtc_voice_call_service.dart';
+import 'ui/roadsos_logo.dart';
 import 'services/privacy_consent_service.dart';
 import 'services/nearby_sos_push_service.dart';
 import 'app_navigator.dart';
@@ -356,19 +357,7 @@ class _LogoMark extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8281A),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: const Icon(
-            Icons.emergency_share,
-            color: Colors.white,
-            size: 40,
-          ),
-        ),
+        const RoadSOSLogo(size: 96),
         const SizedBox(height: 16),
         const Text(
           'RoadSOS',

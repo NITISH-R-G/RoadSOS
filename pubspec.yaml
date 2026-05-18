@@ -66,12 +66,27 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   build_runner: ^2.14.1
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: assets/images/roadsos_logo.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/images/roadsos_logo.png
+  web:
+    generate: true
+    image_path: assets/images/roadsos_logo.png
+    background_color: "#FFFFFF"
+    theme_color: "#C11B17"
 
 flutter:
   generate: true
   uses-material-design: true
 
   assets:
+    - assets/images/roadsos_logo.png
     - assets/env.template
     - assets/first_aid/corpus.json
     - assets/data/government_facilities_seed.json
