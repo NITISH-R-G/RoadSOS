@@ -45,14 +45,11 @@ class GovernmentFacilitySeedService {
     }
 
     if (batchParameters.isNotEmpty) {
-      await db.executeBatch(
-        '''
+      await db.executeBatch('''
         INSERT OR REPLACE INTO emergency_facilities
           (id, name, type, latitude, longitude, contact_number, capabilities, data_source, state_code, district)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''',
-        batchParameters,
-      );
+        ''', batchParameters);
     }
 
     await prefs.setInt(_prefsKeyImportedVersion, v);
