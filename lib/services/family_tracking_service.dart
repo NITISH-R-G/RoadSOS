@@ -30,10 +30,12 @@ class FamilyTrackingService {
     final digits = raw.replaceAll(RegExp(r'\D'), '');
     if (digits.length < 10) return null;
     if (digits.length == 10) return digits;
-    if (digits.length == 11 && digits.startsWith('0'))
+    if (digits.length == 11 && digits.startsWith('0')) {
       return digits.substring(1);
-    if (digits.length >= 12 && digits.startsWith('91'))
+    }
+    if (digits.length >= 12 && digits.startsWith('91')) {
       return digits.substring(digits.length - 10);
+    }
     return digits.length > 10 ? digits.substring(digits.length - 10) : digits;
   }
 

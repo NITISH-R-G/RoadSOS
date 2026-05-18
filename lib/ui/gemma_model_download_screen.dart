@@ -119,8 +119,9 @@ class _GemmaModelDownloadScreenState extends State<GemmaModelDownloadScreen> {
 
   Future<void> _openUrl(String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri))
+    if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────

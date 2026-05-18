@@ -344,7 +344,9 @@ Response rules:
         parts.add(await _firstAidGrounding(query));
     }
 
-    final combined = parts.where((p) => p.trim().isNotEmpty).join('\n\n---\n\n');
+    final combined = parts
+        .where((p) => p.trim().isNotEmpty)
+        .join('\n\n---\n\n');
     return combined.length > 1600 ? combined.substring(0, 1600) : combined;
   }
 
@@ -360,7 +362,9 @@ Response rules:
   String _vehicleRescueGrounding(String query) {
     final lower = query.toLowerCase();
     var vehicleKey = 'car';
-    if (lower.contains('bike') || lower.contains('scooter') || lower.contains('motorbike')) {
+    if (lower.contains('bike') ||
+        lower.contains('scooter') ||
+        lower.contains('motorbike')) {
       vehicleKey = 'bike';
     } else if (lower.contains('truck') || lower.contains('lorry')) {
       vehicleKey = 'truck';
@@ -372,11 +376,26 @@ Response rules:
       vehicleKey = 'ev_car';
     } else {
       for (final kw in _situationKeywords) {
-        if (kw == 'bike' || kw == 'scooter' || kw == 'motorbike') { vehicleKey = 'bike'; break; }
-        if (kw == 'truck' || kw == 'lorry') { vehicleKey = 'truck'; break; }
-        if (kw == 'bus') { vehicleKey = 'bus'; break; }
-        if (kw == 'auto' || kw == 'rickshaw') { vehicleKey = 'auto'; break; }
-        if (kw == 'electric' || kw == 'ev') { vehicleKey = 'ev_car'; break; }
+        if (kw == 'bike' || kw == 'scooter' || kw == 'motorbike') {
+          vehicleKey = 'bike';
+          break;
+        }
+        if (kw == 'truck' || kw == 'lorry') {
+          vehicleKey = 'truck';
+          break;
+        }
+        if (kw == 'bus') {
+          vehicleKey = 'bus';
+          break;
+        }
+        if (kw == 'auto' || kw == 'rickshaw') {
+          vehicleKey = 'auto';
+          break;
+        }
+        if (kw == 'electric' || kw == 'ev') {
+          vehicleKey = 'ev_car';
+          break;
+        }
       }
     }
     final data = kVehicleRescueDatabase[vehicleKey];
@@ -500,9 +519,7 @@ Response rules:
     try {
       final gemma = _ref.read(gemmaLocalServiceProvider);
       if (gemma.isAvailable) {
-        out = await gemma
-            .generate(prompt)
-            .timeout(const Duration(seconds: 20));
+        out = await gemma.generate(prompt).timeout(const Duration(seconds: 20));
       }
     } catch (e, st) {
       appLog.d('[BystanderCoach] gemma generate failed', stackTrace: st);
@@ -521,8 +538,9 @@ Response rules:
   /// relevant step from the grounding text, rather than always returning step 1.
   String _deterministicReply(String transcript, String grounding, String lang) {
     // Determine which step we should be on based on conversation depth.
-    final bystanderTurnCount =
-        state.turns.where((t) => t.role == 'bystander').length;
+    final bystanderTurnCount = state.turns
+        .where((t) => t.role == 'bystander')
+        .length;
 
     // Try to find a numbered step matching the current situation.
     final lines = grounding.split('\n');
@@ -532,13 +550,15 @@ Response rules:
     if (bystanderTurnCount <= 1) {
       // First turn — life-threatening check or first grounding step.
       final lower = transcript.toLowerCase();
-      final isLifeThreatening = lower.contains('not breathing') ||
+      final isLifeThreatening =
+          lower.contains('not breathing') ||
           lower.contains('unconscious') ||
           lower.contains('not responding') ||
           lower.contains('bleeding heavily') ||
           lower.contains('no pulse');
       if (isLifeThreatening) {
-        step = 'Call 108 immediately. Tell them the location and that the person is not responding.';
+        step =
+            'Call 108 immediately. Tell them the location and that the person is not responding.';
       } else {
         step = _extractStepN(lines, 1);
       }
@@ -552,7 +572,8 @@ Response rules:
     }
 
     if (step.isEmpty) {
-      step = 'Call 108 now and stay with the person. Keep them still and reassure them.';
+      step =
+          'Call 108 now and stay with the person. Keep them still and reassure them.';
     }
 
     final tail = switch (lang) {
