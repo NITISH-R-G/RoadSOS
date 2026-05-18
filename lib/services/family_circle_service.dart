@@ -189,7 +189,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
     if (!isSupabaseSdkInitialized) return;
     try {
       await ensureSupabaseAnonymousSession(Supabase.instance.client);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d('[FamilyCircle] anon sign-in retry failed', stackTrace: st);
     }
   }
@@ -273,7 +273,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
       );
 
       await _resubscribePeerChannel();
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[FamilyCircle] refresh failed', error: e, stackTrace: st);
       state = state.copyWith(busy: false, lastError: 'Refresh failed: $e');
     }
@@ -307,7 +307,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
                 row,
               );
               state = state.copyWith(livePositions: updated);
-            } catch (e, st) {
+            } on Object catch (e, st) {
               appLog.d('[FamilyCircle] realtime decode failed', stackTrace: st);
             }
           },
@@ -336,7 +336,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
       });
       await refresh();
       return null;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[FamilyCircle] createCircle failed', error: e, stackTrace: st);
       return 'Could not create circle: $e';
     }
@@ -364,7 +364,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
       });
       final shareUrl = 'https://roadsos.app/i/$code';
       return (code: code, shareUrl: shareUrl, error: null);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[FamilyCircle] createInvite failed', error: e, stackTrace: st);
       return (code: null, shareUrl: null, error: 'Invite create failed: $e');
     }
@@ -404,7 +404,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
           .eq('id', row['id']);
       await refresh();
       return null;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[FamilyCircle] redeemInvite failed', error: e, stackTrace: st);
       return 'Could not redeem invite: $e';
     }
@@ -491,7 +491,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
           .from('family_live_locations')
           .delete()
           .eq('user_id', client.auth.currentUser!.id);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d('[FamilyCircle] stopPublishing delete failed', stackTrace: st);
     }
   }
@@ -526,7 +526,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
         'destination': destination,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d('[FamilyCircle] upsert failed', stackTrace: st);
     }
   }

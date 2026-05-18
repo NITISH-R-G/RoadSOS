@@ -75,7 +75,7 @@ class EmergencyNotificationService {
           ),
         ),
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('Emergency local notification failed', error: e, stackTrace: st);
     }
   }

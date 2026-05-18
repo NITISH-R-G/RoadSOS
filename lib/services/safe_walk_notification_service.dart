@@ -105,7 +105,7 @@ class SafeWalkNotificationService {
           iOS: DarwinNotificationDetails(),
         ),
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('Safe Walk local notification failed', error: e, stackTrace: st);
     }
   }

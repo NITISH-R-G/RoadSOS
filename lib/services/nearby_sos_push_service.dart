@@ -40,7 +40,7 @@ class NearbySosPushService {
       if (Firebase.apps.isEmpty) {
         await Firebase.initializeApp();
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w(
         'Firebase not configured (add google-services.json / FirebaseOptions). Nearby SOS push disabled.',
         error: e,
@@ -88,7 +88,7 @@ class NearbySosPushService {
       } else {
         await messaging.unsubscribeFromTopic(_topic);
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w(
         'FCM topic subscribe/unsubscribe failed',
         error: e,

@@ -137,7 +137,7 @@ class MeshNetworkService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     try {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 30));
-    } catch (e) {
+    } on Object catch (e) {
       appLog.w('Failed to start BLE scan', error: e);
     }
   }
@@ -232,7 +232,7 @@ class MeshNetworkService {
       await _peripheral.start(advertiseData: advertiseData);
       appLog.d('BLE mesh advertising SOS (${advertiseBytes.length}B)');
       return true;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('BLE advertising failed', error: e, stackTrace: st);
       return false;
     }
@@ -292,7 +292,7 @@ final meshListeningBootstrapProvider = FutureProvider<void>((ref) async {
   final mesh = ref.watch(meshNetworkServiceProvider);
   try {
     await mesh.ensureListeningForPeers();
-  } catch (e, st) {
+  } on Object catch (e, st) {
     appLog.w('Mesh listening bootstrap failed', error: e, stackTrace: st);
   }
 });

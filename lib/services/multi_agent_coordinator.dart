@@ -86,7 +86,7 @@ class MultiAgentCoordinator {
       final result = await work();
       _transition(task, AgentStatus.completed);
       return result;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       _transition(task, AgentStatus.failed, error: e.toString());
       appLog.w('[Agent] ${task.displayName} failed', error: e, stackTrace: st);
       return null;

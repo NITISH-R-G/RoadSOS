@@ -289,7 +289,7 @@ class SafeWalkNavigatorService extends StateNotifier<SafeWalkNavState> {
         currentStepIndex: 0,
         routingDegraded: false,
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d(
         '[SafeWalkNav] OSRM unreachable, falling back to bearing-only',
         stackTrace: st,

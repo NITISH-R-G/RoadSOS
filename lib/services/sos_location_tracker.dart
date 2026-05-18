@@ -144,7 +144,7 @@ class SosLocationTracker {
         '${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)} '
         'acc=${pos.accuracy.toStringAsFixed(0)}m',
       );
-    } catch (e) {
+    } on Object catch (e) {
       appLog.w(
         '[SosLocationTracker] Update failed: $e — will retry next cycle',
       );

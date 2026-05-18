@@ -169,7 +169,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
                 startedAt: DateTime.now(),
               );
               unawaited(_ringPulse());
-            } catch (e, st) {
+            } on Object catch (e, st) {
               appLog.w('[WebRTC] ring decode failed', error: e, stackTrace: st);
             }
           },
@@ -235,7 +235,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
       });
 
       return (ok: true, error: null);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[WebRTC] startCall failed', error: e, stackTrace: st);
       await _teardown();
       state = state.copyWith(
@@ -297,7 +297,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
             'answered_at': DateTime.now().toUtc().toIso8601String(),
           })
           .eq('id', callId);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[WebRTC] answer failed', error: e, stackTrace: st);
       await _teardown();
       state = state.copyWith(
@@ -333,7 +333,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     try {
       await Helper.setSpeakerphoneOn(on);
       state = state.copyWith(speakerOn: on);
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[WebRTC] speaker toggle failed: $e');
     }
   }
@@ -403,7 +403,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
                   ? jsonDecode(row['payload'] as String) as Map<String, dynamic>
                   : (row['payload'] as Map).cast<String, dynamic>();
               await _handleIncomingSignal(kind, pl);
-            } catch (e, st) {
+            } on Object catch (e, st) {
               appLog.d('[WebRTC] signal decode failed', stackTrace: st);
             }
           },
@@ -450,7 +450,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     while (_pendingRemoteIce.isNotEmpty) {
       try {
         await _pc!.addCandidate(_pendingRemoteIce.removeAt(0));
-      } catch (e) {
+      } on Object catch (e) {
         appLog.d('[WebRTC] addCandidate pending failed: $e');
       }
     }
@@ -484,7 +484,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
             'ended_by': client.auth.currentUser!.id,
           })
           .eq('id', callId);
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[WebRTC] _markCall failed: $e');
     }
   }

@@ -190,7 +190,7 @@ class AgentHealthService {
       _gemmaCloudCached = result;
       _gemmaCloudCachedAt = DateTime.now();
       return result;
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[HealthCheck] Gemma cloud probe failed: $e');
       _gemmaCloudCached = AgentReadiness.degraded;
       _gemmaCloudCachedAt = DateTime.now();

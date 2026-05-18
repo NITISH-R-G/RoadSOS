@@ -313,7 +313,7 @@ class RemoteCrashConfig {
         '[RemoteCrashConfig] Thresholds refreshed: '
         '${rows.length} rows, zones=${_values.keys.toList()}',
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w(
         '[RemoteCrashConfig] Threshold fetch failed — cached values in use',
         error: e,
@@ -356,7 +356,7 @@ class RemoteCrashConfig {
       appLog.i(
         '[RemoteCrashConfig] Regions refreshed: ${_regions.length} geofences',
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w(
         '[RemoteCrashConfig] Region fetch failed — cached regions in use',
         error: e,
@@ -380,7 +380,7 @@ class RemoteCrashConfig {
           (k, v) => MapEntry(k, (v as num).toDouble()),
         );
       }
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[RemoteCrashConfig] Threshold cache empty (first run): $e');
     }
   }
@@ -389,7 +389,7 @@ class RemoteCrashConfig {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_cacheKey, jsonEncode(_values));
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[RemoteCrashConfig] Threshold cache write failed: $e');
     }
   }
@@ -415,7 +415,7 @@ class RemoteCrashConfig {
           ),
         );
       }
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[RemoteCrashConfig] Region cache empty (first run): $e');
     }
   }
@@ -437,7 +437,7 @@ class RemoteCrashConfig {
           )
           .toList();
       await prefs.setString(_regionsCacheKey, jsonEncode(list));
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[RemoteCrashConfig] Region cache write failed: $e');
     }
   }

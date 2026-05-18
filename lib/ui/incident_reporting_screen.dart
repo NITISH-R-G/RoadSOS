@@ -180,7 +180,7 @@ class _IncidentReportingScreenState
           maxWidth: 1600,
         );
         if (file != null) bytes = await file.readAsBytes();
-      } catch (e) {
+      } on Object {
         if (!mounted) return;
         setState(() => _sceneCaptureBusy = false);
         ScaffoldMessenger.of(context).showSnackBar(

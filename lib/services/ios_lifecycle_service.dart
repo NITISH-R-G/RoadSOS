@@ -46,7 +46,7 @@ class IosLifecycleService {
     if (!Platform.isIOS) return;
     try {
       await _channel.invokeMethod<void>('scheduleBackgroundRefresh');
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('scheduleBackgroundRefresh failed', error: e, stackTrace: st);
     }
   }

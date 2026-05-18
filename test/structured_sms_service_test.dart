@@ -62,39 +62,41 @@ void main() {
     expect(body, contains('inc:0123456'));
   });
 
-  test('Chennai medium severity routes to Tamil Nadu with "?" profile',
-      () async {
-    final body = await svc.buildStructured112Sms(
-      incidentId: 'abcdefab-0000-0000-0000-000000000000',
-      location: LocationFix(
-        latitude: 13.0827,
-        longitude: 80.2707,
-        accuracy: 12,
-        source: 'gps',
-        timestamp: DateTime.now(),
-      ),
-      triage: TriageResult(
-        functionCall: 'dispatch_emergency',
-        location: '13.0827,80.2707',
-        severityLevel: 3,
-        requiredServices: const ['ambulance'],
-        firstAidQuery: 'general',
-        compressedPayload: 'x',
-        thinkingTrace: null,
-        isDegradedMode: false,
-        source: TriageSource.localTier2,
-        visionUsed: false,
-      ),
-      profileOverride: UserProfile(),
-      useGemma: false,
-    );
+  test(
+    'Chennai medium severity routes to Tamil Nadu with "?" profile',
+    () async {
+      final body = await svc.buildStructured112Sms(
+        incidentId: 'abcdefab-0000-0000-0000-000000000000',
+        location: LocationFix(
+          latitude: 13.0827,
+          longitude: 80.2707,
+          accuracy: 12,
+          source: 'gps',
+          timestamp: DateTime.now(),
+        ),
+        triage: TriageResult(
+          functionCall: 'dispatch_emergency',
+          location: '13.0827,80.2707',
+          severityLevel: 3,
+          requiredServices: const ['ambulance'],
+          firstAidQuery: 'general',
+          compressedPayload: 'x',
+          thinkingTrace: null,
+          isDegradedMode: false,
+          source: TriageSource.localTier2,
+          visionUsed: false,
+        ),
+        profileOverride: UserProfile(),
+        useGemma: false,
+      );
 
-    expect(body, startsWith('RSOS|IN-TN|'));
-    expect(body, contains('|S3|'));
-    expect(body, contains('|amb|'));
-    expect(body, contains('|?|'));
-    expect(body.length, lessThanOrEqualTo(kMaxStructured112SmsLength));
-  });
+      expect(body, startsWith('RSOS|IN-TN|'));
+      expect(body, contains('|S3|'));
+      expect(body, contains('|amb|'));
+      expect(body, contains('|?|'));
+      expect(body.length, lessThanOrEqualTo(kMaxStructured112SmsLength));
+    },
+  );
 
   test('Off-India coordinates fall back to "IN" state token', () async {
     final body = await svc.buildStructured112Sms(

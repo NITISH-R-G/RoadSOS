@@ -57,7 +57,10 @@ void main() {
       final result = CrashConfidenceEngine.score(signals);
 
       expect(result.tier, equals(CrashConfidenceTier.high));
-      expect(result.incidentLabel, equals('Detected incident — possible emergency'));
+      expect(
+        result.incidentLabel,
+        equals('Detected incident — possible emergency'),
+      );
       expect(result.score, equals(1.0));
     });
 

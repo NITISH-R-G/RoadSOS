@@ -91,7 +91,7 @@ class CameraTriageService {
         sizeBytes: bytes.length,
         capturedAt: DateTime.now().toUtc(),
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w(
         '[CameraTriageService] Image selection failed',
         error: e,
@@ -132,7 +132,7 @@ class CameraTriageService {
         sizeBytes: bytes.length,
         capturedAt: DateTime.now().toUtc(),
       );
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[CameraTriageService] Silent capture failed: $e');
       return null;
     }
