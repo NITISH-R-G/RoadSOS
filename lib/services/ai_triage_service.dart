@@ -232,7 +232,7 @@ class AiTriageService {
         ).timeout(cloudTimeout);
         appLog.i('[Triage] Tier 1 — Gemma 4 27B cloud ✓ (text-only auto-SOS)');
         return cloud;
-      } catch (e, st) {
+      } on Object catch (e, st) {
         appLog.d(
           '[Triage] Tier 1 unavailable, trying Tier 2 on-device',
           error: e,
@@ -253,7 +253,7 @@ class AiTriageService {
           appLog.i('[Triage] Tier 2 — Gemma 4 E4B on-device ✓');
           return onDevice;
         }
-      } catch (e, st) {
+      } on Object catch (e, st) {
         appLog.d('[Triage] Tier 2 on-device failed', error: e, stackTrace: st);
       }
     }
@@ -313,7 +313,7 @@ class AiTriageService {
         '(${scenePhoto.sizeKb} KB · source=${cloud.source.name})',
       );
       return cloud;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d(
         '[Triage] Vision cloud failed — falling back to text-only triage',
         error: e,

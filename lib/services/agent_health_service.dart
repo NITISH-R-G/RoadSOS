@@ -190,7 +190,7 @@ class AgentHealthService {
       _gemmaCloudCached = result;
       _gemmaCloudCachedAt = DateTime.now();
       return result;
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[HealthCheck] Gemma cloud probe failed: $e');
       _gemmaCloudCached = AgentReadiness.degraded;
       _gemmaCloudCachedAt = DateTime.now();
@@ -215,7 +215,7 @@ class AgentHealthService {
         return AgentReadiness.unavailable;
       }
       return AgentReadiness.ready;
-    } catch (_) {
+    } on Object catch (_) {
       return AgentReadiness.degraded;
     }
   }
@@ -232,7 +232,7 @@ class AgentHealthService {
       // Fallback: open SMS app intent (no permission). If relay isn't configured,
       // we mark this as degraded (still usable, but requires user interaction).
       return AgentReadiness.degraded;
-    } catch (_) {
+    } on Object catch (_) {
       return AgentReadiness.degraded;
     }
   }
@@ -241,7 +241,7 @@ class AgentHealthService {
     try {
       final status = await Permission.bluetooth.status;
       return status.isGranted ? AgentReadiness.ready : AgentReadiness.degraded;
-    } catch (_) {
+    } on Object catch (_) {
       return AgentReadiness.degraded;
     }
   }

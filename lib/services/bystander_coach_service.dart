@@ -151,7 +151,7 @@ Response rules:
         _sttReady = await _stt.initialize(
           onError: (e) => appLog.w('[BystanderCoach] STT error: ${e.errorMsg}'),
         );
-      } catch (e, st) {
+      } on Object catch (e, st) {
         appLog.w('[BystanderCoach] STT init failed', error: e, stackTrace: st);
         _sttReady = false;
       }
@@ -201,7 +201,7 @@ Response rules:
   Future<void> _stopListeningSafely() async {
     try {
       if (_stt.isListening) await _stt.stop();
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 
   // ─── Core response loop ───────────────────────────────────────────────────
@@ -229,7 +229,7 @@ Response rules:
 
     try {
       await _ref.read(voiceAssistantServiceProvider).speak(reply);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d('[BystanderCoach] TTS speak failed', stackTrace: st);
     }
     state = state.copyWith(phase: BystanderCoachPhase.idle);
@@ -353,7 +353,7 @@ Response rules:
   Future<String> _firstAidGrounding(String query) async {
     try {
       return await FirstAidRepository.instance.lookup(query);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d('[BystanderCoach] first-aid lookup failed', stackTrace: st);
       return '';
     }
@@ -521,7 +521,7 @@ Response rules:
       if (gemma.isAvailable) {
         out = await gemma.generate(prompt).timeout(const Duration(seconds: 20));
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d('[BystanderCoach] gemma generate failed', stackTrace: st);
     }
 

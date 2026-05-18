@@ -48,11 +48,11 @@ class EmergencyBeaconService {
 
     try {
       await TorchLight.disableTorch();
-    } catch (_) {}
+    } on Object catch (_) {}
 
     try {
       await _player.stop();
-    } catch (_) {}
+    } on Object catch (_) {}
 
     appLog.i('✅ [BEACON] Hardware SOS signals disabled.');
   }
@@ -95,7 +95,7 @@ class EmergencyBeaconService {
     if (kIsWeb) return;
     try {
       await TorchLight.enableTorch();
-    } catch (e) {
+    } on Object catch (e) {
       appLog.w('[BEACON] Failed to enable torch', error: e);
     }
   }
@@ -104,7 +104,7 @@ class EmergencyBeaconService {
     if (kIsWeb) return;
     try {
       await TorchLight.disableTorch();
-    } catch (e) {
+    } on Object catch (e) {
       appLog.w('[BEACON] Failed to disable torch', error: e);
     }
   }
@@ -118,7 +118,7 @@ class EmergencyBeaconService {
       await _player.setLoopMode(LoopMode.one);
       await _player.setVolume(1.0);
       await _player.play();
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[BEACON] Siren failed to play: $e');
     }
   }

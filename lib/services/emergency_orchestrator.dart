@@ -288,7 +288,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
           .read(locationServiceProvider)
           .getCurrentLocation()
           .timeout(_sosLocationTimeout);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w(
         '[Orchestrator] Location acquisition timed out/failed',
         error: e,
@@ -407,7 +407,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             scenePhoto: scenePhoto,
           )
           .timeout(_sosTriageTimeout);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w(
         '[Orchestrator] Triage timed out/failed — using safety fallback',
         error: e,
@@ -531,7 +531,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             return fallback;
           },
         );
-      } catch (_) {
+      } on Object catch (_) {
         _patchDispatchChannel(
           id,
           DispatchChannelLifecycle.failed,
@@ -580,7 +580,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             triage: triage,
           )
           .timeout(const Duration(seconds: 3));
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w(
         '[Orchestrator] structured SMS build failed — using legacy payload',
         error: e,
@@ -708,7 +708,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         familyFuture,
         nearbyFuture,
       ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 2));
-    } catch (e, st) {
+    } on Object catch (e, st) {
       // Absolute guard: never hang in dispatching.
       appLog.w(
         '[Orchestrator] Dispatch futures did not complete in time',
@@ -900,7 +900,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             ? 'Saved on device. Sync is enabled when network allows.'
             : 'Saved on device. Cloud sync needs Supabase credentials.',
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('Local incident insert failed', error: e, stackTrace: st);
       return (ok: false, detail: 'Could not save incident log on device.');
     }
@@ -909,7 +909,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   bool _hasSupabaseSession() {
     try {
       return Supabase.instance.client.auth.currentSession != null;
-    } catch (_) {
+    } on Object catch (_) {
       return false;
     }
   }
@@ -944,7 +944,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       } else {
         appLog.w('[Orchestrator] Could not launch dialer for $contact');
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.e(
         '[Orchestrator] Error launching dialer',
         error: e,
@@ -968,7 +968,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
                 ? 'RoadSOS user'
                 : profile.fullName.trim(),
           );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d(
         '[Orchestrator] family circle SOS publish failed',
         stackTrace: st,
@@ -983,7 +983,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       String? client;
       try {
         client = Supabase.instance.client.auth.currentUser?.id;
-      } catch (_) {}
+      } on Object catch (_) {}
       if (client == null) return;
       // Find the first member that is NOT the current user.
       final peer = circle.members.firstWhere(
@@ -1001,7 +1001,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       if (res.error != null) {
         appLog.d('[Orchestrator] family ring skipped: ${res.error}');
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d('[Orchestrator] family ring failed', stackTrace: st);
     }
   }

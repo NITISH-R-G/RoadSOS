@@ -76,7 +76,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
       // Side-channel: keep FirstAidStore primed (used elsewhere) — best-effort.
       // ignore: discarded_futures
       FirstAidStore.getVerifiedAdvice(query);
-    } catch (e) {
+    } on Object {
       setState(() {
         _error = 'Could not load first-aid guidance on this device.';
       });

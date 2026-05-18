@@ -80,14 +80,14 @@ class BluetoothVehicleMonitor {
               _lastSpeedKmh = (p.speed * 3.6).clamp(0.0, 320.0);
             }
           }, onError: (Object _) {});
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 
   void _poll() {
     List<BluetoothDevice> devices;
     try {
       devices = FlutterBluePlus.connectedDevices;
-    } catch (_) {
+    } on Object catch (_) {
       return; // BT not available on this device.
     }
 

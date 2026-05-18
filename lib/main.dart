@@ -84,7 +84,7 @@ void main() async {
   // reads its configuration keys.
   try {
     await RuntimeConfig.bootstrap();
-  } catch (e, st) {
+  } on Object catch (e, st) {
     // Non-fatal: all services check for missing config and degrade gracefully.
     appLog.w(
       '[boot] RuntimeConfig.bootstrap() failed — proceeding without config',
@@ -158,7 +158,7 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
       if (_servicesReady && accepted) {
         _runPostConsentHooks();
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.e('[boot] Privacy check failed', error: e, stackTrace: st);
       if (mounted) setState(() => _privacyReady = true); // unblock UI
     }
@@ -191,7 +191,7 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
       );
 
       appLog.i('[boot] All services bootstrapped successfully.');
-    } catch (e, st) {
+    } on Object catch (e, st) {
       // Non-fatal: app runs in offline/degraded mode.
       appLog.e(
         '[boot] Service bootstrap error — running in degraded mode',

@@ -986,7 +986,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         ),
                       );
                     }
-                  } catch (e) {
+                  } on Object catch (e) {
                     appLog.w('Error fetching location suggestions: $e');
                   }
                   return const Iterable<_NominatimHit>.empty();

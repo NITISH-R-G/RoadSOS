@@ -96,7 +96,7 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
             if (!mounted) return;
             setState(() => _myFix = p);
           });
-    } catch (_) {
+    } on Object catch (_) {
       /* permission or platform — radar still renders dots */
     }
   }

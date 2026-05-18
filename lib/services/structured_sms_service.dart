@@ -172,7 +172,7 @@ class StructuredSmsService {
         'O${v.bloodOxygen.round()}',
       ];
       return parts.join(',');
-    } catch (_) {
+    } on Object catch (_) {
       return 'C?B?Bl?';
     }
   }
@@ -231,7 +231,7 @@ class StructuredSmsService {
           .firstWhere((l) => l.contains('RSOS|'), orElse: () => '');
       if (line.isEmpty) return null;
       return line.trim();
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d('[StructuredSMS] gemma compose skipped: $e', stackTrace: st);
       return null;
     }

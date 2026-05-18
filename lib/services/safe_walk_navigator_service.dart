@@ -228,11 +228,11 @@ class SafeWalkNavigatorService extends StateNotifier<SafeWalkNavState> {
         ),
       );
       return LatLng(pos.latitude, pos.longitude);
-    } catch (_) {
+    } on Object catch (_) {
       try {
         final pos = await Geolocator.getLastKnownPosition();
         if (pos != null) return LatLng(pos.latitude, pos.longitude);
-      } catch (_) {}
+      } on Object catch (_) {}
       return null;
     }
   }
@@ -289,7 +289,7 @@ class SafeWalkNavigatorService extends StateNotifier<SafeWalkNavState> {
         currentStepIndex: 0,
         routingDegraded: false,
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d(
         '[SafeWalkNav] OSRM unreachable, falling back to bearing-only',
         stackTrace: st,

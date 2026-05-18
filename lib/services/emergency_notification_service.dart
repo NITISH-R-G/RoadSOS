@@ -75,7 +75,7 @@ class EmergencyNotificationService {
           ),
         ),
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('Emergency local notification failed', error: e, stackTrace: st);
     }
   }
@@ -84,6 +84,6 @@ class EmergencyNotificationService {
     if (kIsWeb) return;
     try {
       await _local.cancel(id: _sosActiveNotificationId);
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 }
