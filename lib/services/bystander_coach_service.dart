@@ -63,15 +63,19 @@ class BystanderCoachState {
 ///
 /// Flow:
 ///   1. UI taps "Start listening" → STT captures bystander's situation.
-///   2. We RAG over [FirstAidRepository] (top-K by token-score) to ground.
-///   3. Gemma 4 E4B streams a short, calm, step-by-step reply in the user's
+///   2. Situation keywords are accumulated across turns to build a targeted
+///      grounding query for the [FirstAidRepository] RAG corpus.
+///   3. Full conversation history (up to [_maxHistoryTurns]) is injected into
+///      the Gemma 4 E4B prompt so the model understands what has already been
+///      said and gives the NEXT step — not the first step again.
+///   4. Gemma 4 E4B streams a short, calm, step-by-step reply in the user's
 ///      locale (Hindi/Eng/Tamil/etc).
-///   4. TTS speaks the reply; UI shows transcript.
-///   5. Loop — bystander can interrupt and ask follow-up.
+///   5. TTS speaks the reply; UI shows transcript.
+///   6. Loop — bystander can interrupt and ask follow-up.
 ///
 /// Fail-open behaviour: when Gemma is not downloaded yet, we serve a
-/// deterministic templated reply that quotes the matched corpus row directly.
-/// The bystander always gets actionable guidance — model-missing is never fatal.
+/// deterministic templated reply that quotes the matched corpus row directly,
+/// taking the current transcript into account. Model-missing is never fatal.
 class BystanderCoachService extends StateNotifier<BystanderCoachState> {
   BystanderCoachService(this._ref) : super(const BystanderCoachState());
 
@@ -79,22 +83,35 @@ class BystanderCoachService extends StateNotifier<BystanderCoachState> {
   final SpeechToText _stt = SpeechToText();
   bool _sttReady = false;
 
-  static const String _systemPromptEn = '''
-You are RoadSOS Bystander Coach, an AI helper guiding a non-medical person at a road accident scene in India until paramedics arrive.
+  /// Accumulated situation keywords from all user turns in this session.
+  /// Used to enrich the grounding query so the RAG retrieval stays on-topic.
+  final Set<String> _situationKeywords = {};
+
+  /// Maximum number of prior turns to include in each Gemma prompt.
+  /// Keeps the prompt within the E4B token budget (~2 048 tokens).
+  static const int _maxHistoryTurns = 6;
+
+  // ─── System prompt ────────────────────────────────────────────────────────
+
+  static const String _systemPrompt = '''
+You are RoadSOS Bystander Coach — an AI helper guiding a non-medical person at a road accident scene in India until paramedics arrive.
 
 Hard rules:
-- ONE numbered step at a time, under 25 words.
-- Plain words. No jargon.
+- Give ONE numbered step per response (the immediate NEXT action), under 30 words.
+- You MUST read the full conversation below and give the NEXT step — never repeat a step already given.
+- Plain words. No medical jargon.
 - Always end with: "Tell me what you see now."
-- If life-threatening (no breathing, severe bleeding): step 1 = call 108 immediately.
+- If life-threatening (no breathing, severe bleeding, unconscious): step 1 = "Call 108 immediately."
 - Never give medication doses.
-- Never tell them to drive the victim themselves unless explicitly asked.
-- If unsure, say so and tell them to wait for 108/112.
-
-Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not supported.
+- Never tell them to drive the victim unless explicitly asked.
+- If unsure, say: "Wait with the person and follow 108 dispatcher instructions."
+- Ground every step in the GROUNDING TEXT. Do not invent steps not supported there.
 ''';
 
+  // ─── Session lifecycle ────────────────────────────────────────────────────
+
   Future<void> startSession({String languageCode = 'en'}) async {
+    _situationKeywords.clear();
     state = const BystanderCoachState().copyWith(
       phase: BystanderCoachPhase.idle,
       languageCode: languageCode,
@@ -110,8 +127,11 @@ Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not suppor
   Future<void> endSession() async {
     await _stopListeningSafely();
     await _ref.read(voiceAssistantServiceProvider).stopSpeaking();
+    _situationKeywords.clear();
     state = const BystanderCoachState();
   }
+
+  // ─── STT capture ──────────────────────────────────────────────────────────
 
   /// Start a single STT capture turn.
   Future<void> startListening() async {
@@ -174,15 +194,22 @@ Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not suppor
     } catch (_) {}
   }
 
-  /// Accept typed input as a turn. Used as a fallback when STT is unavailable.
+  // ─── Core response loop ───────────────────────────────────────────────────
+
+  /// Accept typed or STT input as a turn.
   Future<void> submitTurn(String transcript) async {
+    // Extract keywords from this turn and accumulate across session.
+    _extractKeywords(transcript);
+
     _appendTurn('bystander', transcript);
     state = state.copyWith(phase: BystanderCoachPhase.thinking);
 
-    final grounding = await _retrieveGrounding(transcript);
+    // Build an enriched grounding query from accumulated situation context.
+    final groundingQuery = _buildGroundingQuery(transcript);
+    final grounding = await _retrieveGrounding(groundingQuery);
 
     final reply = await _generateReply(
-      transcript: transcript,
+      latestTranscript: transcript,
       grounding: grounding,
       languageCode: state.languageCode,
     );
@@ -198,6 +225,42 @@ Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not suppor
     state = state.copyWith(phase: BystanderCoachPhase.idle);
   }
 
+  // ─── Keyword accumulation ─────────────────────────────────────────────────
+
+  /// Extract situation-relevant keywords from a bystander message and
+  /// accumulate them in [_situationKeywords] for better RAG retrieval.
+  void _extractKeywords(String text) {
+    final lower = text.toLowerCase();
+    const medicalKeywords = <String>[
+      'bleeding', 'blood', 'unconscious', 'breathing', 'pulse', 'cpr',
+      'fracture', 'broken', 'burn', 'head injury', 'spine', 'neck',
+      'chest', 'heart', 'choking', 'trapped', 'fire', 'smoke',
+      'not moving', 'not breathing', 'not responding', 'pain',
+      'swelling', 'wound', 'cut', 'scratch', 'bruise', 'dislocation',
+      'sprain', 'seizure', 'stroke', 'diabetic', 'allergic', 'shock',
+      'child', 'pregnant', 'elderly', 'motorbike', 'truck', 'car',
+      'pedestrian', 'cyclist', 'road', 'highway', 'truck', 'collision',
+    ];
+    for (final kw in medicalKeywords) {
+      if (lower.contains(kw)) {
+        _situationKeywords.add(kw);
+      }
+    }
+  }
+
+  /// Build a rich grounding query combining the current transcript with
+  /// accumulated session keywords so RAG retrieval stays on-topic.
+  String _buildGroundingQuery(String latestTranscript) {
+    final buf = StringBuffer(latestTranscript.trim());
+    if (_situationKeywords.isNotEmpty) {
+      buf.write(' ');
+      buf.write(_situationKeywords.take(8).join(' '));
+    }
+    return buf.toString();
+  }
+
+  // ─── RAG grounding ────────────────────────────────────────────────────────
+
   Future<String> _retrieveGrounding(String query) async {
     try {
       final text = await FirstAidRepository.instance.lookup(query);
@@ -210,21 +273,80 @@ Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not suppor
     }
   }
 
+  // ─── Prompt construction ──────────────────────────────────────────────────
+
+  /// Build a Gemma 4–compatible prompt that includes:
+  ///   • System instructions
+  ///   • Grounding text from the first-aid corpus
+  ///   • Full conversation history (last [_maxHistoryTurns] turns)
+  ///   • The latest bystander message as the current query
+  String _buildPrompt({
+    required String latestTranscript,
+    required String grounding,
+    required String languageCode,
+  }) {
+    final localisedDirective = _localeDirective(languageCode);
+    final history = state.turns;
+
+    // Collect only turns that are *before* the latest (already appended) bystander turn.
+    // The last turn in state.turns is the bystander's latest message.
+    // We include up to [_maxHistoryTurns] prior turns for context.
+    final priorTurns = history.length > 1
+        ? history.sublist(0, history.length - 1)
+        : <BystanderCoachTurn>[];
+    final historySlice = priorTurns.length > _maxHistoryTurns
+        ? priorTurns.sublist(priorTurns.length - _maxHistoryTurns)
+        : priorTurns;
+
+    final buf = StringBuffer();
+    buf.writeln(_systemPrompt);
+    buf.writeln(localisedDirective);
+    buf.writeln();
+    buf.writeln('GROUNDING TEXT (from RoadSOS first-aid corpus — use this):');
+    buf.writeln('"""');
+    buf.writeln(grounding.trim());
+    buf.writeln('"""');
+    buf.writeln();
+
+    if (historySlice.isNotEmpty) {
+      buf.writeln('CONVERSATION SO FAR (most recent last):');
+      for (final turn in historySlice) {
+        final label = turn.role == 'coach' ? 'COACH' : 'BYSTANDER';
+        buf.writeln('$label: ${turn.text.trim()}');
+      }
+      buf.writeln();
+    }
+
+    buf.writeln('BYSTANDER (current message):');
+    buf.writeln(latestTranscript.trim());
+    buf.writeln();
+    buf.writeln(
+      'COACH (give the NEXT step, one numbered item, ≤30 words, end with "Tell me what you see now."):',
+    );
+
+    return buf.toString();
+  }
+
+  // ─── Generation ───────────────────────────────────────────────────────────
+
   Future<String> _generateReply({
-    required String transcript,
+    required String latestTranscript,
     required String grounding,
     required String languageCode,
   }) async {
-    final localisedDirective = _localeDirective(languageCode);
-
-    final prompt =
-        '$_systemPromptEn\n$localisedDirective\n\nGROUNDING TEXT (verbatim from RoadSOS first-aid corpus):\n"""\n$grounding\n"""\n\nBYSTANDER MESSAGE:\n"""\n$transcript\n"""\n\nRespond with ONE numbered step, plain words, ≤25 words. End with: "Tell me what you see now."';
+    final prompt = _buildPrompt(
+      latestTranscript: latestTranscript,
+      grounding: grounding,
+      languageCode: languageCode,
+    );
 
     String? out;
     try {
       final gemma = _ref.read(gemmaLocalServiceProvider);
       if (gemma.isAvailable) {
-        out = await gemma.generate(prompt).timeout(const Duration(seconds: 12));
+        out = await gemma
+            .generate(prompt)
+            .timeout(const Duration(seconds: 20));
       }
     } catch (e, st) {
       appLog.d('[BystanderCoach] gemma generate failed', stackTrace: st);
@@ -232,27 +354,75 @@ Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not suppor
 
     out = out?.trim();
     if (out == null || out.isEmpty) {
-      return _deterministicReply(transcript, grounding, languageCode);
+      return _deterministicReply(latestTranscript, grounding, languageCode);
     }
     return _postProcess(out);
   }
 
+  // ─── Deterministic fallback ───────────────────────────────────────────────
+
+  /// Smarter offline fallback: uses accumulated situation keywords to pick a
+  /// relevant step from the grounding text, rather than always returning step 1.
   String _deterministicReply(String transcript, String grounding, String lang) {
-    final firstLine = grounding
-        .split('\n')
-        .firstWhere((l) => l.trim().startsWith('1)'), orElse: () => '');
-    final step = firstLine.isEmpty
-        ? 'Call 108 now and stay with the person. Keep them still.'
-        : firstLine.replaceFirst('1)', '').trim();
+    // Determine which step we should be on based on conversation depth.
+    final bystanderTurnCount =
+        state.turns.where((t) => t.role == 'bystander').length;
+
+    // Try to find a numbered step matching the current situation.
+    final lines = grounding.split('\n');
+    String step = '';
+
+    // Look for the most relevant numbered step in the grounding.
+    if (bystanderTurnCount <= 1) {
+      // First turn — life-threatening check or first grounding step.
+      final lower = transcript.toLowerCase();
+      final isLifeThreatening = lower.contains('not breathing') ||
+          lower.contains('unconscious') ||
+          lower.contains('not responding') ||
+          lower.contains('bleeding heavily') ||
+          lower.contains('no pulse');
+      if (isLifeThreatening) {
+        step = 'Call 108 immediately. Tell them the location and that the person is not responding.';
+      } else {
+        step = _extractStepN(lines, 1);
+      }
+    } else {
+      // Subsequent turns — advance to the next logical step.
+      final nextStep = (bystanderTurnCount).clamp(1, 6);
+      step = _extractStepN(lines, nextStep);
+      if (step.isEmpty) {
+        step = _extractStepN(lines, 1);
+      }
+    }
+
+    if (step.isEmpty) {
+      step = 'Call 108 now and stay with the person. Keep them still and reassure them.';
+    }
 
     final tail = switch (lang) {
       'hi' => 'अभी क्या दिख रहा है मुझे बताइए।',
       'ta' => 'இப்போது என்ன தெரிகிறது என்று சொல்லுங்கள்.',
       'te' => 'ఇప్పుడు ఏమి కనిపిస్తుందో చెప్పండి.',
+      'bn' => 'এখন কী দেখছেন বলুন।',
+      'mr' => 'आत्ता काय दिसतेय ते सांगा.',
       _ => 'Tell me what you see now.',
     };
-    return '1) $step $tail';
+    return '$step $tail';
   }
+
+  /// Extract the Nth numbered step from grounding lines. Returns '' if not found.
+  String _extractStepN(List<String> lines, int n) {
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.startsWith('$n)') || trimmed.startsWith('$n.')) {
+        final content = trimmed.replaceFirst(RegExp('^$n[).]\\s*'), '').trim();
+        if (content.isNotEmpty) return content;
+      }
+    }
+    return '';
+  }
+
+  // ─── Post-processing ──────────────────────────────────────────────────────
 
   String _postProcess(String raw) {
     // Strip code fences / leading "Coach:" labels Gemma sometimes emits.
@@ -261,10 +431,14 @@ Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not suppor
       RegExp(r'^\s*(coach|assistant|response)\s*:\s*', caseSensitive: false),
       '',
     );
+    // Strip any "COACH:" prefix the model may prepend.
+    t = t.replaceAll(RegExp(r'^COACH:\s*', caseSensitive: false), '');
     // Hard cap to keep TTS short and readable on small screens.
-    if (t.length > 360) t = '${t.substring(0, 360)}…';
+    if (t.length > 400) t = '${t.substring(0, 400)}…';
     return t.trim();
   }
+
+  // ─── Locale helpers ───────────────────────────────────────────────────────
 
   String _greetingFor(String lang) {
     switch (lang) {
@@ -286,19 +460,21 @@ Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not suppor
   String _localeDirective(String lang) {
     switch (lang) {
       case 'hi':
-        return 'Respond in Hindi (Devanagari). Keep numbers in Arabic numerals.';
+        return 'IMPORTANT: Respond entirely in Hindi (Devanagari script). Use Arabic numerals for step numbers.';
       case 'ta':
-        return 'Respond in Tamil. Keep numbers in Arabic numerals.';
+        return 'IMPORTANT: Respond entirely in Tamil. Use Arabic numerals for step numbers.';
       case 'te':
-        return 'Respond in Telugu. Keep numbers in Arabic numerals.';
+        return 'IMPORTANT: Respond entirely in Telugu. Use Arabic numerals for step numbers.';
       case 'bn':
-        return 'Respond in Bengali. Keep numbers in Arabic numerals.';
+        return 'IMPORTANT: Respond entirely in Bengali. Use Arabic numerals for step numbers.';
       case 'mr':
-        return 'Respond in Marathi (Devanagari). Keep numbers in Arabic numerals.';
+        return 'IMPORTANT: Respond entirely in Marathi (Devanagari script). Use Arabic numerals for step numbers.';
       default:
-        return 'Respond in plain English.';
+        return 'IMPORTANT: Respond in plain English only.';
     }
   }
+
+  // ─── State helpers ────────────────────────────────────────────────────────
 
   void _appendTurn(String role, String text) {
     final turns = List<BystanderCoachTurn>.from(state.turns)
@@ -308,6 +484,9 @@ Use the GROUNDING TEXT to stay accurate. Do not invent steps that are not suppor
 
   @visibleForTesting
   bool get sttReady => _sttReady;
+
+  @visibleForTesting
+  Set<String> get situationKeywords => Set.unmodifiable(_situationKeywords);
 }
 
 final bystanderCoachServiceProvider =
