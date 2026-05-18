@@ -47,12 +47,7 @@ class GemmaStatusBanner extends ConsumerWidget {
         'On-device brain disabled in Settings.',
         const Color(0xFF6b7a99),
       ),
-      _ => (
-        Icons.hourglass_top,
-        'Preparing…',
-        '',
-        const Color(0xFF6b7a99),
-      ),
+      _ => (Icons.hourglass_top, 'Preparing…', '', const Color(0xFF6b7a99)),
     };
 
     final displaySub = _displaySubtitle(status, sub);

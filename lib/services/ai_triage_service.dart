@@ -90,23 +90,23 @@ class TriageResult {
   });
 
   Map<String, dynamic> toJson() => {
-        'function_call': functionCall,
-        'arguments': {
-          'location': location,
-          'severity_level': severityLevel,
-          'required_services': requiredServices,
-          'first_aid_rag_query': firstAidQuery,
-          'compressed_payload': compressedPayload,
-        },
-        'thinking_trace': thinkingTrace,
-        'degraded_mode': isDegradedMode,
-        'source': source.name,
-        'vision_used': visionUsed,
-        'confidence': confidence,
-        'validation_flags': validationFlags,
-        'was_overridden': wasOverridden,
-        'validation_notes': validationNotes,
-      };
+    'function_call': functionCall,
+    'arguments': {
+      'location': location,
+      'severity_level': severityLevel,
+      'required_services': requiredServices,
+      'first_aid_rag_query': firstAidQuery,
+      'compressed_payload': compressedPayload,
+    },
+    'thinking_trace': thinkingTrace,
+    'degraded_mode': isDegradedMode,
+    'source': source.name,
+    'vision_used': visionUsed,
+    'confidence': confidence,
+    'validation_flags': validationFlags,
+    'was_overridden': wasOverridden,
+    'validation_notes': validationNotes,
+  };
 
   String get sourceLabel {
     switch (source) {
@@ -199,6 +199,7 @@ class AiTriageService {
     required String locationString,
     required int accelerometerSeverityHint,
     String languageCode = 'en',
+    CapturedScenePhoto? scenePhoto,
   }) async {
     if (kIsWeb) {
       return _buildClassifierTriage(
@@ -209,13 +210,14 @@ class AiTriageService {
       );
     }
 
-    const CapturedScenePhoto? scenePhoto = null;
-
-    final skipCloud = _connectivityAwareTriage &&
+    final skipCloud =
+        _connectivityAwareTriage &&
         _connectivity.currentQuality == NetworkQuality.none;
 
     if (skipCloud) {
-      appLog.d('[Triage] Connectivity=none — skipping Tier 1 cloud (saves 5s timeout)');
+      appLog.d(
+        '[Triage] Connectivity=none — skipping Tier 1 cloud (saves 5s timeout)',
+      );
     } else {
       final cloudTimeout = _connectivity.currentQuality == NetworkQuality.wifi
           ? const Duration(seconds: 8)
@@ -231,8 +233,11 @@ class AiTriageService {
         appLog.i('[Triage] Tier 1 — Gemma 4 27B cloud ✓ (text-only auto-SOS)');
         return cloud;
       } catch (e, st) {
-        appLog.d('[Triage] Tier 1 unavailable, trying Tier 2 on-device',
-            error: e, stackTrace: st);
+        appLog.d(
+          '[Triage] Tier 1 unavailable, trying Tier 2 on-device',
+          error: e,
+          stackTrace: st,
+        );
       }
     }
 
@@ -268,12 +273,13 @@ class AiTriageService {
     String transcript = '',
     String languageCode = 'en',
     int severityHint = 3,
+    CapturedScenePhoto? scenePhoto,
   }) async {
     final locationString = '${location.latitude},${location.longitude}';
     final ctx = transcript.trim().isEmpty
         ? (isBystander
-            ? 'Bystander reporting roadside emergency'
-            : 'Emergency SOS triggered')
+              ? 'Bystander reporting roadside emergency'
+              : 'Emergency SOS triggered')
         : transcript;
 
     return triageEmergency(
@@ -281,6 +287,7 @@ class AiTriageService {
       locationString: locationString,
       accelerometerSeverityHint: severityHint.clamp(1, 5),
       languageCode: languageCode,
+      scenePhoto: scenePhoto,
     );
   }
 
@@ -350,7 +357,8 @@ class AiTriageService {
     if (data is! Map) throw Exception('Edge triage returned non-object');
     final payload = Map<String, dynamic>.from(data);
 
-    final severity = (payload['severity_level'] as num?)?.toInt().clamp(1, 5) ?? 4;
+    final severity =
+        (payload['severity_level'] as num?)?.toInt().clamp(1, 5) ?? 4;
     final rawServices = payload['required_services'];
     final services = <String>{'ambulance'};
     if (rawServices is List) {
@@ -366,8 +374,9 @@ class AiTriageService {
     final fallbackQuery = _classifier
         .classify(transcript: transcript, severityHint: severityHint)
         .firstAidQuery;
-    final aidQuery =
-        (fromCloud != null && fromCloud.isNotEmpty) ? fromCloud : fallbackQuery;
+    final aidQuery = (fromCloud != null && fromCloud.isNotEmpty)
+        ? fromCloud
+        : fallbackQuery;
     final thinking = payload['thinking_summary'] as String?;
     final modelUsed = payload['_model'] as String?;
     final visionUsed = payload['_vision_used'] == true;
@@ -380,12 +389,18 @@ class AiTriageService {
       severityLevel: severity,
       requiredServices: services.toList(),
       firstAidQuery: verifiedAdvice,
-      compressedPayload: _buildCompressedPayload(location, severity, services.toList()),
+      compressedPayload: _buildCompressedPayload(
+        location,
+        severity,
+        services.toList(),
+      ),
       thinkingTrace: thinking != null
           ? '[${modelUsed ?? "Gemma 4 27B"}${visionUsed ? " + vision" : ""}] $thinking'
           : null,
       isDegradedMode: false,
-      source: visionUsed ? TriageSource.gemma4CloudVision : TriageSource.gemma4Cloud,
+      source: visionUsed
+          ? TriageSource.gemma4CloudVision
+          : TriageSource.gemma4Cloud,
       visionUsed: visionUsed,
     );
   }
@@ -406,7 +421,8 @@ class AiTriageService {
     );
     if (result == null) return null;
 
-    final severity = (result['severity_level'] as num?)?.toInt().clamp(1, 5) ?? 3;
+    final severity =
+        (result['severity_level'] as num?)?.toInt().clamp(1, 5) ?? 3;
     final rawServices = result['required_services'];
     final services = <String>{'ambulance'};
     if (rawServices is List) {
@@ -416,7 +432,8 @@ class AiTriageService {
         }
       }
     }
-    final aidQuery = (result['first_aid_focus'] as String?)?.trim() ??
+    final aidQuery =
+        (result['first_aid_focus'] as String?)?.trim() ??
         _classifier
             .classify(transcript: transcript, severityHint: severityHint)
             .firstAidQuery;
@@ -430,7 +447,11 @@ class AiTriageService {
       severityLevel: severity,
       requiredServices: services.toList(),
       firstAidQuery: verifiedAdvice,
-      compressedPayload: _buildCompressedPayload(location, severity, services.toList()),
+      compressedPayload: _buildCompressedPayload(
+        location,
+        severity,
+        services.toList(),
+      ),
       thinkingTrace: '[Gemma 4 E4B on-device] ${thinking ?? ""}',
       isDegradedMode: true,
       source: TriageSource.gemma4OnDevice,
@@ -445,7 +466,10 @@ class AiTriageService {
     required int severityHint,
     required String languageCode,
   }) async {
-    final c = _tier3.classify(transcript: transcript, severityHint: severityHint);
+    final c = _tier3.classify(
+      transcript: transcript,
+      severityHint: severityHint,
+    );
     final verified = await FirstAidStore.getVerifiedAdvice(c.firstAidQuery);
     return TriageResult(
       functionCall: 'trigger_sos',
@@ -453,7 +477,11 @@ class AiTriageService {
       severityLevel: c.severityLevel.clamp(1, 5),
       requiredServices: c.requiredServices,
       firstAidQuery: verified,
-      compressedPayload: _buildCompressedPayload(location, c.severityLevel, c.requiredServices),
+      compressedPayload: _buildCompressedPayload(
+        location,
+        c.severityLevel,
+        c.requiredServices,
+      ),
       thinkingTrace: languageCode == 'hi'
           ? 'स्थानीय भार-विश्लेषण मॉडल (Gemma 4 E4B उपलब्ध नहीं)।'
           : 'Local weighted heuristic (Gemma 4 E4B unavailable or loading).',
@@ -470,7 +498,10 @@ class AiTriageService {
     required int severityHint,
     required String languageCode,
   }) async {
-    final c = _classifier.classify(transcript: transcript, severityHint: severityHint);
+    final c = _classifier.classify(
+      transcript: transcript,
+      severityHint: severityHint,
+    );
     final severity = c.severityLevel;
     final services = c.requiredServices;
     final verified = await FirstAidStore.getVerifiedAdvice(c.firstAidQuery);
@@ -491,8 +522,13 @@ class AiTriageService {
   }
 
   static const Set<String> _allowedServices = {
-    'ambulance', 'police', 'fire_department', 'rescue',
-    'towing', 'puncture_shop', 'showroom',
+    'ambulance',
+    'police',
+    'fire_department',
+    'rescue',
+    'towing',
+    'puncture_shop',
+    'showroom',
   };
 
   String _buildCompressedPayload(
@@ -500,18 +536,28 @@ class AiTriageService {
     int severity,
     List<String> services,
   ) {
-    final svcCodes = services.map((s) {
-      switch (s) {
-        case 'ambulance':       return 'AMB';
-        case 'police':          return 'POL';
-        case 'fire_department': return 'FIR';
-        case 'rescue':          return 'RES';
-        case 'towing':          return 'TOW';
-        case 'puncture_shop':   return 'PUN';
-        case 'showroom':        return 'SHR';
-        default:                return 'UNK';
-      }
-    }).join(',');
+    final svcCodes = services
+        .map((s) {
+          switch (s) {
+            case 'ambulance':
+              return 'AMB';
+            case 'police':
+              return 'POL';
+            case 'fire_department':
+              return 'FIR';
+            case 'rescue':
+              return 'RES';
+            case 'towing':
+              return 'TOW';
+            case 'puncture_shop':
+              return 'PUN';
+            case 'showroom':
+              return 'SHR';
+            default:
+              return 'UNK';
+          }
+        })
+        .join(',');
 
     final loc = location.replaceAll(' ', '_');
     final clipped = loc.length <= 30 ? loc : loc.substring(0, 30);

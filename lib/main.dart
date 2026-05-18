@@ -28,6 +28,7 @@ import 'ui/onboarding_gate.dart';
 import 'ui/voice_call_overlay.dart';
 import 'services/gemma_auto_downloader.dart';
 import 'services/webrtc_voice_call_service.dart';
+import 'ui/roadsos_logo.dart';
 import 'services/privacy_consent_service.dart';
 import 'services/nearby_sos_push_service.dart';
 import 'app_navigator.dart';
@@ -85,7 +86,11 @@ void main() async {
     await RuntimeConfig.bootstrap();
   } catch (e, st) {
     // Non-fatal: all services check for missing config and degrade gracefully.
-    appLog.w('[boot] RuntimeConfig.bootstrap() failed — proceeding without config', error: e, stackTrace: st);
+    appLog.w(
+      '[boot] RuntimeConfig.bootstrap() failed — proceeding without config',
+      error: e,
+      stackTrace: st,
+    );
   }
 
   // ← First frame renders here.  The loading spinner in _RoadSOSAppState is
@@ -173,8 +178,9 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
       await Future.wait<void>([
         initializeFirstAidRepository(),
         initializeFmtcMapCache(),
-        EmergencyBackgroundService.initialize()
-            .then((_) => EmergencyBackgroundService.ensureNotificationChannel()),
+        EmergencyBackgroundService.initialize().then(
+          (_) => EmergencyBackgroundService.ensureNotificationChannel(),
+        ),
       ]);
 
       // Phase 4: Kick off remote crash-config fetch (non-blocking).
@@ -187,7 +193,11 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
       appLog.i('[boot] All services bootstrapped successfully.');
     } catch (e, st) {
       // Non-fatal: app runs in offline/degraded mode.
-      appLog.e('[boot] Service bootstrap error — running in degraded mode', error: e, stackTrace: st);
+      appLog.e(
+        '[boot] Service bootstrap error — running in degraded mode',
+        error: e,
+        stackTrace: st,
+      );
     } finally {
       if (mounted) {
         setState(() => _servicesReady = true);
@@ -231,8 +241,9 @@ class _RoadSOSAppState extends ConsumerState<RoadSOSApp>
     // 2.4 GB download never starts until the user opens Bystander Coach.
     ref.watch(gemmaAutoDownloaderProvider);
 
-    final sosPhase =
-        ref.watch(emergencyOrchestratorProvider.select((s) => s.phase));
+    final sosPhase = ref.watch(
+      emergencyOrchestratorProvider.select((s) => s.phase),
+    );
     final appLocale = ref.watch(appLocaleProvider);
 
     ref.listen(appLocaleProvider, (_, next) {
@@ -346,15 +357,7 @@ class _LogoMark extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8281A),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: const Icon(Icons.emergency_share, color: Colors.white, size: 40),
-        ),
+        const RoadSOSLogo(size: 96),
         const SizedBox(height: 16),
         const Text(
           'RoadSOS',

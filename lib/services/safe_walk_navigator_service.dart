@@ -104,15 +104,15 @@ class SafeWalkNavState {
       destination: identical(destination, _sentinel)
           ? this.destination
           : destination as LatLng?,
-      lastFix:
-          identical(lastFix, _sentinel) ? this.lastFix : lastFix as LatLng?,
+      lastFix: identical(lastFix, _sentinel)
+          ? this.lastFix
+          : lastFix as LatLng?,
       route: route ?? this.route,
       steps: steps ?? this.steps,
       currentStepIndex: currentStepIndex ?? this.currentStepIndex,
       bearingToDestinationDeg:
           bearingToDestinationDeg ?? this.bearingToDestinationDeg,
-      bearingToNextStepDeg:
-          bearingToNextStepDeg ?? this.bearingToNextStepDeg,
+      bearingToNextStepDeg: bearingToNextStepDeg ?? this.bearingToNextStepDeg,
       distanceToDestinationMeters:
           distanceToDestinationMeters ?? this.distanceToDestinationMeters,
       distanceToNextStepMeters:
@@ -176,26 +176,27 @@ class SafeWalkNavigatorService extends StateNotifier<SafeWalkNavState> {
       _recompute(start);
     }
 
-    _posSub = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 5,
-      ),
-    ).listen(
-      (pos) {
-        final fix = LatLng(pos.latitude, pos.longitude);
-        state = state.copyWith(
-          lastFix: fix,
-          deviceHeadingDeg: pos.heading.isNaN || pos.heading < 0
-              ? state.deviceHeadingDeg
-              : pos.heading,
+    _posSub =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.bestForNavigation,
+            distanceFilter: 5,
+          ),
+        ).listen(
+          (pos) {
+            final fix = LatLng(pos.latitude, pos.longitude);
+            state = state.copyWith(
+              lastFix: fix,
+              deviceHeadingDeg: pos.heading.isNaN || pos.heading < 0
+                  ? state.deviceHeadingDeg
+                  : pos.heading,
+            );
+            _recompute(fix);
+          },
+          onError: (e) {
+            appLog.d('[SafeWalkNav] position stream error: $e');
+          },
         );
-        _recompute(fix);
-      },
-      onError: (e) {
-        appLog.d('[SafeWalkNav] position stream error: $e');
-      },
-    );
   }
 
   Future<void> stop() async {
@@ -243,10 +244,9 @@ class SafeWalkNavigatorService extends StateNotifier<SafeWalkNavState> {
         '${a.longitude},${a.latitude};${b.longitude},${b.latitude}'
         '?overview=full&geometries=geojson&steps=true',
       );
-      final resp = await http.get(
-        url,
-        headers: const {'User-Agent': 'RoadSOS/1.0'},
-      ).timeout(const Duration(seconds: 8));
+      final resp = await http
+          .get(url, headers: const {'User-Agent': 'RoadSOS/1.0'})
+          .timeout(const Duration(seconds: 8));
       if (resp.statusCode != 200) {
         throw HttpException('OSRM HTTP ${resp.statusCode}');
       }
@@ -254,11 +254,14 @@ class SafeWalkNavigatorService extends StateNotifier<SafeWalkNavState> {
       final routes = (body['routes'] as List?) ?? const [];
       if (routes.isEmpty) throw const HttpException('OSRM returned no routes');
       final route = routes.first as Map<String, dynamic>;
-      final coords = ((route['geometry'] as Map<String, dynamic>)['coordinates']
-              as List)
-          .cast<List>()
-          .map((c) => LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble()))
-          .toList();
+      final coords =
+          ((route['geometry'] as Map<String, dynamic>)['coordinates'] as List)
+              .cast<List>()
+              .map(
+                (c) =>
+                    LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble()),
+              )
+              .toList();
 
       final legs = (route['legs'] as List?) ?? const [];
       final steps = <NavStep>[];
@@ -269,12 +272,14 @@ class SafeWalkNavigatorService extends StateNotifier<SafeWalkNavState> {
           final type = (maneuver['type'] as String?) ?? 'turn';
           final mod = (maneuver['modifier'] as String?) ?? '';
           final road = (s['name'] as String?)?.trim() ?? '';
-          steps.add(NavStep(
-            instruction: _phraseFor(type, mod, road),
-            distanceMeters: ((s['distance'] as num?) ?? 0).toDouble(),
-            maneuver: type,
-            location: LatLng(loc[1].toDouble(), loc[0].toDouble()),
-          ));
+          steps.add(
+            NavStep(
+              instruction: _phraseFor(type, mod, road),
+              distanceMeters: ((s['distance'] as num?) ?? 0).toDouble(),
+              maneuver: type,
+              location: LatLng(loc[1].toDouble(), loc[0].toDouble()),
+            ),
+          );
         }
       }
 
@@ -285,8 +290,10 @@ class SafeWalkNavigatorService extends StateNotifier<SafeWalkNavState> {
         routingDegraded: false,
       );
     } catch (e, st) {
-      appLog.d('[SafeWalkNav] OSRM unreachable, falling back to bearing-only',
-          stackTrace: st);
+      appLog.d(
+        '[SafeWalkNav] OSRM unreachable, falling back to bearing-only',
+        stackTrace: st,
+      );
       state = state.copyWith(
         route: const <LatLng>[],
         steps: const <NavStep>[],
@@ -348,9 +355,7 @@ class SafeWalkNavigatorService extends StateNotifier<SafeWalkNavState> {
       case 'depart':
         return road.isEmpty ? 'Start walking' : 'Start walking on $road';
       case 'arrive':
-        return road.isEmpty
-            ? 'Arrive at your destination'
-            : 'Arrive at $road';
+        return road.isEmpty ? 'Arrive at your destination' : 'Arrive at $road';
       case 'turn':
         if (mod.isEmpty) return 'Turn$onRoad';
         return 'Turn $mod$onRoad';
@@ -377,11 +382,9 @@ double _haversineMeters(LatLng a, LatLng b) {
   final lat2 = b.latitude * math.pi / 180;
   final dlat = (b.latitude - a.latitude) * math.pi / 180;
   final dlon = (b.longitude - a.longitude) * math.pi / 180;
-  final h = math.sin(dlat / 2) * math.sin(dlat / 2) +
-      math.cos(lat1) *
-          math.cos(lat2) *
-          math.sin(dlon / 2) *
-          math.sin(dlon / 2);
+  final h =
+      math.sin(dlat / 2) * math.sin(dlat / 2) +
+      math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) * math.sin(dlon / 2);
   return 2 * r * math.asin(math.min(1.0, math.sqrt(h)));
 }
 
@@ -390,7 +393,8 @@ double _bearingDeg(LatLng a, LatLng b) {
   final lat2 = b.latitude * math.pi / 180;
   final dlon = (b.longitude - a.longitude) * math.pi / 180;
   final y = math.sin(dlon) * math.cos(lat2);
-  final x = math.cos(lat1) * math.sin(lat2) -
+  final x =
+      math.cos(lat1) * math.sin(lat2) -
       math.sin(lat1) * math.cos(lat2) * math.cos(dlon);
   final theta = math.atan2(y, x);
   final deg = (theta * 180 / math.pi + 360) % 360;
@@ -404,7 +408,7 @@ class HttpException implements Exception {
   String toString() => 'HttpException: $message';
 }
 
-final safeWalkNavigatorProvider = StateNotifierProvider<
-    SafeWalkNavigatorService, SafeWalkNavState>((ref) {
-  return SafeWalkNavigatorService();
-});
+final safeWalkNavigatorProvider =
+    StateNotifierProvider<SafeWalkNavigatorService, SafeWalkNavState>((ref) {
+      return SafeWalkNavigatorService();
+    });

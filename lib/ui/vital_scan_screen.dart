@@ -10,7 +10,8 @@ class VitalScanScreen extends ConsumerStatefulWidget {
   ConsumerState<VitalScanScreen> createState() => _VitalScanScreenState();
 }
 
-class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerProviderStateMixin {
+class _VitalScanScreenState extends ConsumerState<VitalScanScreen>
+    with TickerProviderStateMixin {
   final _bpmCtrl = TextEditingController();
   final _rrCtrl = TextEditingController();
   final _spo2Ctrl = TextEditingController();
@@ -36,8 +37,10 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.vitalScanTitle,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+        title: Text(
+          AppLocalizations.of(context)!.vitalScanTitle,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+        ),
         backgroundColor: Colors.transparent,
       ),
       body: ListView(
@@ -52,13 +55,20 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
             ),
             child: Text(
               'Enter vitals manually. RoadSOS does not measure SpO₂/HR from the camera in this build.',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.86), height: 1.35),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.86),
+                height: 1.35,
+              ),
             ),
           ),
           const SizedBox(height: 18),
           _field(label: 'Pulse (BPM)', controller: _bpmCtrl, hint: 'e.g., 92'),
           const SizedBox(height: 12),
-          _field(label: 'Respiratory rate (per min)', controller: _rrCtrl, hint: 'e.g., 18'),
+          _field(
+            label: 'Respiratory rate (per min)',
+            controller: _rrCtrl,
+            hint: 'e.g., 18',
+          ),
           const SizedBox(height: 12),
           _field(label: 'SpO₂ (%)', controller: _spo2Ctrl, hint: 'e.g., 97'),
           const SizedBox(height: 18),
@@ -74,7 +84,9 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
                     style: ElevatedButton.styleFrom(
                       backgroundColor: scheme.primary,
                       foregroundColor: scheme.onPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
                 ),
@@ -83,11 +95,16 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
               SizedBox(
                 height: 52,
                 child: OutlinedButton(
-                  onPressed: () => ref.read(vitalSignsProvider.notifier).clear(),
+                  onPressed: () =>
+                      ref.read(vitalSignsProvider.notifier).clear(),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white70,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: const Text('CLEAR'),
                 ),
@@ -104,7 +121,10 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
           Text(
             AppLocalizations.of(context)!.vitalAlignFinger,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 12),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.3),
+              fontSize: 12,
+            ),
           ),
         ],
       ),
@@ -147,20 +167,49 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildVitalItem('BPM', '${vitals.bpm}', Icons.favorite, Colors.red),
-          _buildVitalItem('RESP', '${vitals.respiratoryRate}', Icons.air, Colors.blue),
-          _buildVitalItem('SPO2', '${vitals.bloodOxygen.toStringAsFixed(1)}%', Icons.bloodtype, Colors.orange),
+          _buildVitalItem(
+            'RESP',
+            '${vitals.respiratoryRate}',
+            Icons.air,
+            Colors.blue,
+          ),
+          _buildVitalItem(
+            'SPO2',
+            '${vitals.bloodOxygen.toStringAsFixed(1)}%',
+            Icons.bloodtype,
+            Colors.orange,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildVitalItem(String label, String value, IconData icon, Color color) {
+  Widget _buildVitalItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       children: [
         Icon(icon, color: color, size: 28),
         const SizedBox(height: 8),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white38,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -180,7 +229,11 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
           Expanded(
             child: Text(
               vitals.interpretation,
-              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -195,12 +248,16 @@ class _VitalScanScreenState extends ConsumerState<VitalScanScreen> with TickerPr
 
     if (bpm == null || rr == null || spo2 == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter valid numbers for BPM, RESP, and SpO₂.')),
+        const SnackBar(
+          content: Text('Enter valid numbers for BPM, RESP, and SpO₂.'),
+        ),
       );
       return;
     }
 
-    ref.read(vitalSignsProvider.notifier).setManual(
+    ref
+        .read(vitalSignsProvider.notifier)
+        .setManual(
           bpm: bpm.clamp(20, 240),
           respiratoryRate: rr.clamp(4, 60),
           bloodOxygen: spo2.clamp(50.0, 100.0),

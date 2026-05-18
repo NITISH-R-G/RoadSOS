@@ -147,7 +147,7 @@
         <service
             android:name=".SosQuickSettingsTile"
             android:exported="true"
-            android:icon="@drawable/ic_qs_crash_monitor"
+            android:icon="@mipmap/ic_launcher"
             android:label="@string/qs_tile_label_on"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>

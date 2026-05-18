@@ -4,7 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../logging/app_log.dart';
 
-/// Phase 8 — RL-based optimization: bounded user feedback loop.
+/// Phase 8 — Bounded preference calibration (NOT reinforcement learning).
+///
+/// Earlier docs called this "RL-based optimisation" — the implementation is
+/// an exponential moving average over a user-supplied severity bias, never
+/// touches model weights, and is bounded to [-1.0, +1.0]. Use the more
+/// accurate term "preference calibration" in new docs and READMEs.
 ///
 /// After an SOS is resolved the user is shown a two-question prompt:
 ///   Q1. "Was the severity estimate correct?"  (too low / just right / too high)
@@ -24,15 +29,15 @@ class TriageFeedbackService {
   TriageFeedbackService._();
   static final instance = TriageFeedbackService._();
 
-  static const _kBias      = 'triage_severity_bias';
-  static const _kCount     = 'triage_feedback_count';
-  static const _kHistory   = 'triage_feedback_history';
-  static const _kAlpha     = 0.15;   // EMA learning rate
-  static const _kMinSamples = 3;     // No bias until 3 feedbacks collected
+  static const _kBias = 'triage_severity_bias';
+  static const _kCount = 'triage_feedback_count';
+  static const _kHistory = 'triage_feedback_history';
+  static const _kAlpha = 0.15; // EMA learning rate
+  static const _kMinSamples = 3; // No bias until 3 feedbacks collected
   static const _kMaxHistory = 20;
 
   double _bias = 0.0;
-  int    _count = 0;
+  int _count = 0;
 
   /// How many severity levels to shift Tier 3/4 output.
   /// Positive = inflate; negative = deflate.
@@ -44,8 +49,8 @@ class TriageFeedbackService {
 
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
-    _bias  = prefs.getDouble(_kBias)  ?? 0.0;
-    _count = prefs.getInt(_kCount)    ?? 0;
+    _bias = prefs.getDouble(_kBias) ?? 0.0;
+    _count = prefs.getInt(_kCount) ?? 0;
     appLog.d(
       '[Feedback] RL bias=${_bias.toStringAsFixed(2)} n=$_count '
       '(active=$isLearningActive)',
@@ -64,23 +69,27 @@ class TriageFeedbackService {
     final prefs = await SharedPreferences.getInstance();
 
     // EMA update: bias moves 15% toward the new signal each time.
-    _bias = (_bias * (1.0 - _kAlpha) + severityDelta * _kAlpha).clamp(-1.0, 1.0);
+    _bias = (_bias * (1.0 - _kAlpha) + severityDelta * _kAlpha).clamp(
+      -1.0,
+      1.0,
+    );
     _count++;
 
-    await prefs.setDouble(_kBias,  _bias);
-    await prefs.setInt(_kCount,    _count);
+    await prefs.setDouble(_kBias, _bias);
+    await prefs.setInt(_kCount, _count);
 
     // Append to bounded history for Settings audit trail.
     final rawHistory = prefs.getString(_kHistory);
     final history = rawHistory != null
         ? List<Map<String, dynamic>>.from(
-            (jsonDecode(rawHistory) as List).cast<Map<String, dynamic>>())
+            (jsonDecode(rawHistory) as List).cast<Map<String, dynamic>>(),
+          )
         : <Map<String, dynamic>>[];
 
     history.add({
-      'id':               incidentId,
-      'ts':               DateTime.now().toIso8601String(),
-      'severity_delta':   severityDelta,
+      'id': incidentId,
+      'ts': DateTime.now().toIso8601String(),
+      'severity_delta': severityDelta,
       'services_correct': servicesCorrect,
     });
 
@@ -111,7 +120,7 @@ class TriageFeedbackService {
 
   /// Reset all learning — called from Settings.
   Future<void> resetBias() async {
-    _bias  = 0.0;
+    _bias = 0.0;
     _count = 0;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kBias);

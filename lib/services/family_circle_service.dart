@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../database/app_database.dart' show isSupabaseSdkInitialized, ensureSupabaseAnonymousSession;
+import '../database/app_database.dart'
+    show isSupabaseSdkInitialized, ensureSupabaseAnonymousSession;
 import '../logging/app_log.dart';
 
 /// A member of a Family Circle (mapped from `family_circle_members` + auth uid).
@@ -70,7 +71,8 @@ class FamilyLiveLocation {
       isSafeWalk: (row['is_safewalk'] as bool?) ?? false,
       isSos: (row['is_sos'] as bool?) ?? false,
       destination: row['destination'] as String?,
-      updatedAt: DateTime.tryParse(row['updated_at']?.toString() ?? '') ??
+      updatedAt:
+          DateTime.tryParse(row['updated_at']?.toString() ?? '') ??
           DateTime.now().toUtc(),
     );
   }
@@ -94,7 +96,8 @@ class FamilyCircle {
       id: row['id'] as String,
       name: (row['name'] as String?) ?? 'Family',
       createdBy: row['created_by'] as String,
-      createdAt: DateTime.tryParse(row['created_at']?.toString() ?? '') ??
+      createdAt:
+          DateTime.tryParse(row['created_at']?.toString() ?? '') ??
           DateTime.now().toUtc(),
     );
   }
@@ -236,18 +239,21 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
 
       final memberRows = await client
           .from('family_circle_members')
-          .select('circle_id, user_id, display_name, phone_e164, role, joined_at');
+          .select(
+            'circle_id, user_id, display_name, phone_e164, role, joined_at',
+          );
       final members = (memberRows as List)
           .cast<Map<String, dynamic>>()
-          .map((r) => FamilyMember(
-                userId: r['user_id'] as String,
-                circleId: r['circle_id'] as String,
-                displayName: (r['display_name'] as String?) ?? 'Member',
-                phoneE164: r['phone_e164'] as String?,
-                role: (r['role'] as String?) ?? 'member',
-                joinedAt:
-                    DateTime.tryParse(r['joined_at']?.toString() ?? ''),
-              ))
+          .map(
+            (r) => FamilyMember(
+              userId: r['user_id'] as String,
+              circleId: r['circle_id'] as String,
+              displayName: (r['display_name'] as String?) ?? 'Member',
+              phoneE164: r['phone_e164'] as String?,
+              role: (r['role'] as String?) ?? 'member',
+              joinedAt: DateTime.tryParse(r['joined_at']?.toString() ?? ''),
+            ),
+          )
           .toList();
 
       final positionsRows = await client
@@ -322,12 +328,12 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
               final updated = Map<String, FamilyLiveLocation>.from(
                 state.livePositions,
               );
-              updated[row['user_id'] as String] =
-                  FamilyLiveLocation.fromRow(row);
+              updated[row['user_id'] as String] = FamilyLiveLocation.fromRow(
+                row,
+              );
               state = state.copyWith(livePositions: updated);
             } catch (e, st) {
-              appLog.d('[FamilyCircle] realtime decode failed',
-                  stackTrace: st);
+              appLog.d('[FamilyCircle] realtime decode failed', stackTrace: st);
             }
           },
         )
@@ -356,8 +362,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
       await refresh();
       return null;
     } catch (e, st) {
-      appLog.w('[FamilyCircle] createCircle failed',
-          error: e, stackTrace: st);
+      appLog.w('[FamilyCircle] createCircle failed', error: e, stackTrace: st);
       return 'Could not create circle: $e';
     }
   }
@@ -385,8 +390,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
       final shareUrl = 'https://roadsos.app/i/$code';
       return (code: code, shareUrl: shareUrl, error: null);
     } catch (e, st) {
-      appLog.w('[FamilyCircle] createInvite failed',
-          error: e, stackTrace: st);
+      appLog.w('[FamilyCircle] createInvite failed', error: e, stackTrace: st);
       return (code: null, shareUrl: null, error: 'Invite create failed: $e');
     }
   }
@@ -416,15 +420,17 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
         'display_name': 'Me',
         'role': 'member',
       });
-      await client.from('family_invites').update({
-        'accepted_by': uid,
-        'accepted_at': DateTime.now().toUtc().toIso8601String(),
-      }).eq('id', row['id']);
+      await client
+          .from('family_invites')
+          .update({
+            'accepted_by': uid,
+            'accepted_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', row['id']);
       await refresh();
       return null;
     } catch (e, st) {
-      appLog.w('[FamilyCircle] redeemInvite failed',
-          error: e, stackTrace: st);
+      appLog.w('[FamilyCircle] redeemInvite failed', error: e, stackTrace: st);
       return 'Could not redeem invite: $e';
     }
   }
@@ -460,15 +466,16 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
     await _positionSub?.cancel();
 
     Position? lastPos;
-    _positionSub = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 8,
-      ),
-    ).listen(
-      (pos) => lastPos = pos,
-      onError: (e) => appLog.d('[FamilyCircle] position stream error: $e'),
-    );
+    _positionSub =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 8,
+          ),
+        ).listen(
+          (pos) => lastPos = pos,
+          onError: (e) => appLog.d('[FamilyCircle] position stream error: $e'),
+        );
 
     Future<void> tick() async {
       final pos = lastPos;
@@ -510,8 +517,7 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
           .delete()
           .eq('user_id', client.auth.currentUser!.id);
     } catch (e, st) {
-      appLog.d('[FamilyCircle] stopPublishing delete failed',
-          stackTrace: st);
+      appLog.d('[FamilyCircle] stopPublishing delete failed', stackTrace: st);
     }
   }
 
@@ -628,5 +634,5 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
 
 final familyCircleServiceProvider =
     StateNotifierProvider<FamilyCircleService, FamilyCircleState>((ref) {
-  return FamilyCircleService(ref);
-});
+      return FamilyCircleService(ref);
+    });

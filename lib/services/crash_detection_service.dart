@@ -50,8 +50,7 @@ class CrashDetectionService {
 
   final Ref _ref;
 
-  GyroscopeFusionService get _gyro =>
-      _ref.read(gyroscopeFusionServiceProvider);
+  GyroscopeFusionService get _gyro => _ref.read(gyroscopeFusionServiceProvider);
 
   BluetoothVehicleMonitor get _btMonitor =>
       _ref.read(bluetoothVehicleMonitorProvider);
@@ -66,13 +65,47 @@ class CrashDetectionService {
   DateTime? _lastConfirmedSos;
   DateTime? _lastSpikeHandled;
 
+  /// Last confidence result computed by the detector. Used by
+  /// [EmergencyOrchestrator] so AI triage receives a real, sensor-derived
+  /// severity hint instead of a hardcoded 3.
+  CrashConfidenceResult? _lastConfidence;
+  DateTime? _lastConfidenceAt;
+
+  /// Returns a 1..5 severity hint derived from the most recent crash
+  /// detection event, OR null if no event happened in the last 30s. Callers
+  /// must clamp / default if null.
+  ///
+  /// Mapping:
+  ///   high   tier (≥ 0.65) → 5
+  ///   medium tier (≥ 0.35) → 4 (or 3 if accel < 50 m/s²)
+  ///   low    tier          → 3 (still serious enough to dispatch)
+  int? recentSeverityHint() {
+    final c = _lastConfidence;
+    final t = _lastConfidenceAt;
+    if (c == null || t == null) return null;
+    if (DateTime.now().difference(t).inSeconds > 30) return null;
+
+    switch (c.tier) {
+      case CrashConfidenceTier.high:
+        return 5;
+      case CrashConfidenceTier.medium:
+        final accelContribution = c.breakdown['accel'] ?? 0.0;
+        return accelContribution > 0.13 ? 4 : 3;
+      case CrashConfidenceTier.low:
+        return 3;
+    }
+  }
+
+  /// Latest raw confidence (or null) for diagnostics / explainability UI.
+  CrashConfidenceResult? get lastConfidence => _lastConfidence;
+
   void startMonitoring() {
     stopMonitoring();
     // Gyroscope and BT monitor lifecycle managed by their providers.
     _startGpsSpeed();
-    _accelSub = SensorsPlatform.instance
-        .userAccelerometerEventStream()
-        .listen(_onAccelerometer);
+    _accelSub = SensorsPlatform.instance.userAccelerometerEventStream().listen(
+      _onAccelerometer,
+    );
   }
 
   Future<void> _startGpsSpeed() async {
@@ -103,10 +136,7 @@ class CrashDetectionService {
           accuracy: LocationAccuracy.bestForNavigation,
           distanceFilter: 0,
         ),
-      ).listen(
-        _onPosition,
-        onError: (Object _) => _gpsSpeedUsable = false,
-      );
+      ).listen(_onPosition, onError: (Object _) => _gpsSpeedUsable = false);
     } catch (_) {
       _gpsSpeedUsable = false;
     }
@@ -198,9 +228,10 @@ class CrashDetectionService {
       }
       if (minAfter.isInfinite) minAfter = _speedHistory.last.kmh;
 
-      final approach  = maxBefore >= CrashTuning.minApproachSpeedKmh;
-      final halted    = minAfter  <= CrashTuning.stoppedSpeedKmh;
-      final sharpDrop = (maxBefore - minAfter) >= CrashTuning.suddenDecelDeltaKmh;
+      final approach = maxBefore >= CrashTuning.minApproachSpeedKmh;
+      final halted = minAfter <= CrashTuning.stoppedSpeedKmh;
+      final sharpDrop =
+          (maxBefore - minAfter) >= CrashTuning.suddenDecelDeltaKmh;
 
       if (!approach || !(halted || sharpDrop)) {
         appLog.d(
@@ -230,18 +261,18 @@ class CrashDetectionService {
       // ── Gate 5: Multi-signal confidence scoring ────────────────────────
       final confidence = CrashConfidenceEngine.score(
         CrashSignals(
-          accelPeakMs2:              peakMs2,
-          gyroPeakRadPerSec:         gyroPeakRadPerSec,
-          speedBeforeKmh:            maxBefore,
-          speedDropKmh:              maxBefore - minAfter,
+          accelPeakMs2: peakMs2,
+          gyroPeakRadPerSec: gyroPeakRadPerSec,
+          speedBeforeKmh: maxBefore,
+          speedDropKmh: maxBefore - minAfter,
           bluetoothVehicleDisconnect: _btMonitor.recentDisconnect,
-          postImpactDeviceStill:     still,
+          postImpactDeviceStill: still,
         ),
       );
+      _lastConfidence = confidence;
+      _lastConfidenceAt = DateTime.now();
 
-      appLog.w(
-        'CRASH CONFIRMED — $confidence',
-      );
+      appLog.w('CRASH CONFIRMED — $confidence');
 
       // LOW confidence after 4 gates is theoretically impossible but guarded.
       if (confidence.tier == CrashConfidenceTier.low) {
@@ -274,9 +305,9 @@ class CrashDetectionService {
 
   Future<bool> _measureStillness() async {
     final magnitudes = <double>[];
-    final sub = SensorsPlatform.instance
-        .userAccelerometerEventStream()
-        .listen((e) => magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z)));
+    final sub = SensorsPlatform.instance.userAccelerometerEventStream().listen(
+      (e) => magnitudes.add(sqrt(e.x * e.x + e.y * e.y + e.z * e.z)),
+    );
 
     await Future<void>.delayed(
       Duration(milliseconds: CrashTuning.stillnessSampleWindowMs),

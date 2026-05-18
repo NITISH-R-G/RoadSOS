@@ -20,10 +20,18 @@ class Tier2LocalTriageModel {
     var score = 0;
 
     // Life-threatening indicators.
-    if (_hasAny(t, const ['not breathing', 'no pulse', 'cardiac arrest'])) score += 8;
-    if (_hasAny(t, const ['unconscious', 'passed out', 'unresponsive'])) score += 6;
-    if (_hasAny(t, const ['bleeding heavily', 'severe bleeding', 'spurting'])) score += 6;
-    if (_hasAny(t, const ['trapped', 'pinned', 'stuck in vehicle'])) score += 6;
+    if (_hasAny(t, const ['not breathing', 'no pulse', 'cardiac arrest'])) {
+      score += 8;
+    }
+    if (_hasAny(t, const ['unconscious', 'passed out', 'unresponsive'])) {
+      score += 6;
+    }
+    if (_hasAny(t, const ['bleeding heavily', 'severe bleeding', 'spurting'])) {
+      score += 6;
+    }
+    if (_hasAny(t, const ['trapped', 'pinned', 'stuck in vehicle'])) {
+      score += 6;
+    }
 
     // Major trauma / dangerous context.
     if (_hasAny(t, const ['head injury', 'concussion', 'seizure'])) score += 4;
@@ -31,7 +39,9 @@ class Tier2LocalTriageModel {
     if (_hasAny(t, const ['fire', 'smoke', 'burning', 'explosion'])) score += 5;
 
     // Moderate indicators.
-    if (_hasAny(t, const ['pain', 'hurt', 'bleeding', 'crash', 'accident'])) score += 2;
+    if (_hasAny(t, const ['pain', 'hurt', 'bleeding', 'crash', 'accident'])) {
+      score += 2;
+    }
 
     // Hint from crash detection (1-5): amplify but do not let it dominate fully.
     score += (h - 1) * 2;
@@ -67,7 +77,13 @@ class Tier2LocalTriageModel {
     if (_hasAny(t, const ['fire', 'smoke', 'burning', 'explosion'])) {
       services.add('fire_department');
     }
-    if (_hasAny(t, const ['police', 'hit and run', 'drunk', 'attack', 'crime'])) {
+    if (_hasAny(t, const [
+      'police',
+      'hit and run',
+      'drunk',
+      'attack',
+      'crime',
+    ])) {
       services.add('police');
     }
     if (_hasAny(t, const ['trapped', 'pinned', 'rescue'])) {
@@ -83,13 +99,21 @@ class Tier2LocalTriageModel {
   }
 
   String _firstAidQueryFromText(String t) {
-    if (t.contains('bleed')) return 'severe bleeding wound management tourniquet';
-    if (_hasAny(t, const ['burn', 'smoke'])) return 'burn wound first aid cool water';
+    if (t.contains('bleed')) {
+      return 'severe bleeding wound management tourniquet';
+    }
+    if (_hasAny(t, const ['burn', 'smoke'])) {
+      return 'burn wound first aid cool water';
+    }
     if (_hasAny(t, const ['not breathing', 'cpr', 'choking'])) {
       return 'CPR rescue breathing Heimlich';
     }
-    if (_hasAny(t, const ['fracture', 'broken'])) return 'fracture immobilization splint';
-    if (_hasAny(t, const ['head injury', 'concussion'])) return 'head injury concussion protocol';
+    if (_hasAny(t, const ['fracture', 'broken'])) {
+      return 'fracture immobilization splint';
+    }
+    if (_hasAny(t, const ['head injury', 'concussion'])) {
+      return 'head injury concussion protocol';
+    }
     return 'general road accident first aid emergency response';
   }
 }
@@ -105,4 +129,3 @@ class Tier2LocalTriage {
     required this.firstAidQuery,
   });
 }
-

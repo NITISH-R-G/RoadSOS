@@ -39,6 +39,7 @@ import 'widgets/roadsos_glass.dart';
 import 'vehicle_rescue_screen.dart';
 import 'triage_result_card.dart';
 import 'vital_scan_screen.dart';
+import 'roadsos_logo.dart';
 
 /// Main shell — panic-first design with a discoverable bottom navigation bar.
 ///
@@ -168,19 +169,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: _kRed,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Icon(
-              Icons.emergency_share,
-              color: Colors.white,
-              size: 16,
-            ),
-          ),
+          const RoadSOSLogo(size: 28),
           const SizedBox(width: 10),
           const Text(
             'RoadSOS',
@@ -207,7 +196,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       scrolledUnderElevation: 2,
       title: Row(
         children: [
-          Icon(Icons.emergency_share, color: scheme.error, size: 26),
+          const RoadSOSLogo(size: 26),
           const SizedBox(width: 10),
           Text(
             l10n.dashboardTitle,
@@ -502,7 +491,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           icon: Icons.camera_enhance,
           color: const Color(0xFFF59220),
           title: 'Capture Scene',
-          subtitle: 'Document crash with AI-powered photo analysis',
+          subtitle:
+              'Arm a crash photo — Gemma 4 27B vision uses it on next SOS',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(
@@ -515,7 +505,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           icon: Icons.health_and_safety,
           color: const Color(0xFF4CAF50),
           title: 'Responder View',
-          subtitle: 'Live map with nearby SOS signals',
+          subtitle: 'This device\u2019s live SOS dashboard + BLE mesh peers',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const ResponderDashboard()),
@@ -529,7 +519,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           subtitle: 'Offline extraction guide by vehicle type',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const VehicleRescueScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const VehicleRescueScreen(),
+            ),
           ),
         ),
         _toolCard(
@@ -540,7 +532,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           subtitle: 'On-device Gemma 4 walks you through first aid — offline',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute<void>(builder: (_) => const BystanderCoachScreen()),
+            MaterialPageRoute<void>(
+              builder: (_) => const BystanderCoachScreen(),
+            ),
           ),
         ),
         _toolCard(
@@ -576,7 +570,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           icon: Icons.monitor_heart,
           color: const Color(0xFFE8281A),
           title: 'Vital Scan',
-          subtitle: 'Check heart rate & oxygen saturation',
+          subtitle: 'Log bystander-observed pulse / SpO\u2082 for the 112 SMS',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const VitalScanScreen()),
@@ -1033,11 +1027,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     );
                     if (response.statusCode == 200) {
                       final List<dynamic> data = json.decode(response.body);
-                      return data.whereType<Map>().map((m) => _NominatimHit(
-                            displayName: m['display_name'] as String,
-                            lat: double.tryParse(m['lat']?.toString() ?? '') ?? 0,
-                            lon: double.tryParse(m['lon']?.toString() ?? '') ?? 0,
-                          ));
+                      return data.whereType<Map>().map(
+                        (m) => _NominatimHit(
+                          displayName: m['display_name'] as String,
+                          lat: double.tryParse(m['lat']?.toString() ?? '') ?? 0,
+                          lon: double.tryParse(m['lon']?.toString() ?? '') ?? 0,
+                        ),
+                      );
                     }
                   } catch (e) {
                     appLog.w('Error fetching location suggestions: $e');

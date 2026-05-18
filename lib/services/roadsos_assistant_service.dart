@@ -181,18 +181,123 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
       }
       return null;
     } catch (e, st) {
-      appLog.d('[Assistant] Gemma 4 cloud generate failed', error: e, stackTrace: st);
+      appLog.d(
+        '[Assistant] Gemma 4 cloud generate failed',
+        error: e,
+        stackTrace: st,
+      );
       return null;
     }
   }
 
-  String _detectSceneContext(String input) {
+  /// Local keyword fallback — used only when Gemma 4 cloud is unreachable.
+  /// Intentionally conservative: defaults to `unknown` so a fresh scene falls
+  /// into the generic five-question script when offline.
+  String _detectSceneContextLocal(String input) {
     final lower = input.toLowerCase();
-    if (lower.contains('pedestrian') || lower.contains('पैदल')) return 'pedestrian_hit';
-    if (lower.contains('rollover') || lower.contains('पलटा') || lower.contains('overturned')) return 'rollover';
-    if (lower.contains('fire') || lower.contains('आग') || lower.contains('smoke') || lower.contains('धुआँ')) return 'fire_hazard';
-    if (lower.contains('collision') || lower.contains('टक्कर') || lower.contains('crash')) return 'vehicle_collision';
+    if (lower.contains('pedestrian') || lower.contains('पैदल')) {
+      return 'pedestrian_hit';
+    }
+    if (lower.contains('rollover') ||
+        lower.contains('पलटा') ||
+        lower.contains('overturned')) {
+      return 'rollover';
+    }
+    if (lower.contains('fire') ||
+        lower.contains('आग') ||
+        lower.contains('smoke') ||
+        lower.contains('धुआँ')) {
+      return 'fire_hazard';
+    }
+    if (lower.contains('collision') ||
+        lower.contains('टक्कर') ||
+        lower.contains('crash')) {
+      return 'vehicle_collision';
+    }
     return 'unknown';
+  }
+
+  /// Use Gemma 4 27B (cloud) to bucket the bystander's first description into
+  /// one of: vehicle_collision | pedestrian_hit | rollover | fire_hazard |
+  /// unknown. Falls back to the local keyword classifier if the cloud is
+  /// unreachable, the model misbehaves, or web demo mode is active.
+  Future<String> _detectSceneContext(String input) async {
+    if (kIsWeb || input.trim().isEmpty) {
+      return _detectSceneContextLocal(input);
+    }
+    const allowed = <String>{
+      'vehicle_collision',
+      'pedestrian_hit',
+      'rollover',
+      'fire_hazard',
+      'unknown',
+    };
+    final prompt =
+        'You are a triage scene classifier for a road-accident app in India.\n'
+        'Bystander first description (any Indian language allowed):\n"""$input"""\n\n'
+        'Pick the SINGLE best label from: vehicle_collision, pedestrian_hit, '
+        'rollover, fire_hazard, unknown.\n'
+        'Respond with ONLY that one word, no punctuation, no quotes, no '
+        'explanation. If genuinely ambiguous, respond unknown.';
+    try {
+      final out = (await _gemma4Generate(prompt))?.toLowerCase().trim();
+      if (out == null || out.isEmpty) return _detectSceneContextLocal(input);
+      // Find the first allowed label appearing anywhere in the model output.
+      for (final label in allowed) {
+        if (out == label || out.startsWith(label) || out.contains(label)) {
+          return label;
+        }
+      }
+      return _detectSceneContextLocal(input);
+    } catch (_) {
+      return _detectSceneContextLocal(input);
+    }
+  }
+
+  /// Use Gemma 4 27B (cloud) to compose the FIRST adaptive triage question
+  /// instead of reading the canned scripted first question. Falls back to the
+  /// scripted question only when the cloud is unreachable.
+  Future<String?> _composeFirstQuestionWithGemma({
+    required String sceneContext,
+    required String previousAnswer,
+    required String languageCode,
+  }) async {
+    if (kIsWeb || previousAnswer.trim().isEmpty) return null;
+    final langLabel = switch (languageCode) {
+      'hi' => 'Hindi',
+      'ta' => 'Tamil',
+      'te' => 'Telugu',
+      'bn' => 'Bengali',
+      'mr' => 'Marathi',
+      _ => 'English',
+    };
+    final prompt =
+        'You are an emergency triage assistant for RoadSOS (India). Scene '
+        'classified as: $sceneContext. The bystander just said:\n'
+        '"""$previousAnswer"""\n\n'
+        'Ask the SINGLE most critical follow-up question to gather the next '
+        'piece of dispatch-relevant information. Constraints:\n'
+        '- One question, under 18 words.\n'
+        '- $langLabel. Plain words. No prefix, no quotes, no markdown.\n'
+        '- If unresponsive victim suspected, ask about breathing/consciousness '
+        'first.\n';
+    try {
+      final raw = (await _gemma4Generate(prompt))?.trim();
+      if (raw == null || raw.isEmpty) return null;
+      // Take the first line, strip leading "Q:" / "1)" etc.
+      var line = raw
+          .split('\n')
+          .firstWhere((l) => l.trim().isNotEmpty, orElse: () => '')
+          .trim();
+      line = line.replaceFirst(
+        RegExp(r'^(\d+[\.\)]\s*|q[:\-]\s*)', caseSensitive: false),
+        '',
+      );
+      if (line.length > 240) line = '${line.substring(0, 240)}…';
+      return line.isEmpty ? null : line;
+    } catch (_) {
+      return null;
+    }
   }
 
   void setSceneContext(String context) {
@@ -215,10 +320,26 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
     String languageCode = 'en',
   }) async {
     if (state.history.isEmpty) {
-      final detectedContext = _detectSceneContext(previousAnswer);
-      final questions = languageCode == 'hi' ? _sceneQuestionsHi : _sceneQuestionsEn;
-      final sceneQuestions = questions[detectedContext] ?? questions['unknown']!;
-      final firstQuestion = sceneQuestions.first;
+      state = state.copyWith(isThinking: true);
+
+      // Gemma 4 27B classifies the scene from the bystander's free-form first
+      // line. Falls back to keyword classifier when cloud is unreachable.
+      final detectedContext = await _detectSceneContext(previousAnswer);
+
+      final questions = languageCode == 'hi'
+          ? _sceneQuestionsHi
+          : _sceneQuestionsEn;
+      final sceneQuestions =
+          questions[detectedContext] ?? questions['unknown']!;
+
+      // First question is also Gemma-composed for true adaptive follow-up.
+      // Falls back to the scripted first scene question only when cloud fails.
+      final gemmaFirst = await _composeFirstQuestionWithGemma(
+        sceneContext: detectedContext,
+        previousAnswer: previousAnswer,
+        languageCode: languageCode,
+      );
+      final firstQuestion = gemmaFirst ?? sceneQuestions.first;
 
       state = state.copyWith(
         isThinking: false,
@@ -252,8 +373,11 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
 
     String? gemmaQuestion = await _gemma4Generate(gemmaPrompt);
 
-    final questions = languageCode == 'hi' ? _sceneQuestionsHi : _sceneQuestionsEn;
-    final sceneQuestions = questions[state.sceneContext] ?? questions['unknown']!;
+    final questions = languageCode == 'hi'
+        ? _sceneQuestionsHi
+        : _sceneQuestionsEn;
+    final sceneQuestions =
+        questions[state.sceneContext] ?? questions['unknown']!;
     final nextIndex = state.questionIndex % sceneQuestions.length;
 
     var fallbackQuestion = sceneQuestions[nextIndex];
@@ -267,12 +391,13 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
     }
 
     final bool newInterviewComplete =
-        state.askedQuestions.length >= sceneQuestions.length && gemmaQuestion == null;
+        state.askedQuestions.length >= sceneQuestions.length &&
+        gemmaQuestion == null;
 
     final response = newInterviewComplete
         ? (languageCode == 'hi'
-            ? 'साक्षात्कार पूर्ण। धन्यवाद।'
-            : 'Interview complete. Thank you.')
+              ? 'साक्षात्कार पूर्ण। धन्यवाद।'
+              : 'Interview complete. Thank you.')
         : (gemmaQuestion ?? fallbackQuestion);
 
     final newGuidanceSteps = newInterviewComplete
@@ -298,40 +423,135 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
       switch (sceneContext) {
         case 'vehicle_collision':
           return [
-            GuidanceStep(stepNumber: 1, title: 'सुरक्षा सुनिश्चित करें', description: 'घायलों को सड़क से हटाएं। ट्रैफिक की चेतावनी दें।', icon: '🚨'),
-            GuidanceStep(stepNumber: 2, title: 'आपातकालीन सेवाएं बुलाएं', description: '112 डायल करें।', icon: '📞'),
-            GuidanceStep(stepNumber: 3, title: 'प्राथमिक चिकित्सा करें', description: 'रक्तस्राव नियंत्रित करें। एयरवे खुला रखें।', icon: '🏥'),
-            GuidanceStep(stepNumber: 4, title: 'साक्ष्य संरक्षित करें', description: 'तस्वीरें लें। चश्मदीद खोजें।', icon: '📸'),
-            GuidanceStep(stepNumber: 5, title: 'पुलिस को सूचित करें', description: 'FIR दर्ज करें।', icon: '👮'),
+            GuidanceStep(
+              stepNumber: 1,
+              title: 'सुरक्षा सुनिश्चित करें',
+              description: 'घायलों को सड़क से हटाएं। ट्रैफिक की चेतावनी दें।',
+              icon: '🚨',
+            ),
+            GuidanceStep(
+              stepNumber: 2,
+              title: 'आपातकालीन सेवाएं बुलाएं',
+              description: '112 डायल करें।',
+              icon: '📞',
+            ),
+            GuidanceStep(
+              stepNumber: 3,
+              title: 'प्राथमिक चिकित्सा करें',
+              description: 'रक्तस्राव नियंत्रित करें। एयरवे खुला रखें।',
+              icon: '🏥',
+            ),
+            GuidanceStep(
+              stepNumber: 4,
+              title: 'साक्ष्य संरक्षित करें',
+              description: 'तस्वीरें लें। चश्मदीद खोजें।',
+              icon: '📸',
+            ),
+            GuidanceStep(
+              stepNumber: 5,
+              title: 'पुलिस को सूचित करें',
+              description: 'FIR दर्ज करें।',
+              icon: '👮',
+            ),
           ];
         default:
           return [
-            GuidanceStep(stepNumber: 1, title: '112 डायल करें', description: 'तुरंत आपातकालीन सेवा बुलाएं।', icon: '📞'),
-            GuidanceStep(stepNumber: 2, title: 'घायलों को स्थिर करें', description: 'हिलाएं नहीं। सहारा दें।', icon: '🤝'),
-            GuidanceStep(stepNumber: 3, title: 'क्षेत्र सुरक्षित करें', description: 'ट्रैफिक को चेतावनी दें।', icon: '🚧'),
+            GuidanceStep(
+              stepNumber: 1,
+              title: '112 डायल करें',
+              description: 'तुरंत आपातकालीन सेवा बुलाएं।',
+              icon: '📞',
+            ),
+            GuidanceStep(
+              stepNumber: 2,
+              title: 'घायलों को स्थिर करें',
+              description: 'हिलाएं नहीं। सहारा दें।',
+              icon: '🤝',
+            ),
+            GuidanceStep(
+              stepNumber: 3,
+              title: 'क्षेत्र सुरक्षित करें',
+              description: 'ट्रैफिक को चेतावनी दें।',
+              icon: '🚧',
+            ),
           ];
       }
     } else {
       switch (sceneContext) {
         case 'vehicle_collision':
           return [
-            GuidanceStep(stepNumber: 1, title: 'Ensure Scene Safety', description: 'Move injured to safety if possible. Warn traffic.', icon: '🚨'),
-            GuidanceStep(stepNumber: 2, title: 'Call Emergency Services', description: 'Dial 112 or 911.', icon: '📞'),
-            GuidanceStep(stepNumber: 3, title: 'Provide First Aid', description: 'Control bleeding. Keep airway open.', icon: '🏥'),
-            GuidanceStep(stepNumber: 4, title: 'Preserve Evidence', description: 'Take photos. Note vehicle numbers.', icon: '📸'),
-            GuidanceStep(stepNumber: 5, title: 'Notify Police', description: 'File incident report.', icon: '👮'),
+            GuidanceStep(
+              stepNumber: 1,
+              title: 'Ensure Scene Safety',
+              description: 'Move injured to safety if possible. Warn traffic.',
+              icon: '🚨',
+            ),
+            GuidanceStep(
+              stepNumber: 2,
+              title: 'Call Emergency Services',
+              description: 'Dial 112 or 911.',
+              icon: '📞',
+            ),
+            GuidanceStep(
+              stepNumber: 3,
+              title: 'Provide First Aid',
+              description: 'Control bleeding. Keep airway open.',
+              icon: '🏥',
+            ),
+            GuidanceStep(
+              stepNumber: 4,
+              title: 'Preserve Evidence',
+              description: 'Take photos. Note vehicle numbers.',
+              icon: '📸',
+            ),
+            GuidanceStep(
+              stepNumber: 5,
+              title: 'Notify Police',
+              description: 'File incident report.',
+              icon: '👮',
+            ),
           ];
         case 'fire_hazard':
           return [
-            GuidanceStep(stepNumber: 1, title: 'Evacuate Immediately', description: 'Move everyone away from fire.', icon: '🏃'),
-            GuidanceStep(stepNumber: 2, title: 'Call Fire Brigade', description: 'Dial 101 (India) or 112.', icon: '🚒'),
-            GuidanceStep(stepNumber: 3, title: 'Call Ambulance', description: 'Dial 102 (India) for burn injuries.', icon: '🚑'),
+            GuidanceStep(
+              stepNumber: 1,
+              title: 'Evacuate Immediately',
+              description: 'Move everyone away from fire.',
+              icon: '🏃',
+            ),
+            GuidanceStep(
+              stepNumber: 2,
+              title: 'Call Fire Brigade',
+              description: 'Dial 101 (India) or 112.',
+              icon: '🚒',
+            ),
+            GuidanceStep(
+              stepNumber: 3,
+              title: 'Call Ambulance',
+              description: 'Dial 102 (India) for burn injuries.',
+              icon: '🚑',
+            ),
           ];
         default:
           return [
-            GuidanceStep(stepNumber: 1, title: 'Call Emergency Services', description: 'Dial 112. Describe situation clearly.', icon: '📞'),
-            GuidanceStep(stepNumber: 2, title: 'Stabilize Victims', description: 'Do not move injured unless in danger.', icon: '🤝'),
-            GuidanceStep(stepNumber: 3, title: 'Secure the Scene', description: 'Warn traffic. Keep crowd back.', icon: '🚧'),
+            GuidanceStep(
+              stepNumber: 1,
+              title: 'Call Emergency Services',
+              description: 'Dial 112. Describe situation clearly.',
+              icon: '📞',
+            ),
+            GuidanceStep(
+              stepNumber: 2,
+              title: 'Stabilize Victims',
+              description: 'Do not move injured unless in danger.',
+              icon: '🤝',
+            ),
+            GuidanceStep(
+              stepNumber: 3,
+              title: 'Secure the Scene',
+              description: 'Warn traffic. Keep crowd back.',
+              icon: '🚧',
+            ),
           ];
       }
     }
@@ -340,8 +560,8 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
 
 final roadSosAssistantServiceProvider =
     StateNotifierProvider<RoadSosAssistantService, AssistantState>((ref) {
-  return RoadSosAssistantService();
-});
+      return RoadSosAssistantService();
+    });
 
 /// Alias used by UI files.
 final roadsosAssistantProvider = roadSosAssistantServiceProvider;
