@@ -1,25 +1,22 @@
 import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../database/app_database.dart' show isSupabaseSdkInitialized;
 import '../services/family_circle_service.dart';
-import 'widgets/roadsos_glass.dart';
 import '../services/family_tracking_service.dart';
 import '../services/sms_direct_send.dart';
-import '../services/user_profile_service.dart';
 import '../services/webrtc_voice_call_service.dart';
+import 'widgets/roadsos_glass.dart';
 
-/// Family Circle: list of trusted peers, live map of their positions, invite +
-/// redeem flows. Map uses the same `flutter_map` + OSM tiles used elsewhere in
-/// the app, so no extra credentials needed.
+/// Family Circle: trusted peers, live map, invite + redeem.
 class FamilyCircleScreen extends ConsumerStatefulWidget {
   const FamilyCircleScreen({super.key});
 
@@ -34,7 +31,7 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(familyCircleServiceProvider.notifier).refresh();
+      await ref.read(familyCircleServiceProvider.notifier).ensureCircleReady();
     });
   }
 
@@ -58,14 +55,9 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
           ),
         ),
         actions: [
-          if (state.isDemoPreview)
-            TextButton(
-              onPressed: notifier.clearDemoPreview,
-              child: const Text('Exit demo'),
-            ),
           IconButton(
             tooltip: 'Refresh',
-            onPressed: state.busy ? null : notifier.refresh,
+            onPressed: state.busy ? null : () => notifier.ensureCircleReady(),
             icon: const Icon(Icons.refresh_rounded),
           ),
           IconButton(
@@ -84,35 +76,36 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
           ),
         ),
         child: SafeArea(
-        child: Column(
-          children: [
-            if (state.isDemoPreview) _demoBanner(),
-            if (state.lastError != null) _errorBanner(state.lastError!),
-            SizedBox(height: 220, child: _liveMap(state)),
-            _publishingControls(state, notifier),
-            const Divider(height: 1, color: Color(0xFF1F2933)),
-            Expanded(child: _membersList(state, notifier)),
-          ],
+          child: Column(
+            children: [
+              if (state.lastError != null) _errorBanner(state.lastError!),
+              SizedBox(height: 220, child: _liveMap(state)),
+              _publishingControls(state, notifier),
+              const Divider(height: 1, color: Color(0xFF1F2933)),
+              Expanded(child: _membersList(state, notifier)),
+            ],
+          ),
         ),
       ),
-      ),
-      floatingActionButton: state.circles.isEmpty && !state.isDemoPreview
+      floatingActionButton: state.circles.isEmpty
           ? FloatingActionButton.extended(
               backgroundColor: const Color(0xFF5C7CFA),
-              onPressed: () => _showCreateCircleDialog(context, notifier),
+              onPressed: state.busy
+                  ? null
+                  : () => notifier.ensureCircleReady(),
               icon: const Icon(Icons.group_add),
-              label: const Text('CREATE CIRCLE'),
+              label: const Text('Set up circle'),
             )
           : FloatingActionButton.extended(
               backgroundColor: const Color(0xFF5C7CFA),
-              onPressed: () => _showInviteDialog(context, notifier, state.circles.first.id),
+              onPressed: state.busy
+                  ? null
+                  : () => _showInviteDialog(context, notifier, state.circles.first.id),
               icon: const Icon(Icons.person_add),
-              label: const Text('INVITE BY SMS'),
+              label: const Text('Invite by SMS'),
             ),
     );
   }
-
-  // ── Map ────────────────────────────────────────────────────────────────────
 
   Widget _liveMap(FamilyCircleState state) {
     final markers = <Marker>[];
@@ -144,13 +137,11 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(6),
+                  color: Colors.black.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   loc.displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(color: Colors.white, fontSize: 10),
                 ),
               ),
@@ -160,155 +151,98 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
       );
     }
 
+    final center = first ?? const LatLng(12.9716, 77.5946);
+
     return FlutterMap(
       mapController: _mapController,
-      options: MapOptions(
-        initialCenter: first ?? const LatLng(12.9716, 77.5946),
-        initialZoom: first != null ? 14 : 5,
-        interactionOptions: const InteractionOptions(
-          flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
-        ),
-      ),
+      options: MapOptions(initialCenter: center, initialZoom: 13),
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'app.roadsos',
-          maxZoom: 18,
+          userAgentPackageName: 'com.roadsos.app',
         ),
-        if (markers.isNotEmpty) MarkerLayer(markers: markers),
+        MarkerLayer(markers: markers),
       ],
     );
   }
 
   Widget _publishingControls(FamilyCircleState state, FamilyCircleService notifier) {
     final mode = state.publishingMode;
-    final profile = ref.read(userProfileProvider);
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      color: const Color(0xFF11151B),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  state.publishing ? 'YOU ARE LIVE' : 'YOU ARE PRIVATE',
-                  style: TextStyle(
-                    color: state.publishing ? const Color(0xFF00B8A0) : Colors.white60,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  state.publishing
-                      ? mode == FamilyPublishMode.sos
-                          ? 'Sharing SOS location with circle'
-                          : 'Sharing Safe Walk position with circle'
-                      : 'Circle peers cannot see your location',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          if (state.publishing)
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Color(0xFFE8281A)),
-              ),
-              onPressed: notifier.stopPublishing,
-              icon: const Icon(Icons.stop_circle_outlined, color: Color(0xFFE8281A)),
-              label: const Text('STOP'),
-            )
-          else
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00B8A0),
-                foregroundColor: Colors.black,
-              ),
-              onPressed: state.circles.isEmpty
-                  ? null
-                  : () => notifier.startPublishing(
-                        mode: FamilyPublishMode.safeWalk,
-                        displayName: profile.fullName.trim().isEmpty
-                            ? 'Me'
-                            : profile.fullName.trim(),
-                      ),
-              icon: const Icon(Icons.location_on),
-              label: const Text('GO LIVE'),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // ── Members list ───────────────────────────────────────────────────────────
-
-  Widget _demoBanner() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: RoadSosGlassPanel(
-        borderRadius: BorderRadius.circular(14),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        tint: const Color(0x225C7CFA),
-        child: const Row(
+        borderRadius: BorderRadius.circular(16),
+        padding: const EdgeInsets.all(12),
+        child: Row(
           children: [
-            Icon(Icons.science_outlined, color: Color(0xFF5C7CFA), size: 20),
-            SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Demo preview — map & members are simulated. Create a real circle when Supabase is connected.',
-                style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.35),
+                state.publishing
+                    ? mode == FamilyPublishMode.sos
+                        ? 'Sharing SOS location with circle'
+                        : 'Sharing Safe Walk with circle'
+                    : 'Location sharing is off',
+                style: const TextStyle(color: Colors.white, fontSize: 13),
               ),
             ),
+            if (state.publishing)
+              TextButton(
+                onPressed: notifier.stopPublishing,
+                child: const Text('Stop'),
+              )
+            else ...[
+              TextButton(
+                onPressed: state.usesLocalPreview
+                    ? null
+                    : () => notifier.startPublishing(
+                          mode: FamilyPublishMode.safeWalk,
+                          destination: 'Out',
+                        ),
+                child: const Text('Safe Walk'),
+              ),
+              TextButton(
+                onPressed: state.usesLocalPreview
+                    ? null
+                    : () => notifier.startPublishing(mode: FamilyPublishMode.sos),
+                child: const Text('SOS share'),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
+  Widget _errorBanner(String message) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: RoadSosGlassPanel(
+        borderRadius: BorderRadius.circular(12),
+        padding: const EdgeInsets.all(12),
+        tint: const Color(0x22E8281A),
+        child: Text(message, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+      ),
+    );
+  }
+
   String? _currentUserId() {
-    if (!isSupabaseSdkInitialized) return null;
+    if (!isSupabaseSdkInitialized) return 'local-self';
     try {
-      return Supabase.instance.client.auth.currentUser?.id;
+      return Supabase.instance.client.auth.currentUser?.id ?? 'local-self';
     } catch (_) {
-      return null;
+      return 'local-self';
     }
   }
 
   Widget _membersList(FamilyCircleState state, FamilyCircleService notifier) {
-    if (state.circles.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Share live location with people you trust.\n\nCreate a circle and invite family by SMS, or try the demo to see how it looks.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, height: 1.45, fontSize: 15),
-              ),
-              const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: notifier.enableDemoPreview,
-                icon: const Icon(Icons.play_circle_outline),
-                label: const Text('Try demo circle'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
     if (state.members.isEmpty) {
       return const Center(
-        child: Text(
-          'Circle is empty. Tap INVITE BY SMS.',
-          style: TextStyle(color: Colors.white60),
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'Setting up your circle…',
+            style: TextStyle(color: Colors.white70, fontSize: 15),
+          ),
         ),
       );
     }
@@ -320,10 +254,7 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
       itemBuilder: (context, i) {
         final m = state.members[i];
         final live = state.livePositions[m.userId];
-        final uid = _currentUserId();
-        final isSelf = state.isDemoPreview
-            ? m.userId == 'demo-you'
-            : uid != null && m.userId == uid;
+        final isSelf = m.userId == _currentUserId();
         return RoadSosGlassPanel(
           borderRadius: BorderRadius.circular(16),
           padding: const EdgeInsets.all(12),
@@ -379,40 +310,32 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
                 ),
               ),
               if (!isSelf) ...[
-                IconButton(
-                  tooltip: 'Voice call in app',
-                  onPressed: () async {
-                    if (state.isDemoPreview) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Demo preview — voice calls work after you create a real circle.',
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-                    final res = await ref
-                        .read(webRtcVoiceCallServiceProvider.notifier)
-                        .startCall(
-                          calleeId: m.userId,
-                          peerName: m.displayName,
+                if (!state.usesLocalPreview)
+                  IconButton(
+                    tooltip: 'Voice call in app',
+                    onPressed: () async {
+                      final res = await ref
+                          .read(webRtcVoiceCallServiceProvider.notifier)
+                          .startCall(
+                            calleeId: m.userId,
+                            peerName: m.displayName,
+                          );
+                      if (!context.mounted) return;
+                      if (res.error != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(res.error!)),
                         );
-                    if (!context.mounted) return;
-                    if (res.error != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(res.error!)),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.headset_mic,
-                      color: Color(0xFF5C7CFA)),
-                ),
+                      }
+                    },
+                    icon: const Icon(Icons.headset_mic, color: Color(0xFF5C7CFA)),
+                  ),
                 if (m.phoneE164 != null)
                   IconButton(
-                    tooltip: 'PSTN call',
-                    onPressed: () =>
-                        launchUrl(Uri.parse('tel:${m.phoneE164}')),
+                    tooltip: 'Phone call',
+                    onPressed: () {
+                      final digits = m.phoneE164!.replaceAll(RegExp(r'[^\d+]'), '');
+                      launchUrl(Uri.parse('tel:$digits'));
+                    },
                     icon: const Icon(Icons.call, color: Color(0xFF00B8A0)),
                   ),
               ],
@@ -424,57 +347,10 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
   }
 
   String _age(DateTime t) {
-    final delta = DateTime.now().toUtc().difference(t.toUtc());
-    if (delta.inSeconds < 60) return '${delta.inSeconds}s';
-    if (delta.inMinutes < 60) return '${delta.inMinutes}m';
-    if (delta.inHours < 24) return '${delta.inHours}h';
-    return '${delta.inDays}d';
-  }
-
-  // ── Dialogs ────────────────────────────────────────────────────────────────
-
-  Widget _errorBanner(String text) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      color: const Color(0x44E8281A),
-      child: Text(text, style: const TextStyle(color: Color(0xFFFF9494))),
-    );
-  }
-
-  Future<void> _showCreateCircleDialog(
-    BuildContext context,
-    FamilyCircleService notifier,
-  ) async {
-    final controller = TextEditingController(text: 'Family');
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Create circle'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(labelText: 'Circle name'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
-          FilledButton(
-            onPressed: () async {
-              final name = controller.text.trim();
-              Navigator.pop(ctx);
-              if (name.isEmpty) return;
-              final err = await notifier.createCircle(name);
-              if (!context.mounted) return;
-              if (err != null) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(err)));
-              }
-            },
-            child: const Text('CREATE'),
-          ),
-        ],
-      ),
-    );
+    final d = DateTime.now().toUtc().difference(t);
+    if (d.inMinutes < 1) return 'just now';
+    if (d.inMinutes < 60) return '${d.inMinutes}m';
+    return '${d.inHours}h';
   }
 
   Future<void> _showInviteDialog(
@@ -482,60 +358,78 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
     FamilyCircleService notifier,
     String circleId,
   ) async {
-    final controller = TextEditingController();
-    await showDialog<void>(
+    final phoneController = TextEditingController();
+    final raw = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Invite by SMS'),
+        title: const Text('Invite to Family Circle'),
         content: TextField(
-          controller: controller,
+          controller: phoneController,
           keyboardType: TextInputType.phone,
           decoration: const InputDecoration(
-            labelText: 'Phone (E.164, e.g. +91987654xxxx)',
+            labelText: 'Phone number',
+            hintText: '9876543210',
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           FilledButton(
-            onPressed: () async {
-              final raw = controller.text.trim();
-              final phone = FamilyTrackingService.normalizePhoneDigits(raw);
-              Navigator.pop(ctx);
-              if (phone == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Need at least 10 digits.')),
-                );
-                return;
-              }
-              final res = await notifier.createInvite(
-                circleId: circleId,
-                phoneE164: '+91$phone',
-              );
-              if (!context.mounted) return;
-              if (res.error != null) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(res.error!)));
-                return;
-              }
-              final body =
-                  'RoadSOS: Join my Family Circle. Tap to accept: ${res.shareUrl} (code ${res.code}). Expires in 7 days.';
-              await Clipboard.setData(ClipboardData(text: body));
-              var sent = false;
-              if (!kIsWeb && Platform.isAndroid) {
-                sent = await sendSmsDirectAndroid(phone, body);
-              }
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(sent
-                    ? 'Invite SMS sent to +91$phone'
-                    : 'Invite ready — message copied to clipboard'),
-              ));
-            },
-            child: const Text('SEND'),
+            onPressed: () => Navigator.pop(ctx, phoneController.text),
+            child: const Text('Send invite'),
           ),
         ],
       ),
     );
+    if (raw == null || raw.trim().isEmpty) return;
+
+    await notifier.ensureCircleReady();
+    if (!context.mounted) return;
+
+    final state = ref.read(familyCircleServiceProvider);
+    if (state.usesLocalPreview) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Still connecting — try again in a moment.')),
+      );
+      return;
+    }
+
+    final phone = FamilyTrackingService.normalizePhoneDigits(raw);
+    if (phone == null) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid 10-digit mobile number.')),
+      );
+      return;
+    }
+
+    final res = await notifier.createInvite(
+      circleId: circleId,
+      phoneE164: '+91$phone',
+    );
+    if (!context.mounted) return;
+    if (res.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.error!)));
+      return;
+    }
+
+    final body =
+        'RoadSOS: Join my Family Circle. Tap to accept: ${res.shareUrl} (code ${res.code}). Expires in 7 days.';
+    if (!kIsWeb && Platform.isAndroid) {
+      final sent = await sendSmsDirectAndroid(phone, body);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(sent ? 'Invite SMS sent' : 'Invite code: ${res.code}'),
+        ),
+      );
+    } else {
+      await Clipboard.setData(ClipboardData(text: body));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invite link copied to clipboard')),
+      );
+    }
   }
 
   Future<void> _showRedeemDialog(
@@ -543,37 +437,28 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
     FamilyCircleService notifier,
   ) async {
     final controller = TextEditingController();
-    await showDialog<void>(
+    final code = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Redeem invite'),
+        title: const Text('Join a circle'),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: 'Invite code'),
-          textCapitalization: TextCapitalization.characters,
+          decoration: const InputDecoration(hintText: 'Invite code'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           FilledButton(
-            onPressed: () async {
-              final code = controller.text.trim().toUpperCase();
-              Navigator.pop(ctx);
-              if (code.isEmpty) return;
-              final err = await notifier.redeemInvite(code);
-              if (!context.mounted) return;
-              if (err != null) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(err)));
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Joined circle ✓')),
-                );
-              }
-            },
-            child: const Text('JOIN'),
+            onPressed: () => Navigator.pop(ctx, controller.text.trim().toUpperCase()),
+            child: const Text('Join'),
           ),
         ],
       ),
     );
+    if (code == null || code.isEmpty) return;
+    final err = await notifier.redeemInvite(code);
+    if (!context.mounted) return;
+    if (err != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+    }
   }
 }

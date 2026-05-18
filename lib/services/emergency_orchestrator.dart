@@ -459,8 +459,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     _patchDispatchChannel('mesh', DispatchChannelLifecycle.inProgress, 'Broadcasting BLE beacon…');
     _patchDispatchChannel('sms', DispatchChannelLifecycle.inProgress, 'Sending emergency SMS…');
     _patchDispatchChannel('local_log', DispatchChannelLifecycle.inProgress, 'Saving incident on device…');
-    _patchDispatchChannel('family_link', DispatchChannelLifecycle.inProgress, 'Family tracking link…');
-    _patchDispatchChannel('nearby_services', DispatchChannelLifecycle.inProgress, 'Broadcasting to nearby services…');
+    _patchDispatchChannel('family_link', DispatchChannelLifecycle.inProgress, 'Alerting Family Circle…');
 
     // Phase 9: Automated alerts and calling
     unawaited(_notifyUser());
@@ -587,9 +586,9 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
             location: location,
             triage: triage,
           ),
-      fallback: (ok: false, detail: 'Family link timed out — share manually if needed.'),
-      timeoutDetail: 'Family link timed out — share manually if needed.',
-      failureDetail: 'Family link failed — share manually if needed.',
+      fallback: (ok: false, detail: 'Family Circle alert timed out — share manually if needed.'),
+      timeoutDetail: 'Family Circle alert timed out — share manually if needed.',
+      failureDetail: 'Family Circle alert failed — share manually if needed.',
     ).then((family) {
       _patchDispatchChannel(
         'family_link',
@@ -599,23 +598,6 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       return family;
     });
 
-    final nearbyFuture = guard<bool>(
-      id: 'nearby_services',
-      future: Future.delayed(const Duration(seconds: 3), () => true),
-      fallback: false,
-      timeoutDetail: 'Nearby services broadcast timed out.',
-      failureDetail: 'Nearby services broadcast failed.',
-    ).then((ok) {
-      _patchDispatchChannel(
-        'nearby_services',
-        ok ? DispatchChannelLifecycle.success : DispatchChannelLifecycle.failed,
-        ok
-            ? 'Emergency alert broadcasted to nearby facilities and responders ✓'
-            : 'Could not complete nearby services broadcast.',
-      );
-      return ok;
-    });
-
     List<Object?> results;
     try {
       results = await Future.wait([
@@ -623,7 +605,6 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
         smsFuture,
         persistedFuture,
         familyFuture,
-        nearbyFuture,
       ]).timeout(_dispatchChannelTimeout + const Duration(seconds: 1));
     } catch (e, st) {
       // Absolute guard: never hang in dispatching.
@@ -740,13 +721,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ),
       DispatchChannelRow(
         id: 'family_link',
-        title: 'Family tracking link',
-        lifecycle: DispatchChannelLifecycle.pending,
-        detail: 'Waiting…',
-      ),
-      DispatchChannelRow(
-        id: 'nearby_services',
-        title: 'Nearby Services',
+        title: 'Family Circle',
         lifecycle: DispatchChannelLifecycle.pending,
         detail: 'Waiting…',
       ),
