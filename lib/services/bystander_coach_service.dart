@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import '../logging/app_log.dart';
+import '../ui/vehicle_rescue_data.dart';
 import 'emergency_orchestrator.dart' show voiceAssistantServiceProvider;
 import 'first_aid_repository.dart';
 import 'gemma_local_service.dart';
@@ -94,18 +95,27 @@ class BystanderCoachService extends StateNotifier<BystanderCoachState> {
   // ─── System prompt ────────────────────────────────────────────────────────
 
   static const String _systemPrompt = '''
-You are RoadSOS Bystander Coach — an AI helper guiding a non-medical person at a road accident scene in India until paramedics arrive.
+You are RoadSOS Bystander Coach — a calm, practical AI assistant helping someone at a road accident scene in India.
 
-Hard rules:
-- Give ONE numbered step per response (the immediate NEXT action), under 30 words.
-- You MUST read the full conversation below and give the NEXT step — never repeat a step already given.
-- Plain words. No medical jargon.
-- Always end with: "Tell me what you see now."
-- If life-threatening (no breathing, severe bleeding, unconscious): step 1 = "Call 108 immediately."
+You can answer ANY question about the current emergency, including:
+- Medical first aid (CPR, bleeding, fractures, burns, shock)
+- Vehicle rescue (how to extract a trapped person, EV hazards, fuel fires)
+- Finding help (nearest hospital, ambulance, towing, police)
+- Emergency numbers (108 ambulance, 112 ERSS, 101 fire, 100 police)
+- Legal questions (Good Samaritan law, what to do after an accident)
+- Insurance/documentation (FIR, accident report, insurance claim steps)
+- Road safety (scene safety, warning traffic, hazards)
+- Reassurance and what to do while waiting for help
+
+Response rules:
+- Give ONE clear, actionable step per reply, under 35 words.
+- Read the full conversation history — give the NEXT relevant action, never repeat.
+- Plain simple words. No jargon. Anyone can understand.
+- For life-threatening situations (not breathing, heavy bleeding, unconscious): first step = "Call 108 now."
+- For hospital/towing questions: give the number to call AND what to say.
+- End EVERY reply with: "Tell me what you see now." (or locale equivalent)
+- Use GROUNDING TEXT facts. Do not invent information.
 - Never give medication doses.
-- Never tell them to drive the victim unless explicitly asked.
-- If unsure, say: "Wait with the person and follow 108 dispatcher instructions."
-- Ground every step in the GROUNDING TEXT. Do not invent steps not supported there.
 ''';
 
   // ─── Session lifecycle ────────────────────────────────────────────────────
@@ -225,31 +235,86 @@ Hard rules:
     state = state.copyWith(phase: BystanderCoachPhase.idle);
   }
 
-  // ─── Keyword accumulation ─────────────────────────────────────────────────
+  // ─── Keyword accumulation ─────────────────────────────────────────────────────
 
-  /// Extract situation-relevant keywords from a bystander message and
-  /// accumulate them in [_situationKeywords] for better RAG retrieval.
+  /// Accumulate situation-relevant keywords from every bystander message.
   void _extractKeywords(String text) {
     final lower = text.toLowerCase();
-    const medicalKeywords = <String>[
+    const allKeywords = <String>[
+      // Medical
       'bleeding', 'blood', 'unconscious', 'breathing', 'pulse', 'cpr',
       'fracture', 'broken', 'burn', 'head injury', 'spine', 'neck',
       'chest', 'heart', 'choking', 'trapped', 'fire', 'smoke',
       'not moving', 'not breathing', 'not responding', 'pain',
       'swelling', 'wound', 'cut', 'scratch', 'bruise', 'dislocation',
       'sprain', 'seizure', 'stroke', 'diabetic', 'allergic', 'shock',
-      'child', 'pregnant', 'elderly', 'motorbike', 'truck', 'car',
-      'pedestrian', 'cyclist', 'road', 'highway', 'truck', 'collision',
+      'pregnant', 'elderly', 'child',
+      // Vehicle
+      'motorbike', 'bike', 'scooter', 'truck', 'lorry', 'bus', 'car',
+      'auto', 'rickshaw', 'electric', 'ev', 'petrol', 'diesel', 'cng',
+      'helmet', 'airbag', 'battery', 'fuel', 'orange cable',
+      'tyre', 'tire', 'engine', 'overheating', 'breakdown',
+      // Scene
+      'pedestrian', 'cyclist', 'road', 'highway', 'collision', 'hit',
+      'accident', 'crash', 'overturn', 'rolled', 'skid',
+      // Help-seeking
+      'hospital', 'ambulance', 'doctor', 'police', 'towing', 'tow',
+      'mechanic', 'insurance', 'fir', 'report', 'helpline', 'number',
+      // Legal
+      'good samaritan', 'legal', 'law', 'arrested', 'fined', 'liability',
     ];
-    for (final kw in medicalKeywords) {
-      if (lower.contains(kw)) {
-        _situationKeywords.add(kw);
-      }
+    for (final kw in allKeywords) {
+      if (lower.contains(kw)) _situationKeywords.add(kw);
     }
   }
 
-  /// Build a rich grounding query combining the current transcript with
-  /// accumulated session keywords so RAG retrieval stays on-topic.
+  /// Intent categories for routing grounding sources.
+  _CoachIntent _detectIntent(String text) {
+    final lower = text.toLowerCase();
+    if (lower.contains('hospital') ||
+        lower.contains('ambulance') ||
+        lower.contains('doctor') ||
+        lower.contains('where') && lower.contains('help')) {
+      return _CoachIntent.findHelp;
+    }
+    if (lower.contains('tow') ||
+        lower.contains('mechanic') ||
+        lower.contains('breakdown') ||
+        lower.contains('tyre') ||
+        lower.contains('tire') ||
+        lower.contains('puncture') ||
+        lower.contains('engine') ||
+        lower.contains('repair')) {
+      return _CoachIntent.vehicleAssistance;
+    }
+    if (lower.contains('extract') ||
+        lower.contains('stuck') ||
+        lower.contains('trapped') ||
+        lower.contains('helmet') ||
+        lower.contains('orange cable') ||
+        lower.contains('electric') ||
+        lower.contains('ev') ||
+        lower.contains('bike') ||
+        lower.contains('scooter') ||
+        lower.contains('truck') ||
+        lower.contains('bus') ||
+        lower.contains('auto')) {
+      return _CoachIntent.vehicleRescue;
+    }
+    if (lower.contains('legal') ||
+        lower.contains('law') ||
+        lower.contains('samaritan') ||
+        lower.contains('arrested') ||
+        lower.contains('fir') ||
+        lower.contains('insurance') ||
+        lower.contains('report') ||
+        lower.contains('liability')) {
+      return _CoachIntent.legalOrInsurance;
+    }
+    return _CoachIntent.medicalFirstAid;
+  }
+
+  /// Build a grounding query combining the transcript with accumulated keywords.
   String _buildGroundingQuery(String latestTranscript) {
     final buf = StringBuffer(latestTranscript.trim());
     if (_situationKeywords.isNotEmpty) {
@@ -259,19 +324,110 @@ Hard rules:
     return buf.toString();
   }
 
-  // ─── RAG grounding ────────────────────────────────────────────────────────
+  // ─── Multi-source RAG grounding ───────────────────────────────────────────────
 
   Future<String> _retrieveGrounding(String query) async {
+    final intent = _detectIntent(query);
+    final parts = <String>[_emergencyNumbersText()];
+
+    switch (intent) {
+      case _CoachIntent.vehicleRescue:
+        parts.add(_vehicleRescueGrounding(query));
+        parts.add(await _firstAidGrounding(query));
+      case _CoachIntent.vehicleAssistance:
+        parts.add(_vehicleAssistanceText());
+      case _CoachIntent.findHelp:
+        parts.add(_findHelpText());
+      case _CoachIntent.legalOrInsurance:
+        parts.add(_legalText());
+      case _CoachIntent.medicalFirstAid:
+        parts.add(await _firstAidGrounding(query));
+    }
+
+    final combined = parts.where((p) => p.trim().isNotEmpty).join('\n\n---\n\n');
+    return combined.length > 1600 ? combined.substring(0, 1600) : combined;
+  }
+
+  Future<String> _firstAidGrounding(String query) async {
     try {
-      final text = await FirstAidRepository.instance.lookup(query);
-      // Trim grounding to keep token budget reasonable for E4B.
-      if (text.length <= 1400) return text;
-      return text.substring(0, 1400);
+      return await FirstAidRepository.instance.lookup(query);
     } catch (e, st) {
-      appLog.d('[BystanderCoach] grounding lookup failed', stackTrace: st);
-      return 'No grounding found — answer cautiously and recommend 108.';
+      appLog.d('[BystanderCoach] first-aid lookup failed', stackTrace: st);
+      return '';
     }
   }
+
+  String _vehicleRescueGrounding(String query) {
+    final lower = query.toLowerCase();
+    var vehicleKey = 'car';
+    if (lower.contains('bike') || lower.contains('scooter') || lower.contains('motorbike')) {
+      vehicleKey = 'bike';
+    } else if (lower.contains('truck') || lower.contains('lorry')) {
+      vehicleKey = 'truck';
+    } else if (lower.contains('bus')) {
+      vehicleKey = 'bus';
+    } else if (lower.contains('auto') || lower.contains('rickshaw')) {
+      vehicleKey = 'auto';
+    } else if (lower.contains('electric') || lower.contains('ev')) {
+      vehicleKey = 'ev_car';
+    } else {
+      for (final kw in _situationKeywords) {
+        if (kw == 'bike' || kw == 'scooter' || kw == 'motorbike') { vehicleKey = 'bike'; break; }
+        if (kw == 'truck' || kw == 'lorry') { vehicleKey = 'truck'; break; }
+        if (kw == 'bus') { vehicleKey = 'bus'; break; }
+        if (kw == 'auto' || kw == 'rickshaw') { vehicleKey = 'auto'; break; }
+        if (kw == 'electric' || kw == 'ev') { vehicleKey = 'ev_car'; break; }
+      }
+    }
+    final data = kVehicleRescueDatabase[vehicleKey];
+    if (data == null) return '';
+    final buf = StringBuffer()
+      ..writeln('VEHICLE RESCUE — ${data.vehicleType} (${data.fuelType}):')
+      ..writeln('DANGERS: ${data.dangers.join(' | ')}')
+      ..writeln('STEPS:');
+    for (final s in data.extractionSteps) {
+      buf.writeln('${s.stepNumber}. ${s.title}: ${s.detail}');
+    }
+    buf.writeln('FIRST AID TIPS: ${data.firstAidTips.join(' | ')}');
+    return buf.toString();
+  }
+
+  static String _emergencyNumbersText() =>
+      'INDIA EMERGENCY NUMBERS:\n'
+      '108 — Ambulance (call first for medical emergencies)\n'
+      '112 — National ERSS (all emergencies)\n'
+      '101 — Fire brigade\n'
+      '100 — Police\n'
+      '1033 — NHAI highway helpline (highway breakdowns)\n'
+      '14567 — Motor Accident Claims helpline';
+
+  static String _findHelpText() =>
+      'FINDING NEARBY HELP:\n'
+      '1. Call 108 — they dispatch ambulance AND locate nearest hospital.\n'
+      '2. Call 112 ERSS — coordinates police, fire, and medical.\n'
+      '3. Ask a bystander to search Google Maps for "hospital near me".\n'
+      '4. On national highways call 1033 (NHAI) — they know nearest facilities.\n'
+      '5. Any government hospital MUST treat accident victims free of cost.';
+
+  static String _vehicleAssistanceText() =>
+      'VEHICLE BREAKDOWN / TOWING:\n'
+      '1. Call 1033 (NHAI helpline) for highway breakdowns — free towing on many NHs.\n'
+      '2. Call your car insurance company — most have 24x7 roadside assistance.\n'
+      '3. Common helplines: Maruti 1800-102-1800 | Hyundai 1800-11-4645 | Tata 1800-209-7979.\n'
+      '4. Turn on hazard lights and place objects 50m behind to warn traffic.\n'
+      '5. For flat tyre: change only if road is safe and you know how.';
+
+  static String _legalText() =>
+      'GOOD SAMARITAN LAW (India — Motor Vehicles Act 2019):\n'
+      '- You CANNOT be arrested or harassed for helping an accident victim.\n'
+      '- You are NOT liable if the victim dies despite your help.\n'
+      '- You may give your name voluntarily but are NOT required to.\n'
+      '- Hospitals CANNOT demand payment before treating an accident victim.\n\n'
+      'ACCIDENT DOCUMENTATION:\n'
+      '1. Note registration numbers of vehicles involved.\n'
+      '2. Photograph the scene if safe.\n'
+      '3. File an FIR at nearest police station or call 100.\n'
+      '4. Notify your insurer within 24-48 hours. Keep all bills.';
 
   // ─── Prompt construction ──────────────────────────────────────────────────
 
@@ -493,3 +649,12 @@ final bystanderCoachServiceProvider =
     StateNotifierProvider<BystanderCoachService, BystanderCoachState>((ref) {
       return BystanderCoachService(ref);
     });
+
+/// Intent categories used by [BystanderCoachService._detectIntent].
+enum _CoachIntent {
+  medicalFirstAid,
+  vehicleRescue,
+  vehicleAssistance,
+  findHelp,
+  legalOrInsurance,
+}
