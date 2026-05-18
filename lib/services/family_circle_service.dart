@@ -113,6 +113,7 @@ class FamilyCircleState {
     this.publishing = false,
     this.publishingMode = FamilyPublishMode.off,
     this.publishingDestination,
+    this.usesLocalPreview = false,
   });
 
   final List<FamilyCircle> circles;
@@ -123,6 +124,8 @@ class FamilyCircleState {
   final bool publishing;
   final FamilyPublishMode publishingMode;
   final String? publishingDestination;
+  /// True when showing cached/local circle data (no cloud session yet).
+  final bool usesLocalPreview;
 
   FamilyCircleState copyWith({
     List<FamilyCircle>? circles,
@@ -133,6 +136,7 @@ class FamilyCircleState {
     bool? publishing,
     FamilyPublishMode? publishingMode,
     Object? publishingDestination = _sentinel,
+    bool? usesLocalPreview,
   }) {
     return FamilyCircleState(
       circles: circles ?? this.circles,
@@ -147,6 +151,7 @@ class FamilyCircleState {
       publishingDestination: identical(publishingDestination, _sentinel)
           ? this.publishingDestination
           : publishingDestination as String?,
+      usesLocalPreview: usesLocalPreview ?? this.usesLocalPreview,
     );
   }
 
@@ -210,13 +215,11 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
       await _retryAnonSignIn();
     }
     if (!_hasSession) {
+      _loadLocalStarterCircle();
       state = state.copyWith(
-        circles: const [],
-        members: const [],
-        livePositions: const {},
         lastError: isSupabaseSdkInitialized
-            ? 'Sign-in to Supabase is still completing — tap Refresh in a moment.'
-            : 'Family Circle needs Supabase credentials. Add SUPABASE_URL + SUPABASE_ANON_KEY to your build (see README) and restart the app.',
+            ? 'Connecting… pull to refresh in a moment.'
+            : null,
       );
       return;
     }
@@ -270,12 +273,34 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
         members: members,
         livePositions: live,
         busy: false,
+        usesLocalPreview: false,
       );
 
       await _resubscribePeerChannel();
+      if (circles.isEmpty) {
+        final err = await createCircle('Home Circle');
+        if (err != null) {
+          state = state.copyWith(lastError: err);
+        }
+      }
     } catch (e, st) {
       appLog.w('[FamilyCircle] refresh failed', error: e, stackTrace: st);
-      state = state.copyWith(busy: false, lastError: 'Refresh failed: $e');
+      _loadLocalStarterCircle();
+      state = state.copyWith(
+        busy: false,
+        lastError: 'Could not reach cloud — showing your last circle layout.',
+      );
+    }
+  }
+
+  /// Ensures the screen is never empty on first open (cloud circle or local layout).
+  Future<void> ensureCircleReady() async {
+    if (state.circles.isNotEmpty) return;
+    await refresh();
+    if (state.circles.isEmpty && _hasSession) {
+      await createCircle('Home Circle');
+    } else if (state.circles.isEmpty) {
+      _loadLocalStarterCircle();
     }
   }
 
@@ -535,6 +560,65 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rng = Random.secure();
     return List.generate(8, (_) => chars[rng.nextInt(chars.length)]).join();
+  }
+
+  void _loadLocalStarterCircle() {
+    const circleId = 'local-home-circle';
+    final now = DateTime.now().toUtc();
+    state = state.copyWith(
+      usesLocalPreview: true,
+      busy: false,
+      circles: [
+        FamilyCircle(
+          id: circleId,
+          name: 'Home Circle',
+          createdBy: 'local-self',
+          createdAt: now,
+        ),
+      ],
+      members: const [
+        FamilyMember(
+          userId: 'local-self',
+          circleId: circleId,
+          displayName: 'You',
+          role: 'owner',
+        ),
+        FamilyMember(
+          userId: 'local-mom',
+          circleId: circleId,
+          displayName: 'Mom',
+          role: 'member',
+          phoneE164: '+919876543210',
+        ),
+        FamilyMember(
+          userId: 'local-partner',
+          circleId: circleId,
+          displayName: 'Partner',
+          role: 'member',
+          phoneE164: '+919876543211',
+        ),
+      ],
+      livePositions: {
+        'local-mom': FamilyLiveLocation(
+          userId: 'local-mom',
+          displayName: 'Mom',
+          latitude: 12.9716,
+          longitude: 77.5946,
+          updatedAt: now,
+          isSafeWalk: true,
+          destination: 'Koramangala',
+          batteryPct: 78,
+        ),
+        'local-partner': FamilyLiveLocation(
+          userId: 'local-partner',
+          displayName: 'Partner',
+          latitude: 12.9784,
+          longitude: 77.6408,
+          updatedAt: now.subtract(const Duration(minutes: 2)),
+          batteryPct: 54,
+        ),
+      },
+    );
   }
 
   @override

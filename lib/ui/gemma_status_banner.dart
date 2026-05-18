@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/gemma_auto_downloader.dart';
+import '../services/gemma_model_manager.dart';
 
 /// Compact banner that surfaces the on-device Gemma 4 E4B install progress.
 ///
@@ -49,6 +50,8 @@ class GemmaStatusBanner extends ConsumerWidget {
       _ => (Icons.hourglass_top, 'Preparing…', '', const Color(0xFF6b7a99)),
     };
 
+    final displaySub = _displaySubtitle(status, sub);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -58,7 +61,13 @@ class GemmaStatusBanner extends ConsumerWidget {
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          if (status.state == GemmaAutoState.failed ||
+              status.state == GemmaAutoState.waitingForWifi) {
+            ref.read(gemmaAutoDownloaderProvider.notifier).retryDownload();
+          }
+          onTap?.call();
+        },
         borderRadius: BorderRadius.circular(14),
         child: Row(
           children: [
@@ -77,10 +86,12 @@ class GemmaStatusBanner extends ConsumerWidget {
                       letterSpacing: 0.3,
                     ),
                   ),
-                  if (sub.isNotEmpty) ...[
+                  if (displaySub.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
-                      sub,
+                      displaySub,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xFFB9C2D6),
                         fontSize: 11.5,
@@ -107,5 +118,17 @@ class GemmaStatusBanner extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _displaySubtitle(GemmaAutoStatus status, String templateSub) {
+    if (status.state == GemmaAutoState.failed && status.errorMessage != null) {
+      final msg = status.errorMessage!;
+      if (msg.contains('http')) {
+        return GemmaModelManager.userFacingDownloadError(msg);
+      }
+      if (msg.length > 200) return '${msg.substring(0, 197)}…';
+      return msg;
+    }
+    return templateSub;
   }
 }

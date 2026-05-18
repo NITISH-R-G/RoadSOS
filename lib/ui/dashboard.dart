@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' show min;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:roadsos/l10n/app_localizations.dart';
@@ -34,6 +35,7 @@ import 'sos_activity_log_screen.dart';
 import 'sos_countdown_widget.dart';
 import 'sos_side_effect_observer.dart';
 import 'status_indicator.dart';
+import 'widgets/roadsos_glass.dart';
 import 'vehicle_rescue_screen.dart';
 import 'triage_result_card.dart';
 import 'vital_scan_screen.dart';
@@ -58,8 +60,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   late Animation<double> _pulseAnimation;
 
   static const _kRed = Color(0xFFE8281A);
-  static const _kSurface = Color(0xFF111418);
-  static const _kNavBg = Color(0xFF0D1014);
 
   @override
   void initState() {
@@ -116,27 +116,42 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             const SOSSideEffectObserver(),
           ],
         ),
+        bottomNavigationBar: _emergencyEndBar(context),
       );
     }
 
-    // Idle → 3-tab layout.
+    // Idle → 3-tab layout with iOS-style glass chrome.
     return Scaffold(
-      backgroundColor: Colors.black,
+      extendBody: true,
+      backgroundColor: const Color(0xFF0A0C10),
       appBar: _idleAppBar(context),
-      body: Stack(
-        children: [
-          IndexedStack(
-            index: _tab,
-            children: [
-              _sosTab(context, drivingMode),
-              _toolsTab(context),
-              _profileTab(context),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0A0C10),
+              Color(0xFF141A22),
+              Color(0xFF0D1014),
             ],
           ),
-          const CrisisCompanionOverlay(),
-          const SafeWalkOverlay(),
-          const SOSSideEffectObserver(),
-        ],
+        ),
+        child: Stack(
+          children: [
+            IndexedStack(
+              index: _tab,
+              children: [
+                _sosTab(context, drivingMode),
+                _toolsTab(context),
+                _profileTab(context),
+              ],
+            ),
+            const CrisisCompanionOverlay(),
+            const SafeWalkOverlay(),
+            const SOSSideEffectObserver(),
+          ],
+        ),
       ),
       bottomNavigationBar: _navBar(context),
     );
@@ -193,6 +208,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ],
       ),
       actions: [
+        TextButton.icon(
+          onPressed: () => _confirmEndSos(context),
+          icon: Icon(Icons.close_rounded, color: scheme.error, size: 22),
+          label: Text(
+            'End',
+            style: TextStyle(
+              color: scheme.error,
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+            ),
+          ),
+        ),
         IconButton(
           tooltip: 'Activity log',
           icon: const Icon(Icons.fact_check_outlined),
@@ -204,9 +231,65 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ),
         ),
         const StatusIndicatorBar(),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
       ],
     );
+  }
+
+  Widget _emergencyEndBar(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: FilledButton.icon(
+            onPressed: () => _confirmEndSos(context),
+            style: FilledButton.styleFrom(
+              backgroundColor: scheme.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            icon: const Icon(Icons.check_circle_outline, size: 22),
+            label: const Text(
+              'End emergency session',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmEndSos(BuildContext context) async {
+    final ok = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: const Text('End emergency session?'),
+        content: const Text(
+          'Stops dispatch UI, beacons, and live sharing. '
+          'Call 112 if you still need real emergency help.',
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Keep active'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('End session'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) {
+      ref.read(emergencyOrchestratorProvider.notifier).endSosSession();
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -214,16 +297,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _navBar(BuildContext context) {
-    return NavigationBar(
-      selectedIndex: _tab,
-      onDestinationSelected: (i) => setState(() => _tab = i),
-      backgroundColor: _kNavBg,
-      surfaceTintColor: Colors.transparent,
-      shadowColor: Colors.black,
-      elevation: 8,
-      indicatorColor: _kRed.withAlpha(38),
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      destinations: const [
+    return RoadSosGlassNavBar(
+      child: NavigationBar(
+        selectedIndex: _tab,
+        onDestinationSelected: (i) => setState(() => _tab = i),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        elevation: 0,
+        height: 64,
+        indicatorColor: _kRed.withAlpha(48),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: const [
         NavigationDestination(
           icon: Icon(Icons.emergency_outlined, color: Colors.white54),
           selectedIcon: Icon(Icons.emergency, color: _kRed),
@@ -240,6 +325,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           label: 'My Profile',
         ),
       ],
+      ),
     );
   }
 
@@ -384,14 +470,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       children: [
         // Radar + status at the top
         const SizedBox(height: 160, child: MeshRadar()),
-        const SizedBox(height: 8),
-        const Align(
-          alignment: Alignment.centerRight,
-          child: Padding(
-            padding: EdgeInsets.only(right: 4, bottom: 4),
-            child: StatusIndicatorBar(),
-          ),
-        ),
         const SizedBox(height: 16),
 
         // Auto-Gemma install + readiness banner (hides itself when ready).
@@ -470,15 +548,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             MaterialPageRoute<void>(builder: (_) => const FamilyCircleScreen()),
           ),
         ),
-        _toolCard(
-          context,
-          icon: Icons.play_circle_fill,
-          color: const Color(0xFFB388FF),
-          title: 'Demo Mode (judges + first-time users)',
-          subtitle:
-              'Simulate a crash to walk the full SOS pipeline end-to-end. No real SMS or 112 dispatched.',
-          onTap: () => _runDemoMode(context),
-        ),
 
         const SizedBox(height: 20),
 
@@ -507,18 +576,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             MaterialPageRoute<void>(builder: (_) => const VitalScanScreen()),
           ),
         ),
-        _toolCard(
-          context,
-          icon: Icons.qr_code,
-          color: const Color(0xFF2196F3),
-          title: 'Medical ID',
-          subtitle: 'Show responders your blood type, allergies, contacts',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(builder: (_) => const MedicalCardScreen()),
-          ),
-        ),
-
         const SizedBox(height: 20),
 
         // ── Connectivity ────────────────────────────────────────────────
@@ -596,8 +653,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           context,
           icon: Icons.qr_code,
           color: const Color(0xFF00B8A0),
-          title: 'Medical ID Card',
-          subtitle: 'Quick-access health info for emergency responders',
+          title: 'Medical ID',
+          subtitle: 'Blood type, allergies, and emergency contacts for responders',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(builder: (_) => const MedicalCardScreen()),
@@ -661,17 +718,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: _kSurface,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          splashColor: color.withAlpha(20),
-          highlightColor: color.withAlpha(10),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
+      child: RoadSosGlassPanel(
+        borderRadius: BorderRadius.circular(18),
+        padding: EdgeInsets.zero,
+        tint: color.withValues(alpha: 0.06),
+        borderColor: color.withValues(alpha: 0.22),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(18),
+            splashColor: color.withAlpha(20),
+            highlightColor: color.withAlpha(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
               children: [
                 Container(
                   width: 46,
@@ -717,6 +778,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -778,6 +840,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 height: 1.35,
               ),
             ),
+            const SizedBox(height: 32),
+            TextButton(
+              onPressed: () => _confirmEndSos(context),
+              child: Text(
+                l10n.cancelSos,
+                style: TextStyle(color: scheme.error, fontSize: 16),
+              ),
+            ),
           ],
         ),
       ),
@@ -830,6 +900,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            RoadSosGlassPanel(
+              borderRadius: BorderRadius.circular(16),
+              padding: const EdgeInsets.all(14),
+              tint: const Color(0x22E8281A),
+              borderColor: const Color(0x55E8281A),
+              child: Row(
+                children: [
+                  const Icon(Icons.emergency, color: Color(0xFFE8281A)),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Emergency session active',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => _confirmEndSos(context),
+                    child: const Text(
+                      'End',
+                      style: TextStyle(
+                        color: Color(0xFFE8281A),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             if (state.dispatchChannels.isNotEmpty) ...[
               DispatchStatusPanel(
                 channels: state.dispatchChannels,
@@ -861,60 +964,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // ─────────────────────────────────────────────────────────────────────────
   // Safe Walk dialog
   // ─────────────────────────────────────────────────────────────────────────
-
-  // ──────────────────────────────────────────────────────────────────────
-  // Demo Mode — surfaces a clearly-labelled simulated crash so first-time
-  // users and judges can walk the full SOS pipeline (countdown → bystander
-  // mode → AI triage → dispatch panel → Bystander Coach hand-off) without
-  // ever sending real SMS, dialing 112, or waking up Family Circle peers.
-  // Per `critical-feature-audit.mdc`: Simulated content MUST be labelled
-  // simulated — done via the "SIMULATED" banner in the confirmation dialog.
-
-  Future<void> _runDemoMode(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Demo Mode — SIMULATED crash'),
-        content: const Text(
-          'Walks every screen in the SOS pipeline so you can see what RoadSOS does on a real accident.\n\n'
-          'This is fully simulated:\n'
-          '  • Bystander-mode SOS countdown starts (not self-SOS).\n'
-          '  • No real SMS, 112 dial, or WebRTC ring to your Family Circle.\n'
-          '  • The Bystander Coach screen opens after dispatch so you can rehearse the first-aid voice flow.\n'
-          '\nTap CANCEL on the SOS countdown any time to abort.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('CANCEL'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('RUN DEMO'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    if (!context.mounted) return;
-
-    // Bystander mode = the safety-validation agent treats it as severity 2
-    // baseline; even if dispatch fails (no Supabase / no SMS perm), the
-    // countdown + status panel still walk the same code path the real SOS
-    // does, which is the entire point of the demo.
-    await ref
-        .read(emergencyOrchestratorProvider.notifier)
-        .startSos(isBystander: true);
-
-    // Auto-open the Bystander Coach so the rehearsal hits the on-device
-    // Gemma-4 voice flow without the user having to tap a second time.
-    if (!context.mounted) return;
-    await Future<void>.delayed(const Duration(seconds: 12));
-    if (!context.mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const BystanderCoachScreen()),
-    );
-  }
 
   // ──────────────────────────────────────────────────────────────────────
   // Dialog uses a typed Nominatim hit so we capture the lat/lng alongside the

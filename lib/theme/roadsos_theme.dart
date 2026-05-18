@@ -31,14 +31,16 @@ abstract final class RoadSosTheme {
         color: RoadSosColors.abyss,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.zero,
+          borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: RoadSosColors.borderSubtle),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size.fromHeight(RoadSosLayout.minTap),
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           foregroundColor: Colors.white,
           backgroundColor: RoadSosColors.meshTeal,
         ),

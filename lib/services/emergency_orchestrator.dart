@@ -153,6 +153,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
   final Ref _ref;
   Timer? _countdownTimer;
   final _uuid = const Uuid();
+  /// When true, in-flight [_executeEmergencyPipeline] should exit without re-persisting SOS.
+  bool _pipelineAborted = false;
   static const Duration _sosLocationTimeout = Duration(seconds: 12);
   static const Duration _sosTriageTimeout = Duration(seconds: 10);
   static const Duration _dispatchChannelTimeout = Duration(seconds: 8);
@@ -166,14 +168,23 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
 
   Future<void> _restoreState() async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('sos_active') ?? false) {
-      _log('🚨 Recovering active SOS state after restart...', SOSPhase.active);
-      state = state.copyWith(
-        phase: SOSPhase.active,
-        incidentId: prefs.getString('sos_id'),
-      );
-      await WakeLockService.acquireForSos();
-    }
+    if (!(prefs.getBool('sos_active') ?? false)) return;
+
+    // Never trap the user in full-screen SOS after a cold start — the prior
+    // session cannot be faithfully rehydrated (dispatch log, triage, mesh, etc.).
+    await prefs.setBool('sos_active', false);
+    await prefs.setString('sos_id', '');
+    await WakeLockService.release();
+    unawaited(EmergencyBeaconService.instance.stop());
+    unawaited(
+      EmergencyNotificationService.instance.cancelSosNotification(),
+    );
+
+    _log(
+      'Previous emergency session cleared after app restart. '
+      'Tap SOS only if you still need help — use End session any time during SOS.',
+      SOSPhase.idle,
+    );
   }
 
   Future<void> _persistState(bool active) async {
@@ -245,27 +256,39 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     });
   }
 
-  void cancelSos() {
-    _countdownTimer?.cancel();
-    state = const SOSState();
-    _persistState(false);
-    unawaited(WakeLockService.release());
-    // Stop any in-progress TTS so the countdown announcement does not keep playing.
-    unawaited(_ref.read(voiceAssistantServiceProvider).stopSpeaking());
-    // Phase 9: Stop hardware beacon signals.
-    unawaited(EmergencyBeaconService.instance.stop());
-    state = state.copyWith(isBeaconActive: false);
+  void cancelSos() => endSosSession();
 
-    unawaited(EmergencyNotificationService.instance.cancelSosNotification());
+  /// Ends SOS from any phase (countdown, dispatch, active). Clears persisted
+  /// `sos_active` so the app never re-opens trapped in emergency UI.
+  void endSosSession() {
+    _pipelineAborted = true;
+    _countdownTimer?.cancel();
+    _teardownSosSideEffects();
+    state = const SOSState();
+    unawaited(_persistState(false));
     final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
     _log(l10n.orchestratorCancelled, SOSPhase.idle);
+    _pipelineAborted = false;
   }
 
+  void _teardownSosSideEffects() {
+    unawaited(WakeLockService.release());
+    unawaited(_ref.read(voiceAssistantServiceProvider).stopSpeaking());
+    unawaited(EmergencyBeaconService.instance.stop());
+    unawaited(EmergencyNotificationService.instance.cancelSosNotification());
+    unawaited(_ref.read(meshNetworkServiceProvider).stopBroadcasting());
+    unawaited(_ref.read(familyCircleServiceProvider.notifier).stopPublishing());
+  }
+
+  bool get _shouldAbortPipeline => _pipelineAborted || state.phase == SOSPhase.idle;
+
   Future<void> _executeEmergencyPipeline() async {
+    _pipelineAborted = false;
     final l10n = lookupAppLocalizations(_ref.read(appLocaleProvider));
     final locale = _ref.read(appLocaleProvider);
 
     Future<void> failOpenToActive(String detail) async {
+      if (_shouldAbortPipeline) return;
       _log(detail, SOSPhase.active, isError: true);
       state = state.copyWith(
         phase: SOSPhase.active,
@@ -278,6 +301,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       state = state.copyWith(isBeaconActive: true);
       await WakeLockService.acquireForSos();
     }
+
+    if (_shouldAbortPipeline) return;
 
     _log(l10n.orchestratorAcquiringLocation, SOSPhase.gpsLocking);
     state = state.copyWith(phase: SOSPhase.gpsLocking);
@@ -376,6 +401,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
           .syncLocalRegion(location.latitude, location.longitude),
     );
 
+    if (_shouldAbortPipeline) return;
+
     _log(l10n.orchestratorAiBrief, SOSPhase.triaging);
     state = state.copyWith(phase: SOSPhase.triaging);
 
@@ -468,6 +495,8 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       );
     }
 
+    if (_shouldAbortPipeline) return;
+
     _log(l10n.orchestratorDispatching, SOSPhase.dispatching);
     state = state.copyWith(
       phase: SOSPhase.dispatching,
@@ -494,7 +523,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
     _patchDispatchChannel(
       'family_link',
       DispatchChannelLifecycle.inProgress,
-      'Family tracking link…',
+      'Alerting Family Circle…',
     );
     _patchDispatchChannel(
       'nearby_services',
@@ -654,10 +683,10 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
               ),
           fallback: (
             ok: false,
-            detail: 'Family link timed out — share manually if needed.',
+            detail: 'Family Circle alert timed out — share manually if needed.',
           ),
-          timeoutDetail: 'Family link timed out — share manually if needed.',
-          failureDetail: 'Family link failed — share manually if needed.',
+          timeoutDetail: 'Family Circle alert timed out — share manually if needed.',
+          failureDetail: 'Family Circle alert failed — share manually if needed.',
         ).then((family) {
           _patchDispatchChannel(
             'family_link',
@@ -836,7 +865,7 @@ class EmergencyOrchestrator extends StateNotifier<SOSState> {
       ),
       DispatchChannelRow(
         id: 'family_link',
-        title: 'Family tracking link',
+        title: 'Family Circle',
         lifecycle: DispatchChannelLifecycle.pending,
         detail: 'Waiting…',
       ),
