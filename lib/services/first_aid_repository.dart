@@ -190,7 +190,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
         return (data['text'] as String).trim();
       }
       return null;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d('[FirstAid] Gemma 4 compose failed', error: e, stackTrace: st);
       return null;
     }
@@ -257,7 +257,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
         ''',
         [ftsQuery],
       );
-    } catch (e) {
+    } on Object {
       rows = [];
     }
 
@@ -272,7 +272,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS first_aid_fts USING fts5(
           ''',
           ['general OR trauma OR emergency OR india OR 108'],
         );
-      } catch (e) {
+      } on Object {
         rows = [];
       }
     }

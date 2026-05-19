@@ -48,7 +48,7 @@ class PredictiveSosPreloader {
           .head(Uri.parse('$url/functions/v1/triage-gemini'))
           .timeout(const Duration(seconds: 4));
       appLog.d('[Preloader] Supabase edge TLS session pre-warmed ✓');
-    } catch (_) {
+    } on Object catch (_) {
       // Expected on first cold-start or offline — not an error.
       appLog.d('[Preloader] Supabase pre-warm skipped (offline or timeout)');
     }
@@ -77,7 +77,7 @@ class PredictiveSosPreloader {
         ),
       );
       appLog.d('[Preloader] GPS chipset pre-warmed ✓');
-    } catch (_) {
+    } on Object catch (_) {
       appLog.d('[Preloader] GPS pre-warm skipped');
     }
   }

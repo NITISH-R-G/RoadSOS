@@ -36,7 +36,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
           _hi = hi;
         });
       }
-    } catch (_) {
+    } on Object catch (_) {
       if (mounted) {
         setState(() {
           _en = 'Privacy text asset missing.';

@@ -79,7 +79,7 @@ class NearbyServicesBroadcastService {
     SupabaseClient client;
     try {
       client = Supabase.instance.client;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w(
         '[NearbyBroadcast] Supabase not initialised',
         error: e,
@@ -165,7 +165,7 @@ class NearbyServicesBroadcastService {
         ok: false,
         detail: 'Failed — realtime send timed out (>3s).',
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[NearbyBroadcast] Broadcast failed', error: e, stackTrace: st);
       return NearbyBroadcastOutcome(
         ok: false,
@@ -176,7 +176,7 @@ class NearbyServicesBroadcastService {
       if (channel != null) {
         try {
           await client.removeChannel(channel);
-        } catch (_) {
+        } on Object catch (_) {
           /* best-effort */
         }
       }

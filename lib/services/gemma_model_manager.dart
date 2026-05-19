@@ -78,7 +78,7 @@ class GemmaModelManager {
       final file = File(await localModelPath());
       if (!file.existsSync()) return false;
       return file.lengthSync() >= expectedMinBytes;
-    } catch (_) {
+    } on Object catch (_) {
       return false;
     }
   }
@@ -88,7 +88,7 @@ class GemmaModelManager {
     try {
       final file = File(await localModelPath());
       return file.existsSync() ? file.lengthSync() : 0;
-    } catch (_) {
+    } on Object catch (_) {
       return 0;
     }
   }
@@ -98,7 +98,7 @@ class GemmaModelManager {
     try {
       final tmp = File('${await localModelPath()}.download');
       return tmp.existsSync() ? tmp.lengthSync() : 0;
-    } catch (_) {
+    } on Object catch (_) {
       return 0;
     }
   }

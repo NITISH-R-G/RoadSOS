@@ -137,7 +137,7 @@ class CrashDetectionService {
           distanceFilter: 0,
         ),
       ).listen(_onPosition, onError: (Object _) => _gpsSpeedUsable = false);
-    } catch (_) {
+    } on Object catch (_) {
       _gpsSpeedUsable = false;
     }
   }

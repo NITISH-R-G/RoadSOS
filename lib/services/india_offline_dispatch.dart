@@ -54,7 +54,7 @@ class IndiaOfflineDispatch {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
         appLog.d('India: launched $desc');
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('India: could not launch $desc', error: e, stackTrace: st);
     }
   }
@@ -66,7 +66,7 @@ class IndiaOfflineDispatch {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
         appLog.d('India USSD intent: $code');
       }
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('India USSD launch failed', error: e, stackTrace: st);
     }
   }

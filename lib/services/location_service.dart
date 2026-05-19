@@ -82,7 +82,7 @@ class LocationService {
         '[Location] GPS fix acquired (attempt 1): ${fix.accuracy.round()}m',
       );
       return fix;
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d(
         '[Location] Attempt 1 failed ($e) — retrying at medium accuracy',
       );
@@ -103,7 +103,7 @@ class LocationService {
         '[Location] GPS fix acquired (attempt 2 medium): ${fix.accuracy.round()}m',
       );
       return fix;
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[Location] Attempt 2 failed ($e) — trying last known from OS');
     }
 
@@ -118,7 +118,7 @@ class LocationService {
         );
         return fix;
       }
-    } catch (_) {}
+    } on Object catch (_) {}
 
     return _fallbackLocation('All location attempts failed');
   }

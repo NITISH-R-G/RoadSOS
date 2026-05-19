@@ -94,7 +94,7 @@ class _SafeWalkNavigatorScreenState
   Future<void> _speak(String text) async {
     try {
       await ref.read(voiceAssistantServiceProvider).speak(text);
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 
   @override
@@ -124,7 +124,7 @@ class _SafeWalkNavigatorScreenState
       // Re-center the map gently on the user.
       try {
         _mapController.move(mePoint, _mapController.camera.zoom);
-      } catch (_) {}
+      } on Object catch (_) {}
     }
 
     return Scaffold(

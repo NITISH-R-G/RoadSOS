@@ -180,7 +180,7 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
         return (data['text'] as String).trim();
       }
       return null;
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.d(
         '[Assistant] Gemma 4 cloud generate failed',
         error: e,
@@ -249,7 +249,7 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
         }
       }
       return _detectSceneContextLocal(input);
-    } catch (_) {
+    } on Object catch (_) {
       return _detectSceneContextLocal(input);
     }
   }
@@ -295,7 +295,7 @@ class RoadSosAssistantService extends StateNotifier<AssistantState> {
       );
       if (line.length > 240) line = '${line.substring(0, 240)}…';
       return line.isEmpty ? null : line;
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }

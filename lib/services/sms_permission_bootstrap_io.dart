@@ -17,7 +17,7 @@ Future<void> requestSmsPermissionEarlyIfAndroidImpl() async {
     await Permission
         .sms
         .status; // keep plugin warmed for health checks if needed
-  } catch (e, st) {
+  } on Object catch (e, st) {
     appLog.w('Startup SMS permission request failed', error: e, stackTrace: st);
   }
 }

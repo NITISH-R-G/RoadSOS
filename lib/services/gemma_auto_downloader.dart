@@ -107,7 +107,7 @@ class GemmaAutoDownloader extends StateNotifier<GemmaAutoStatus> {
           unawaited(_kick());
         }
       });
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[GemmaAuto] bootstrap failed', error: e, stackTrace: st);
       state = state.copyWith(
         state: GemmaAutoState.failed,
@@ -193,7 +193,7 @@ class GemmaAutoDownloader extends StateNotifier<GemmaAutoStatus> {
         state: GemmaAutoState.failed,
         errorMessage: e.message,
       );
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[GemmaAuto] download failed', error: e, stackTrace: st);
       state = state.copyWith(
         state: GemmaAutoState.failed,

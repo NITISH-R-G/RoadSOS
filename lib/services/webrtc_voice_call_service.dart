@@ -123,7 +123,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     try {
       return isSupabaseSdkInitialized &&
           Supabase.instance.client.auth.currentSession != null;
-    } catch (_) {
+    } on Object catch (_) {
       return false;
     }
   }
@@ -137,7 +137,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
   Future<void> _subscribeToIncomingCalls() async {
     try {
       _ringChannel?.unsubscribe();
-    } catch (_) {}
+    } on Object catch (_) {}
 
     final client = Supabase.instance.client;
     final uid = client.auth.currentUser!.id;
@@ -169,7 +169,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
                 startedAt: DateTime.now(),
               );
               unawaited(_ringPulse());
-            } catch (e, st) {
+            } on Object catch (e, st) {
               appLog.w('[WebRTC] ring decode failed', error: e, stackTrace: st);
             }
           },
@@ -235,7 +235,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
       });
 
       return (ok: true, error: null);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[WebRTC] startCall failed', error: e, stackTrace: st);
       await _teardown();
       state = state.copyWith(
@@ -297,7 +297,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
             'answered_at': DateTime.now().toUtc().toIso8601String(),
           })
           .eq('id', callId);
-    } catch (e, st) {
+    } on Object catch (e, st) {
       appLog.w('[WebRTC] answer failed', error: e, stackTrace: st);
       await _teardown();
       state = state.copyWith(
@@ -314,7 +314,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     if (callId != null && peerId != null) {
       try {
         await _sendSignal(callId, peerId, 'bye', {'reason': reason});
-      } catch (_) {}
+      } on Object catch (_) {}
       await _markCall(callId, reason);
     }
     await _teardown();
@@ -333,7 +333,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     try {
       await Helper.setSpeakerphoneOn(on);
       state = state.copyWith(speakerOn: on);
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[WebRTC] speaker toggle failed: $e');
     }
   }
@@ -384,7 +384,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
   Future<void> _subscribeToSignals(String callId) async {
     try {
       _signalChannel?.unsubscribe();
-    } catch (_) {}
+    } on Object catch (_) {}
     final client = Supabase.instance.client;
     _signalChannel = client
         .channel('public:voice_call_signals:call-$callId')
@@ -403,7 +403,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
                   ? jsonDecode(row['payload'] as String) as Map<String, dynamic>
                   : (row['payload'] as Map).cast<String, dynamic>();
               await _handleIncomingSignal(kind, pl);
-            } catch (e, st) {
+            } on Object catch (e, st) {
               appLog.d('[WebRTC] signal decode failed', stackTrace: st);
             }
           },
@@ -450,7 +450,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     while (_pendingRemoteIce.isNotEmpty) {
       try {
         await _pc!.addCandidate(_pendingRemoteIce.removeAt(0));
-      } catch (e) {
+      } on Object catch (e) {
         appLog.d('[WebRTC] addCandidate pending failed: $e');
       }
     }
@@ -484,7 +484,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
             'ended_by': client.auth.currentUser!.id,
           })
           .eq('id', callId);
-    } catch (e) {
+    } on Object catch (e) {
       appLog.d('[WebRTC] _markCall failed: $e');
     }
   }
@@ -494,19 +494,19 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     _outgoingTimeout = null;
     try {
       await _pc?.close();
-    } catch (_) {}
+    } on Object catch (_) {}
     _pc = null;
     try {
       for (final track in (_localStream?.getTracks() ?? <MediaStreamTrack>[])) {
         await track.stop();
       }
       await _localStream?.dispose();
-    } catch (_) {}
+    } on Object catch (_) {}
     _localStream = null;
     _pendingRemoteIce.clear();
     try {
       _signalChannel?.unsubscribe();
-    } catch (_) {}
+    } on Object catch (_) {}
     _signalChannel = null;
   }
 
@@ -519,7 +519,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
         await HapticFeedback.heavyImpact();
         await Future<void>.delayed(const Duration(milliseconds: 180));
         await HapticFeedback.lightImpact();
-      } catch (_) {}
+      } on Object catch (_) {}
       await Future<void>.delayed(const Duration(milliseconds: 900));
     }
   }
@@ -529,7 +529,7 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     unawaited(_teardown());
     try {
       _ringChannel?.unsubscribe();
-    } catch (_) {}
+    } on Object catch (_) {}
     super.dispose();
   }
 }
