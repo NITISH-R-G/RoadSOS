@@ -14,7 +14,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 const allowOrigin = Deno.env.get("FAMILY_TRACK_ALLOWED_ORIGIN") ?? "";
 const cors = {
   // Default is same-origin only; set FAMILY_TRACK_ALLOWED_ORIGIN="*" explicitly for demos.
-  ...(allowOrigin.trim() ? { "Access-Control-Allow-Origin": allowOrigin.trim() } : {}),
+  ...(allowOrigin.trim() && allowOrigin.trim() !== "null" ? { "Access-Control-Allow-Origin": allowOrigin.trim() } : {}),
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, accept",
   "Access-Control-Allow-Methods": "GET, OPTIONS",

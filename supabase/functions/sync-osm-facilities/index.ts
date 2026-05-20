@@ -13,6 +13,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import * as crypto from "node:crypto";
 
 type BBox = { south: number; west: number; north: number; east: number };
 
@@ -88,7 +89,12 @@ Deno.serve(async (req: Request) => {
   if (trigger) {
     const auth = req.headers.get("authorization") ?? "";
     const expected = `Bearer ${trigger}`;
-    if (auth !== expected) {
+
+    const encoder = new TextEncoder();
+    const a = encoder.encode(auth);
+    const b = encoder.encode(expected);
+
+    if (a.byteLength !== b.byteLength || !crypto.timingSafeEqual(a, b)) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json; charset=utf-8" },
