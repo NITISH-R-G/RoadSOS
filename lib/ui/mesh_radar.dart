@@ -147,7 +147,7 @@ class _SweepingDotPainter extends CustomPainter {
   final double orbitRadius;
 
   const _SweepingDotPainter(this.animation, this.orbitRadius)
-      : super(repaint: animation);
+    : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -190,7 +190,9 @@ class _SweepingDotPainter extends CustomPainter {
 
     // Outer glow
     final outerGlowPaint = Paint()
-      ..color = const Color(0xFF00FFFF).withValues(alpha: 0.2 + (pulseValue * 0.3))
+      ..color = const Color(
+        0xFF00FFFF,
+      ).withValues(alpha: 0.2 + (pulseValue * 0.3))
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10 + (pulseValue * 20));
     canvas.drawCircle(Offset(dotX, dotY), 5 + (pulseValue * 4), outerGlowPaint);
 
@@ -202,7 +204,9 @@ class _SweepingDotPainter extends CustomPainter {
 
     // Core dot
     final dotPaint = Paint()
-      ..color = const Color(0xFF00FFFF).withValues(alpha: 0.3 + (pulseValue * 0.7))
+      ..color = const Color(
+        0xFF00FFFF,
+      ).withValues(alpha: 0.3 + (pulseValue * 0.7))
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(dotX, dotY), 5, dotPaint);
 
