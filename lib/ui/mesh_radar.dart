@@ -57,62 +57,13 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
               ...List.generate(5, (i) => _buildCircle(i)),
 
               // Orbiting dot with pulsing glow
-              // ⚡ Bolt Optimization: Use RotationTransition for the static radar beam
-              // to prevent expensive custom painting on every frame, while keeping the
-              // dynamically pulsing dot in the AnimatedBuilder.
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  RotationTransition(
-                    turns: _rotationController,
-                    child: const CustomPaint(
-                      painter: _StaticRadarBeamPainter(75.0),
-                      size: Size(180, 180),
-                    ),
-                  ),
-                  AnimatedBuilder(
-                    animation: _rotationController,
-                    builder: (context, child) {
-                      final currentAngle = _rotationController.value * 2 * pi;
-                      final orbitRadius = 75.0;
-                      final currentX = cos(currentAngle) * orbitRadius;
-                      final currentY = sin(currentAngle) * orbitRadius;
-
-                      // Pulsing effect using sine wave
-                      final pulseValue =
-                          (sin(currentAngle * 3) + 1) /
-                          2; // Range 0 to 1, pulses every ~1.3 seconds
-
-                      return Transform.translate(
-                        offset: Offset(currentX, currentY),
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(
-                              0xFF00FFFF,
-                            ).withValues(alpha: 0.3 + (pulseValue * 0.7)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF00FFFF),
-                                blurRadius: 5 + (pulseValue * 15),
-                                spreadRadius: 1 + (pulseValue * 3),
-                              ),
-                              BoxShadow(
-                                color: const Color(
-                                  0xFF00FFFF,
-                                ).withValues(alpha: 0.2 + (pulseValue * 0.3)),
-                                blurRadius: 10 + (pulseValue * 20),
-                                spreadRadius: 2 + (pulseValue * 4),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+              // ⚡ Bolt Optimization: Use CustomPainter for both the sweeping radar beam
+              // and the pulsing dot, passing the _rotationController to the repaint parameter.
+              // This completely bypasses the widget tree and delegates positioning, pulsing,
+              // and glow logic to the canvas layer, saving thousands of widget rebuilds.
+              CustomPaint(
+                painter: _SweepingDotPainter(_rotationController, 75.0),
+                size: const Size(180, 180),
               ),
 
               // Discovered Nodes
@@ -191,57 +142,77 @@ class _MeshRadarState extends ConsumerState<MeshRadar>
   }
 }
 
-class _StaticRadarBeamPainter extends CustomPainter {
+class _SweepingDotPainter extends CustomPainter {
+  final Animation<double> animation;
   final double orbitRadius;
 
-  const _StaticRadarBeamPainter(this.orbitRadius);
+  const _SweepingDotPainter(this.animation, this.orbitRadius)
+    : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
+    final currentAngle = animation.value * 2 * pi;
 
-    // Draw sweeping radar beam from center to orbiting dot (fixed at angle 0)
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(currentAngle);
+
+    // 1. Draw the static beam pointing at angle 0 (because we rotated the canvas)
     final dotX = orbitRadius;
-    final dotY = 0.0;
+    const dotY = 0.0;
 
     final beamPaint = Paint()
       ..color = const Color(0xFF00FFFF).withValues(alpha: 0.25)
       ..style = PaintingStyle.fill;
 
-    // Draw a triangular beam shape from center to dot
-    final beamWidth = 0.3; // Width of the beam in radians
-
+    const beamWidth = 0.3; // Width of the beam in radians
     final path = Path();
-    path.moveTo(center.dx, center.dy); // Start at center
+    path.moveTo(0, 0);
 
-    // First edge of beam
     final angle1 = -beamWidth / 2;
-    path.lineTo(
-      center.dx + cos(angle1) * orbitRadius,
-      center.dy + sin(angle1) * orbitRadius,
-    );
+    path.lineTo(cos(angle1) * orbitRadius, sin(angle1) * orbitRadius);
+    path.lineTo(dotX, dotY);
 
-    // Arc to dot
-    path.lineTo(center.dx + dotX, center.dy + dotY);
-
-    // Second edge of beam
     final angle2 = beamWidth / 2;
-    path.lineTo(
-      center.dx + cos(angle2) * orbitRadius,
-      center.dy + sin(angle2) * orbitRadius,
-    );
-
+    path.lineTo(cos(angle2) * orbitRadius, sin(angle2) * orbitRadius);
     path.close();
+
     canvas.drawPath(path, beamPaint);
 
-    // Add a glow effect with lighter color
     final glowPaint = Paint()
       ..color = const Color(0xFF00FFFF).withValues(alpha: 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-
     canvas.drawPath(path, glowPaint);
+
+    // 2. Draw the pulsing dot at (dotX, dotY)
+    final pulseValue = (sin(currentAngle * 3) + 1) / 2;
+
+    // Outer glow
+    final outerGlowPaint = Paint()
+      ..color = const Color(
+        0xFF00FFFF,
+      ).withValues(alpha: 0.2 + (pulseValue * 0.3))
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10 + (pulseValue * 20));
+    canvas.drawCircle(Offset(dotX, dotY), 5 + (pulseValue * 4), outerGlowPaint);
+
+    // Inner glow
+    final innerGlowPaint = Paint()
+      ..color = const Color(0xFF00FFFF)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 5 + (pulseValue * 15));
+    canvas.drawCircle(Offset(dotX, dotY), 5 + (pulseValue * 3), innerGlowPaint);
+
+    // Core dot
+    final dotPaint = Paint()
+      ..color = const Color(
+        0xFF00FFFF,
+      ).withValues(alpha: 0.3 + (pulseValue * 0.7))
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(dotX, dotY), 5, dotPaint);
+
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _SweepingDotPainter oldDelegate) => true;
 }
