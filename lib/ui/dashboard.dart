@@ -530,10 +530,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           color: const Color(0xFF9C27B0),
           title: 'Mesh Chat',
           subtitle: 'Offline Bluetooth messaging — no signal needed',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(builder: (_) => const MeshChatScreen()),
-          ),
+          onTap: () {
+            if (ref.read(emergencyOrchestratorProvider).phase !=
+                SOSPhase.idle) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Mesh Chat is disabled during an active SOS to preserve the BLE beacon channel.',
+                  ),
+                ),
+              );
+              return;
+            }
+            Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (_) => const MeshChatScreen()),
+            );
+          },
         ),
         _toolCard(
           context,
@@ -1060,8 +1073,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 child: ElevatedButton.icon(
                   onPressed: () {
                     final destLatLng = selectedDestinationLatLng;
-                    Navigator.pop(ctx);
                     if (destLatLng != null) {
+                      Navigator.pop(ctx);
                       // Push the full Safe Walk Navigator screen — AirTag arrow
                       // + OSRM turn-by-turn + voice + 30 m geofence auto-end.
                       // The navigator itself calls startSafeWalk() so the dead-
@@ -1077,19 +1090,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     } else {
                       // Fallback: timer-only mode (no nav). Lets users who don't
                       // pick from the autocomplete still get dead-man coverage.
-                      ref
-                          .read(proactiveMonitorProvider.notifier)
-                          .startSafeWalk(
-                            selectedDestination.trim().isEmpty
-                                ? 'your destination'
-                                : selectedDestination.trim(),
-                            const Duration(minutes: 30),
-                          );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Dead-man timer started (no map — pick a suggestion to unlock navigation).',
+                      // Requires explicit acknowledgment to prevent silent failure if user expected map.
+                      showDialog<void>(
+                        context: ctx,
+                        builder: (confirmCtx) => AlertDialog(
+                          title: const Text('Timer-Only Mode'),
+                          content: const Text(
+                            'No specific destination selected.\n\nSafe Walk will start in timer-only mode without map navigation. An automatic SOS will trigger if you do not check in before the ETA.',
                           ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(confirmCtx),
+                              child: const Text('CANCEL'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(confirmCtx);
+                                Navigator.pop(ctx);
+                                ref
+                                    .read(proactiveMonitorProvider.notifier)
+                                    .startSafeWalk(
+                                      selectedDestination.trim().isEmpty
+                                          ? 'your destination'
+                                          : selectedDestination.trim(),
+                                      const Duration(minutes: 30),
+                                    );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Dead-man timer started.'),
+                                  ),
+                                );
+                              },
+                              child: const Text('CONTINUE'),
+                            ),
+                          ],
                         ),
                       );
                     }
