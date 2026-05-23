@@ -207,7 +207,9 @@ class VoiceAssistantService {
             confirmed = true;
           }
         },
-        listenOptions: SpeechListenOptions(listenFor: const Duration(seconds: 5)),
+        listenOptions: SpeechListenOptions(
+          listenFor: const Duration(seconds: 5),
+        ),
       );
 
       await Future<void>.delayed(const Duration(seconds: 5));

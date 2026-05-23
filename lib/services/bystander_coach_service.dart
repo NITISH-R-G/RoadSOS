@@ -173,7 +173,10 @@ Response rules:
 
     var heard = '';
     await _stt.listen(
-      listenOptions: SpeechListenOptions(listenFor: const Duration(seconds: 12), pauseFor: const Duration(seconds: 3)),
+      listenOptions: SpeechListenOptions(
+        listenFor: const Duration(seconds: 12),
+        pauseFor: const Duration(seconds: 3),
+      ),
       onResult: (r) {
         heard = r.recognizedWords;
         if (mounted) {

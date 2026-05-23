@@ -205,7 +205,7 @@ class GemmaLocalService {
       await _chat!.addQuery(Message.text(text: prompt, isUser: true));
       await for (final token in _chat!.generateChatResponseAsync()) {
         if (token is TextResponse) {
-           yield token.token;
+          yield token.token;
         }
       }
     } on Object catch (e, st) {
