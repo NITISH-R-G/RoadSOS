@@ -15,7 +15,7 @@ import 'gemma_model_manager.dart';
 /// is unreachable (no internet, server timeout, or offline crash scenario).
 ///
 /// Model:    gemma-4-e4b-it-Q4_K_M.gguf  (~2.4 GB)
-/// Runtime:  MediaPipe LiteRT via flutter_gemma 0.3.x
+/// Runtime:  MediaPipe LiteRT via flutter_gemma 0.16.x
 /// Download: GemmaModelManager — prompted once during onboarding
 ///
 /// If the model has not been downloaded, all inference methods return null and
@@ -30,9 +30,10 @@ class GemmaLocalService {
   bool _initialized = false;
   bool _available = false;
   String? _lastError;
-  FlutterGemmaPlugin? _plugin;
+  InferenceModel? _model;
+  InferenceChat? _chat;
 
-  bool get isAvailable => _available && _plugin != null;
+  bool get isAvailable => _available && _model != null && _chat != null;
   bool get isInitialized => _initialized;
   String? get lastError => _lastError;
 
@@ -52,8 +53,8 @@ class GemmaLocalService {
     }
 
     try {
-      _plugin = await _initFlutterGemma();
-      _available = _plugin != null;
+      final success = await _initFlutterGemma();
+      _available = success;
       if (_available) {
         appLog.i('[GemmaLocal] ✓ Gemma 4 E4B on-device ready');
       } else {
@@ -71,7 +72,7 @@ class GemmaLocalService {
 
   // ── Real flutter_gemma initialization ─────────────────────────────────────
 
-  Future<FlutterGemmaPlugin?> _initFlutterGemma() async {
+  Future<bool> _initFlutterGemma() async {
     // Step 1: Verify model file exists and passes basic size check.
     // The model is downloaded by GemmaModelManager during onboarding.
     // Source: https://huggingface.co/google/gemma-4-e4b-it-GGUF
@@ -83,7 +84,7 @@ class GemmaLocalService {
         '[GemmaLocal] Model not found at: $modelPath\n'
         '  → Download from HuggingFace during onboarding (GemmaModelDownloadScreen)',
       );
-      return null;
+      return false;
     }
 
     final fileSizeBytes = modelFile.lengthSync();
@@ -94,7 +95,7 @@ class GemmaLocalService {
         '${(GemmaModelManager.expectedMinBytes / 1024 / 1024).round()} MB). '
         'Re-download needed.',
       );
-      return null;
+      return false;
     }
 
     appLog.i(
@@ -103,67 +104,36 @@ class GemmaLocalService {
     );
 
     // Step 2: Load model into MediaPipe LiteRT runtime.
-    // flutter_gemma 0.3.x exposes loadModel({required String modelPath}).
-    // We try this first; fall back to passing modelPath in init() if unavailable.
-    final plugin = FlutterGemmaPlugin.instance;
-    bool loadedViaLoadModel = false;
-
     try {
-      // ignore: avoid_dynamic_calls
-      await (plugin as dynamic).loadModel(modelPath: modelPath);
-      loadedViaLoadModel = true;
-      appLog.d('[GemmaLocal] loadModel() succeeded');
-    } on NoSuchMethodError {
-      appLog.d(
-        '[GemmaLocal] loadModel() not in this build — will pass via init()',
+      final plugin = FlutterGemmaPlugin.instance;
+
+      // Initialize if needed
+      await FlutterGemma.initialize();
+
+      // We can create the InferenceModel directly bypassing the active model
+      // since the plugin instance provides `createModel`
+      _model = await plugin.createModel(
+        modelType: ModelType.gemma4,
+        maxTokens: 512,
       );
-    } on Object catch (e) {
-      appLog.w('[GemmaLocal] loadModel() threw: $e — trying init() fallback');
-    }
 
-    // Step 3: Configure inference parameters.
-    // temperature 0.3 → low randomness (triage needs consistent output)
-    // topK 40 → sufficient for multilingual token diversity
-    // maxTokens 512 → enough for structured JSON response
-    try {
-      if (loadedViaLoadModel) {
-        await plugin.init(
-          maxTokens: 512,
-          temperature: 0.3,
-          topK: 40,
-          randomSeed: 42,
-        );
-      } else {
-        // Some 0.3.x builds accept modelPath in init() directly.
-        try {
-          // ignore: avoid_dynamic_calls
-          await (plugin as dynamic).init(
-            modelPath: modelPath,
-            maxTokens: 512,
-            temperature: 0.3,
-            topK: 40,
-            randomSeed: 42,
-          );
-        } on NoSuchMethodError {
-          await plugin.init(
-            maxTokens: 512,
-            temperature: 0.3,
-            topK: 40,
-            randomSeed: 42,
-          );
-        }
-      }
+      // Create a chat session with inference parameters
+      _chat = await _model!.createChat(
+        temperature: 0.3,
+        topK: 40,
+        randomSeed: 42,
+      );
+
+      appLog.i('[GemmaLocal] Inference chat created ✓');
+      return true;
     } on Object catch (e, st) {
       appLog.w(
         '[GemmaLocal] flutter_gemma init() failed',
         error: e,
         stackTrace: st,
       );
-      return null;
+      return false;
     }
-
-    appLog.i('[GemmaLocal] FlutterGemmaPlugin.init() ✓');
-    return plugin;
   }
 
   // ── Public inference API ───────────────────────────────────────────────────
@@ -176,7 +146,7 @@ class GemmaLocalService {
     required int severityHint,
     String languageCode = 'en',
   }) async {
-    if (!_available || _plugin == null) return null;
+    if (!_available || _chat == null) return null;
 
     final prompt = _buildTriagePrompt(
       transcript: transcript,
@@ -186,8 +156,13 @@ class GemmaLocalService {
     );
 
     try {
-      final raw = await _plugin!.getResponse(prompt: prompt);
-      if (raw == null || raw.isEmpty) return null;
+      await _chat!.addQuery(Message.text(text: prompt, isUser: true));
+      final rawResponse = await _chat!.generateChatResponse();
+
+      if (rawResponse is! TextResponse) return null;
+      final raw = rawResponse.token;
+
+      if (raw.isEmpty) return null;
       final parsed = _parseJSON(raw);
       if (parsed != null) {
         appLog.d(
@@ -209,10 +184,13 @@ class GemmaLocalService {
 
   /// Free-form on-device generation — for voice assistant and first-aid Q&A.
   Future<String?> generate(String prompt) async {
-    if (!_available || _plugin == null) return null;
+    if (!_available || _chat == null) return null;
     try {
-      final result = await _plugin!.getResponse(prompt: prompt);
-      return result;
+      await _chat!.addQuery(Message.text(text: prompt, isUser: true));
+      final rawResponse = await _chat!.generateChatResponse();
+
+      if (rawResponse is! TextResponse) return null;
+      return rawResponse.token;
     } on Object catch (e, st) {
       appLog.w('[GemmaLocal] generate() failed', error: e, stackTrace: st);
       _available = false;
@@ -222,10 +200,13 @@ class GemmaLocalService {
 
   /// Stream tokens from on-device Gemma 4 E4B for real-time UI display.
   Stream<String> generateStream(String prompt) async* {
-    if (!_available || _plugin == null) return;
+    if (!_available || _chat == null) return;
     try {
-      await for (final token in _plugin!.getResponseAsync(prompt: prompt)) {
-        if (token != null) yield token;
+      await _chat!.addQuery(Message.text(text: prompt, isUser: true));
+      await for (final token in _chat!.generateChatResponseAsync()) {
+        if (token is TextResponse) {
+           yield token.token;
+        }
       }
     } on Object catch (e, st) {
       appLog.w(

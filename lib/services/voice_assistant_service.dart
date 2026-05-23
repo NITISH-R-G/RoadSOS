@@ -154,7 +154,7 @@ class VoiceAssistantService {
         final words = result.recognizedWords.toLowerCase();
         if (_matchesCancel(words)) cancelled = true;
       },
-      listenFor: listenFor,
+      listenOptions: SpeechListenOptions(listenFor: listenFor),
     );
 
     await Future<void>.delayed(listenFor + const Duration(milliseconds: 200));
@@ -207,7 +207,7 @@ class VoiceAssistantService {
             confirmed = true;
           }
         },
-        listenFor: const Duration(seconds: 5),
+        listenOptions: SpeechListenOptions(listenFor: const Duration(seconds: 5)),
       );
 
       await Future<void>.delayed(const Duration(seconds: 5));
