@@ -23,16 +23,19 @@ class OfflineTriageClassifier {
     required String transcript,
     required int severityHint,
   }) {
+    // ⚡ Bolt Optimization: Only call toLowerCase() once and reuse the result.
+    final lowerTranscript = transcript.toLowerCase();
+
     final severity = _mergeSeverity(
-      _estimateSeverityFromText(transcript),
+      _estimateSeverityFromText(lowerTranscript),
       severityHint,
     );
-    final services = _extractServicesFromText(transcript);
+    final services = _extractServicesFromText(lowerTranscript);
 
     return OfflineClassification(
       severityLevel: severity,
       requiredServices: services,
-      firstAidQuery: _buildFirstAidQuery(transcript),
+      firstAidQuery: _buildFirstAidQuery(lowerTranscript),
     );
   }
 
@@ -45,8 +48,7 @@ class OfflineTriageClassifier {
         : ((fromText + h + 1) ~/ 2).clamp(1, 5);
   }
 
-  int _estimateSeverityFromText(String text) {
-    final lower = text.toLowerCase();
+  int _estimateSeverityFromText(String lower) {
     if (lower.contains('dead') ||
         lower.contains('fatal') ||
         lower.contains('not breathing')) {
@@ -75,8 +77,7 @@ class OfflineTriageClassifier {
     return 3;
   }
 
-  List<String> _extractServicesFromText(String text) {
-    final lower = text.toLowerCase();
+  List<String> _extractServicesFromText(String lower) {
     final services = <String>{'ambulance'};
     if (lower.contains('fire') ||
         lower.contains('smoke') ||
@@ -109,8 +110,7 @@ class OfflineTriageClassifier {
     return services.toList();
   }
 
-  String _buildFirstAidQuery(String text) {
-    final lower = text.toLowerCase();
+  String _buildFirstAidQuery(String lower) {
     if (lower.contains('bleed')) {
       return 'severe bleeding wound management tourniquet';
     }
