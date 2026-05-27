@@ -12,6 +12,7 @@ import '../services/privacy_consent_service.dart';
 import 'good_samaritan_law_screen.dart';
 import 'offline_map_screen.dart';
 import 'permission_onboarding_screen.dart';
+import '../services/emergency_orchestrator.dart';
 import 'privacy_policy_screen.dart';
 import 'sos_activity_log_screen.dart';
 import 'mesh_chat_screen.dart';
@@ -187,10 +188,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Icons.bluetooth,
             l10n.meshConfigTitle,
             l10n.meshConfigSubtitle,
-            onTap: () => Navigator.push<void>(
-              context,
-              MaterialPageRoute<void>(builder: (_) => const MeshChatScreen()),
-            ),
+            onTap: () {
+              if (ref.read(emergencyOrchestratorProvider).phase !=
+                  SOSPhase.idle) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Mesh Chat is disabled during an active SOS to preserve the BLE beacon channel.',
+                    ),
+                  ),
+                );
+                return;
+              }
+              Navigator.push<void>(
+                context,
+                MaterialPageRoute<void>(builder: (_) => const MeshChatScreen()),
+              );
+            },
           ),
           if (!kIsWeb && Platform.isAndroid) ...[
             const SizedBox(height: 8),
