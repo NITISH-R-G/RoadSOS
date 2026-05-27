@@ -427,8 +427,13 @@ class AiTriageService {
     final services = <String>{'ambulance'};
     if (rawServices is List) {
       for (final e in rawServices) {
-        if (e is String && _allowedServices.contains(e.toLowerCase())) {
-          services.add(e.toLowerCase());
+        if (e is String && e.isNotEmpty) {
+          // ⚡ Bolt Optimization: Pre-compute lowercase string
+          // to eliminate redundant String allocations inside the loop.
+          final normalized = e.toLowerCase();
+          if (_allowedServices.contains(normalized)) {
+            services.add(normalized);
+          }
         }
       }
     }
