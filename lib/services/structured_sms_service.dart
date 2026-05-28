@@ -138,10 +138,15 @@ class StructuredSmsService {
     final bt = p.bloodType.trim();
     final hasBt = bt.isNotEmpty && bt.toLowerCase() != 'unknown';
     final allergies = p.allergies.trim();
+
+    // ⚡ Bolt Optimization: Lazy evaluation of toLowerCase()
+    // By only evaluating allergiesLower if allergies is not empty, we avoid allocating a new string for empty inputs.
+    // Reusing the variable saves a redundant toLowerCase() allocation compared to checking 'none' and 'n/a' individually.
+    final allergiesLower = allergies.isNotEmpty ? allergies.toLowerCase() : '';
     final hasAllergy =
         allergies.isNotEmpty &&
-        allergies.toLowerCase() != 'none' &&
-        allergies.toLowerCase() != 'n/a';
+        allergiesLower != 'none' &&
+        allergiesLower != 'n/a';
 
     if (!hasBt && !hasAllergy) return '?';
 
