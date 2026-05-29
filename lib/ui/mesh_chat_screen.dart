@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/emergency_orchestrator.dart';
 import '../services/mesh_chat_service.dart';
 
 class MeshChatScreen extends ConsumerStatefulWidget {
@@ -14,6 +15,22 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(emergencyOrchestratorProvider.select((s) => s.phase), (
+      previous,
+      next,
+    ) {
+      if (next != SOSPhase.idle) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Mesh Chat is disabled during an active SOS to preserve the BLE beacon channel.',
+            ),
+          ),
+        );
+      }
+    });
+
     final messages = ref.watch(meshChatProvider);
 
     return Scaffold(

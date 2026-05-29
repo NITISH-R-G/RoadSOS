@@ -76,18 +76,16 @@ were found and fixed across four agile sprints on branch
   oversell. The implementation is an EMA over a user-supplied severity
   bias, bounded to [−1.0, +1.0], and never touches model weights.
   Re-documented as "bounded preference calibration".
+- ✅ **`MultiAgentCoordinator` was unused infrastructure** —
+  it was not wired into the SOS pipeline. Removed.
+- ✅ **Mesh chat collided with SOS BLE channel** —
+  Mesh chat is now actively disabled and exits automatically when `SOSPhase != idle`.
+- ✅ **`SafeWalk` timer-only mode was brittle** —
+  now requires explicit user acknowledgment when no destination coordinates are supplied.
 
 ### Verification
 - `flutter analyze` — **No issues found!**
 - `flutter test` — **17 tests pass** (3.41.9 / Dart 3.11.5).
-
-### Still on the backlog (not blocking the round)
-- `MultiAgentCoordinator` is still infrastructure not wired into the SOS
-  pipeline — recommend either delete or wire into the orchestrator next.
-- Mesh chat can collide with the SOS BLE advertising channel — should be
-  refused while `SOSPhase != idle`.
-- `SafeWalk` default 30-min ETA when no destination coords are supplied
-  is brittle — should force-acknowledge "timer-only" mode.
 
 ---
 
