@@ -30,7 +30,7 @@ dependencies:
   latlong2: ^0.9.1
   flutter_map_animations: ^0.7.0
   sensors_plus: ^7.0.0
-  flutter_ble_peripheral: ^2.1.0
+  flutter_ble_peripheral: ^2.1.1
   country_codes: ^3.3.0
   http: ^1.6.0
   flutter_dotenv: ^6.0.1
