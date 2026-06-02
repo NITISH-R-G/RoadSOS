@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,6 +21,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
   String _result = '';
   String? _error;
   List<String> _suggestions = [];
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -28,26 +31,30 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _textController.removeListener(_onTextChanged);
     _textController.dispose();
     super.dispose();
   }
 
-  void _onTextChanged() async {
-    final query = _textController.text;
-    if (query.length < 2) {
-      if (_suggestions.isNotEmpty) {
-        setState(() => _suggestions = []);
+  void _onTextChanged() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () async {
+      final query = _textController.text;
+      if (query.length < 2) {
+        if (_suggestions.isNotEmpty && mounted) {
+          setState(() => _suggestions = []);
+        }
+        return;
       }
-      return;
-    }
 
-    final suggestions = await FirstAidStore.getSuggestions(query);
-    if (mounted) {
-      setState(() {
-        _suggestions = suggestions;
-      });
-    }
+      final suggestions = await FirstAidStore.getSuggestions(query);
+      if (mounted) {
+        setState(() {
+          _suggestions = suggestions;
+        });
+      }
+    });
   }
 
   Future<void> _lookupFirstAid(String query) async {
