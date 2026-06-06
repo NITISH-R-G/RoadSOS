@@ -21,11 +21,6 @@
       "type": "config"
     },
     {
-      "id": "edge_sync-osm-facilities",
-      "label": "Function: sync-osm-facilities",
-      "type": "backend"
-    },
-    {
       "id": "edge_sms-dispatch",
       "label": "Function: sms-dispatch",
       "type": "backend"
@@ -33,6 +28,11 @@
     {
       "id": "edge_triage-gemini",
       "label": "Function: triage-gemini",
+      "type": "backend"
+    },
+    {
+      "id": "edge_sync-osm-facilities",
+      "label": "Function: sync-osm-facilities",
       "type": "backend"
     },
     {
@@ -51,23 +51,8 @@
       "type": "module"
     },
     {
-      "id": "file_user_profile_service",
-      "label": "user_profile_service",
-      "type": "file"
-    },
-    {
-      "id": "file_ai_triage_service",
-      "label": "ai_triage_service",
-      "type": "file"
-    },
-    {
-      "id": "file_sms_permission_bootstrap",
-      "label": "sms_permission_bootstrap",
-      "type": "file"
-    },
-    {
-      "id": "file_bluetooth_vehicle_monitor",
-      "label": "bluetooth_vehicle_monitor",
+      "id": "file_webrtc_voice_call_service",
+      "label": "webrtc_voice_call_service",
       "type": "file"
     },
     {
@@ -76,13 +61,38 @@
       "type": "file"
     },
     {
+      "id": "file_sms_dispatch_outcome",
+      "label": "sms_dispatch_outcome",
+      "type": "file"
+    },
+    {
+      "id": "file_crash_tuning",
+      "label": "crash_tuning",
+      "type": "file"
+    },
+    {
+      "id": "file_safe_walk_notification_service",
+      "label": "safe_walk_notification_service",
+      "type": "file"
+    },
+    {
       "id": "module_ui",
       "label": "Library: ui",
       "type": "module"
     },
     {
-      "id": "file_profile_editor_screen",
-      "label": "profile_editor_screen",
+      "id": "file_voice_call_overlay",
+      "label": "voice_call_overlay",
+      "type": "file"
+    },
+    {
+      "id": "file_sos_countdown_widget",
+      "label": "sos_countdown_widget",
+      "type": "file"
+    },
+    {
+      "id": "file_mesh_radar",
+      "label": "mesh_radar",
       "type": "file"
     },
     {
@@ -91,24 +101,19 @@
       "type": "file"
     },
     {
-      "id": "file_status_indicator",
-      "label": "status_indicator",
-      "type": "file"
-    },
-    {
-      "id": "file_ai_explainability_view",
-      "label": "ai_explainability_view",
-      "type": "file"
-    },
-    {
-      "id": "file_bystander_radar",
-      "label": "bystander_radar",
+      "id": "file_first_aid_screen",
+      "label": "first_aid_screen",
       "type": "file"
     },
     {
       "id": "module_models",
       "label": "Library: models",
       "type": "module"
+    },
+    {
+      "id": "file_sos_activity_record",
+      "label": "sos_activity_record",
+      "type": "file"
     },
     {
       "id": "file_facility",
@@ -118,11 +123,6 @@
     {
       "id": "file_dispatch_channel_status",
       "label": "dispatch_channel_status",
-      "type": "file"
-    },
-    {
-      "id": "file_sos_activity_record",
-      "label": "sos_activity_record",
       "type": "file"
     },
     {
@@ -194,17 +194,17 @@
     },
     {
       "source": "flutter_app",
-      "target": "edge_sync-osm-facilities",
-      "relation": "calls API"
-    },
-    {
-      "source": "flutter_app",
       "target": "edge_sms-dispatch",
       "relation": "calls API"
     },
     {
       "source": "flutter_app",
       "target": "edge_triage-gemini",
+      "relation": "calls API"
+    },
+    {
+      "source": "flutter_app",
+      "target": "edge_sync-osm-facilities",
       "relation": "calls API"
     },
     {
@@ -224,27 +224,27 @@
     },
     {
       "source": "module_services",
-      "target": "file_user_profile_service",
-      "relation": "implements"
-    },
-    {
-      "source": "module_services",
-      "target": "file_ai_triage_service",
-      "relation": "implements"
-    },
-    {
-      "source": "module_services",
-      "target": "file_sms_permission_bootstrap",
-      "relation": "implements"
-    },
-    {
-      "source": "module_services",
-      "target": "file_bluetooth_vehicle_monitor",
+      "target": "file_webrtc_voice_call_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
       "target": "file_first_aid_repository",
+      "relation": "implements"
+    },
+    {
+      "source": "module_services",
+      "target": "file_sms_dispatch_outcome",
+      "relation": "implements"
+    },
+    {
+      "source": "module_services",
+      "target": "file_crash_tuning",
+      "relation": "implements"
+    },
+    {
+      "source": "module_services",
+      "target": "file_safe_walk_notification_service",
       "relation": "implements"
     },
     {
@@ -254,7 +254,17 @@
     },
     {
       "source": "module_ui",
-      "target": "file_profile_editor_screen",
+      "target": "file_voice_call_overlay",
+      "relation": "implements"
+    },
+    {
+      "source": "module_ui",
+      "target": "file_sos_countdown_widget",
+      "relation": "implements"
+    },
+    {
+      "source": "module_ui",
+      "target": "file_mesh_radar",
       "relation": "implements"
     },
     {
@@ -264,17 +274,7 @@
     },
     {
       "source": "module_ui",
-      "target": "file_status_indicator",
-      "relation": "implements"
-    },
-    {
-      "source": "module_ui",
-      "target": "file_ai_explainability_view",
-      "relation": "implements"
-    },
-    {
-      "source": "module_ui",
-      "target": "file_bystander_radar",
+      "target": "file_first_aid_screen",
       "relation": "implements"
     },
     {
@@ -284,17 +284,17 @@
     },
     {
       "source": "module_models",
+      "target": "file_sos_activity_record",
+      "relation": "implements"
+    },
+    {
+      "source": "module_models",
       "target": "file_facility",
       "relation": "implements"
     },
     {
       "source": "module_models",
       "target": "file_dispatch_channel_status",
-      "relation": "implements"
-    },
-    {
-      "source": "module_models",
-      "target": "file_sos_activity_record",
       "relation": "implements"
     },
     {
