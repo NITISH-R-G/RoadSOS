@@ -298,3 +298,15 @@ MIT license. No dependency on US cloud providers. Runs on existing 108/112 infra
 ## License
 
 MIT — open-weight AI, open-source code, open to any state emergency service in India.
+<!-- AUTO-GEN: TECH-STACK -->
+- Flutter
+- Dart
+- Supabase Edge Functions
+- Deno/TypeScript
+<!-- /AUTO-GEN: TECH-STACK -->
+<!-- AUTO-GEN: ARCHITECTURE -->
+[View Detailed Architecture Diagrams](docs/architecture/architecture.md)
+<!-- /AUTO-GEN: ARCHITECTURE -->
+<!-- AUTO-GEN: BADGES -->
+[![CI/CD Automation](https://github.com/USERNAME/REPO/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/USERNAME/REPO/actions/workflows/ci_cd.yml)
+<!-- /AUTO-GEN: BADGES -->
