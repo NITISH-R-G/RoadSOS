@@ -29,7 +29,6 @@ Future<void> bootstrapSupabaseAuth() async {
   }
 
   try {
-    // ignore: deprecated_member_use
     await Supabase.initialize(url: url, anonKey: anonKey);
     await ensureSupabaseAnonymousSession(Supabase.instance.client);
     _supabaseSdkInitialized = true;

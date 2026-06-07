@@ -56,13 +56,18 @@ jobs:
           import os
           import openai
           from github import Github
+          from github import Auth
 
           # Initialize APIs
-          gh = Github(os.environ.get('GITHUB_TOKEN'))
+          auth = Auth.Token(os.environ.get('GITHUB_TOKEN'))
+          gh = Github(auth=auth)
           repo = gh.get_repo(os.environ.get('REPO_NAME'))
           pr = repo.get_pull(int(os.environ.get('PR_NUMBER')))
 
-          client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY', 'dummy-key'))
+          api_key = os.environ.get('OPENAI_API_KEY')
+          if not api_key:
+              api_key = 'dummy-key'
+          client = openai.OpenAI(api_key=api_key)
 
           # Get PR Diff
           files = pr.get_files()
