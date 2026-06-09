@@ -29,7 +29,7 @@ Future<void> bootstrapSupabaseAuth() async {
   }
 
   try {
-    await Supabase.initialize(url: url, publishableKey: anonKey);
+    await Supabase.initialize(url: url, anonKey: anonKey);
     await ensureSupabaseAnonymousSession(Supabase.instance.client);
     _supabaseSdkInitialized = true;
     appLog.i('Supabase anonymous sign-in completed.');
