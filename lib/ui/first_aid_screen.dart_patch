@@ -1,0 +1,8 @@
+<<<<<<< SEARCH
+      // Side-channel: keep FirstAidStore primed (used elsewhere) — best-effort.
+
+      FirstAidStore.getVerifiedAdvice(query);
+=======
+      // Side-channel: keep FirstAidStore primed (used elsewhere) — best-effort.
+      unawaited(FirstAidStore.getVerifiedAdvice(query));
+>>>>>>> REPLACE
