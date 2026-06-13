@@ -14,19 +14,14 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+
+    val extension = project.extensions.findByName("android") as? com.android.build.gradle.BaseExtension
+    if (extension != null) {
+        extension.compileSdkVersion(35)
+    }
 }
 subprojects {
     project.evaluationDependsOn(":app")
-}
-subprojects {
-    afterEvaluate {
-        val plugin = project.plugins.findPlugin("com.android.library")
-            ?: project.plugins.findPlugin("com.android.application")
-        if (plugin != null) {
-            val extension = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
-            extension.compileSdkVersion(35)
-        }
-    }
 }
 
 tasks.register<Delete>("clean") {
