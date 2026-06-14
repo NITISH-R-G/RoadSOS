@@ -21,8 +21,8 @@
       "type": "config"
     },
     {
-      "id": "edge_sms-dispatch",
-      "label": "Function: sms-dispatch",
+      "id": "edge_family-track",
+      "label": "Function: family-track",
       "type": "backend"
     },
     {
@@ -41,8 +41,8 @@
       "type": "backend"
     },
     {
-      "id": "edge_family-track",
-      "label": "Function: family-track",
+      "id": "edge_sms-dispatch",
+      "label": "Function: sms-dispatch",
       "type": "backend"
     },
     {
@@ -51,28 +51,28 @@
       "type": "module"
     },
     {
-      "id": "file_webrtc_voice_call_service",
-      "label": "webrtc_voice_call_service",
+      "id": "file_bluetooth_vehicle_monitor",
+      "label": "bluetooth_vehicle_monitor",
       "type": "file"
     },
     {
-      "id": "file_first_aid_repository",
-      "label": "first_aid_repository",
+      "id": "file_india_offline_dispatch",
+      "label": "india_offline_dispatch",
       "type": "file"
     },
     {
-      "id": "file_sms_dispatch_outcome",
-      "label": "sms_dispatch_outcome",
+      "id": "file_facility_sync_service",
+      "label": "facility_sync_service",
       "type": "file"
     },
     {
-      "id": "file_crash_tuning",
-      "label": "crash_tuning",
+      "id": "file_hardware_trigger_service",
+      "label": "hardware_trigger_service",
       "type": "file"
     },
     {
-      "id": "file_safe_walk_notification_service",
-      "label": "safe_walk_notification_service",
+      "id": "file_nearby_sos_push_service",
+      "label": "nearby_sos_push_service",
       "type": "file"
     },
     {
@@ -81,13 +81,18 @@
       "type": "module"
     },
     {
-      "id": "file_voice_call_overlay",
-      "label": "voice_call_overlay",
+      "id": "file_medical_card_screen",
+      "label": "medical_card_screen",
       "type": "file"
     },
     {
-      "id": "file_sos_countdown_widget",
-      "label": "sos_countdown_widget",
+      "id": "file_safe_walk_overlay",
+      "label": "safe_walk_overlay",
+      "type": "file"
+    },
+    {
+      "id": "file_map_widget",
+      "label": "map_widget",
       "type": "file"
     },
     {
@@ -96,13 +101,8 @@
       "type": "file"
     },
     {
-      "id": "file_vehicle_rescue_screen",
-      "label": "vehicle_rescue_screen",
-      "type": "file"
-    },
-    {
-      "id": "file_first_aid_screen",
-      "label": "first_aid_screen",
+      "id": "file_safe_walk_navigator_screen",
+      "label": "safe_walk_navigator_screen",
       "type": "file"
     },
     {
@@ -194,7 +194,7 @@
     },
     {
       "source": "flutter_app",
-      "target": "edge_sms-dispatch",
+      "target": "edge_family-track",
       "relation": "calls API"
     },
     {
@@ -214,7 +214,7 @@
     },
     {
       "source": "flutter_app",
-      "target": "edge_family-track",
+      "target": "edge_sms-dispatch",
       "relation": "calls API"
     },
     {
@@ -224,27 +224,27 @@
     },
     {
       "source": "module_services",
-      "target": "file_webrtc_voice_call_service",
+      "target": "file_bluetooth_vehicle_monitor",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_first_aid_repository",
+      "target": "file_india_offline_dispatch",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_sms_dispatch_outcome",
+      "target": "file_facility_sync_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_crash_tuning",
+      "target": "file_hardware_trigger_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_safe_walk_notification_service",
+      "target": "file_nearby_sos_push_service",
       "relation": "implements"
     },
     {
@@ -254,12 +254,17 @@
     },
     {
       "source": "module_ui",
-      "target": "file_voice_call_overlay",
+      "target": "file_medical_card_screen",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_sos_countdown_widget",
+      "target": "file_safe_walk_overlay",
+      "relation": "implements"
+    },
+    {
+      "source": "module_ui",
+      "target": "file_map_widget",
       "relation": "implements"
     },
     {
@@ -269,12 +274,7 @@
     },
     {
       "source": "module_ui",
-      "target": "file_vehicle_rescue_screen",
-      "relation": "implements"
-    },
-    {
-      "source": "module_ui",
-      "target": "file_first_aid_screen",
+      "target": "file_safe_walk_navigator_screen",
       "relation": "implements"
     },
     {
