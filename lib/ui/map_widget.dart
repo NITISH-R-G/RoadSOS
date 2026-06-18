@@ -344,7 +344,7 @@ class _FacilityMarker extends StatelessWidget {
     IconData icon;
     Color color;
 
-    switch (facility.type.toLowerCase()) {
+    switch (facility.type) {
       case 'hospital':
       case 'ambulance':
       case 'primary_health_centre':
