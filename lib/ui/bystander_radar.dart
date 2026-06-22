@@ -128,16 +128,17 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
             Stack(
               alignment: Alignment.center,
               children: [
-                CustomPaint(
-                  size: const Size(200, 200),
+                const CustomPaint(
+                  size: Size(200, 200),
                   painter: _RadarPainter(),
                 ),
-                RotationTransition(
-                  turns: _controller,
-                  child: const CustomPaint(
-                    size: Size(200, 200),
-                    painter: _SweepPainter(),
-                  ),
+                // ⚡ Bolt Optimization: Pass the AnimationController directly to CustomPainter
+                // using the `repaint` parameter. This delegates the continuous sweep animation
+                // completely to the rendering engine, preventing the creation of a new Transform
+                // widget on every frame (which would happen with RotationTransition).
+                CustomPaint(
+                  size: const Size(200, 200),
+                  painter: _SweepPainter(_controller),
                 ),
                 ..._buildBeaconDots(),
                 const Icon(Icons.my_location, color: Colors.blue, size: 24),
@@ -279,12 +280,20 @@ class _RadarPainter extends CustomPainter {
 }
 
 class _SweepPainter extends CustomPainter {
-  const _SweepPainter();
+  final Animation<double> animation;
+  const _SweepPainter(this.animation) : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
+
+    final currentAngle = animation.value * 2 * math.pi;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(currentAngle);
+    canvas.translate(-center.dx, -center.dy);
 
     final rect = Rect.fromCircle(center: center, radius: radius);
     final gradient = SweepGradient(
@@ -303,10 +312,12 @@ class _SweepPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(center, radius, paint);
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _SweepPainter oldDelegate) =>
+      oldDelegate.animation != animation;
 }
 
 class _IncidentDot extends StatelessWidget {
