@@ -533,5 +533,5 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
 
 final webRtcVoiceCallServiceProvider =
     StateNotifierProvider<WebRtcVoiceCallService, VoiceCallState>((ref) {
-  return WebRtcVoiceCallService();
+      return WebRtcVoiceCallService();
     });
