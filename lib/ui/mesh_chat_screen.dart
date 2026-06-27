@@ -15,6 +15,7 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
 
   @override
   void dispose() {
+    // ⚡ Bolt Optimization: Dispose TextEditingController to prevent memory leaks.
     _controller.dispose();
     super.dispose();
   }
