@@ -315,7 +315,8 @@ class _SweepPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SweepPainter oldDelegate) => oldDelegate.animation != animation;
+  bool shouldRepaint(covariant _SweepPainter oldDelegate) =>
+      oldDelegate.animation != animation;
 }
 
 class _IncidentDot extends StatelessWidget {
