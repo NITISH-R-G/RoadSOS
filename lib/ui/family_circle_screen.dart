@@ -412,6 +412,7 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
         ],
       ),
     );
+    controller.dispose();
   }
 
   Future<void> _showInviteDialog(
@@ -481,6 +482,7 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
         ],
       ),
     );
+    controller.dispose();
   }
 
   Future<void> _showRedeemDialog(
@@ -524,5 +526,6 @@ class _FamilyCircleScreenState extends ConsumerState<FamilyCircleScreen> {
         ],
       ),
     );
+    controller.dispose();
   }
 }
