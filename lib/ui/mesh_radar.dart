@@ -214,5 +214,10 @@ class _SweepingDotPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SweepingDotPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _SweepingDotPainter oldDelegate) =>
+      // ⚡ Bolt Optimization: Only trigger a canvas repaint when the animation value
+      // or orbit radius actually changes, rather than blindly repainting every time
+      // the parent widget rebuilds. This prevents unnecessary rendering cycles.
+      oldDelegate.animation != animation ||
+      oldDelegate.orbitRadius != orbitRadius;
 }
