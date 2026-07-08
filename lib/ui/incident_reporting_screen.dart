@@ -27,6 +27,13 @@ class _IncidentReportingScreenState
   bool _sceneCaptureBusy = false;
 
   @override
+  void dispose() {
+    // ⚡ Bolt Optimization: Prevent memory leaks by explicitly disposing the TextEditingController.
+    _voiceInputController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final assistantState = ref.watch(roadsosAssistantProvider);
     final l10n = AppLocalizations.of(context)!;

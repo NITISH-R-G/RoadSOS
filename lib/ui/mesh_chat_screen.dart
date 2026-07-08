@@ -14,6 +14,13 @@ class _MeshChatScreenState extends ConsumerState<MeshChatScreen> {
   final TextEditingController _controller = TextEditingController();
 
   @override
+  void dispose() {
+    // ⚡ Bolt Optimization: Prevent memory leaks by explicitly disposing the TextEditingController.
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     ref.listen(emergencyOrchestratorProvider.select((s) => s.phase), (
       previous,
