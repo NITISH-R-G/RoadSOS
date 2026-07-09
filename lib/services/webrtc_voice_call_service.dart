@@ -92,12 +92,9 @@ class VoiceCallState {
 /// behind symmetric NAT may fail. Acceptable for hackathon demo on WiFi /
 /// 4G with the same operator; production should add a Coturn TURN server.
 class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
-  WebRtcVoiceCallService(this._ref) : super(const VoiceCallState()) {
+  WebRtcVoiceCallService() : super(const VoiceCallState()) {
     _bootstrap();
   }
-
-  // ignore: unused_field
-  final Ref _ref;
 
   RTCPeerConnection? _pc;
   MediaStream? _localStream;
@@ -536,5 +533,5 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
 
 final webRtcVoiceCallServiceProvider =
     StateNotifierProvider<WebRtcVoiceCallService, VoiceCallState>((ref) {
-      return WebRtcVoiceCallService(ref);
+      return WebRtcVoiceCallService();
     });
