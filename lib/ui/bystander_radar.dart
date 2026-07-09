@@ -132,12 +132,11 @@ class _BystanderRadarState extends ConsumerState<BystanderRadar>
                   size: const Size(200, 200),
                   painter: _RadarPainter(),
                 ),
-                RotationTransition(
-                  turns: _controller,
-                  child: const CustomPaint(
-                    size: Size(200, 200),
-                    painter: _SweepPainter(),
-                  ),
+                // ⚡ Bolt Optimization: Replace RotationTransition with CustomPainter animation.
+                // This prevents the widget tree from rebuilding on every frame by pushing the rotation entirely to the canvas layer.
+                CustomPaint(
+                  size: const Size(200, 200),
+                  painter: _SweepPainter(_controller),
                 ),
                 ..._buildBeaconDots(),
                 const Icon(Icons.my_location, color: Colors.blue, size: 24),
@@ -279,12 +278,19 @@ class _RadarPainter extends CustomPainter {
 }
 
 class _SweepPainter extends CustomPainter {
-  const _SweepPainter();
+  final Animation<double> animation;
+
+  _SweepPainter(this.animation) : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(animation.value * 2 * math.pi);
+    canvas.translate(-center.dx, -center.dy);
 
     final rect = Rect.fromCircle(center: center, radius: radius);
     final gradient = SweepGradient(
@@ -303,10 +309,12 @@ class _SweepPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(center, radius, paint);
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _SweepPainter oldDelegate) =>
+      oldDelegate.animation != animation;
 }
 
 class _IncidentDot extends StatelessWidget {
