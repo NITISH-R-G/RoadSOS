@@ -214,5 +214,8 @@ class _SweepingDotPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SweepingDotPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _SweepingDotPainter oldDelegate) {
+    return oldDelegate.animation != animation ||
+        oldDelegate.orbitRadius != orbitRadius;
+  }
 }

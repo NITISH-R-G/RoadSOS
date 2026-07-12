@@ -275,7 +275,7 @@ class _RadarPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _RadarPainter oldDelegate) => false;
 }
 
 class _SweepPainter extends CustomPainter {
@@ -306,7 +306,7 @@ class _SweepPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _SweepPainter oldDelegate) => false;
 }
 
 class _IncidentDot extends StatelessWidget {
