@@ -26,6 +26,13 @@ class _IncidentReportingScreenState
   Uint8List? _sceneImageBytes;
   bool _sceneCaptureBusy = false;
 
+  // ⚡ Bolt Optimization: Dispose controllers to prevent memory leaks and improve widget unmount performance.
+  @override
+  void dispose() {
+    _voiceInputController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final assistantState = ref.watch(roadsosAssistantProvider);
