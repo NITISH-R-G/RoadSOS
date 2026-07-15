@@ -988,7 +988,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
                   // ⚡ Bolt Optimization: Debounce Nominatim API call to reduce network spam and UI stutter.
                   // Increased to 1000ms to comply with Nominatim's strict usage policy of max 1 request per second.
-                  await Future<void>.delayed(const Duration(milliseconds: 1000));
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 1000),
+                  );
                   if (latestQuery != query) {
                     return const Iterable<_NominatimHit>.empty();
                   }
