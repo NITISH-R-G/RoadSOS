@@ -21,6 +21,16 @@
       "type": "config"
     },
     {
+      "id": "edge_sms-dispatch",
+      "label": "Function: sms-dispatch",
+      "type": "backend"
+    },
+    {
+      "id": "edge_sync-osm-facilities",
+      "label": "Function: sync-osm-facilities",
+      "type": "backend"
+    },
+    {
       "id": "edge_family-track",
       "label": "Function: family-track",
       "type": "backend"
@@ -31,18 +41,8 @@
       "type": "backend"
     },
     {
-      "id": "edge_sync-osm-facilities",
-      "label": "Function: sync-osm-facilities",
-      "type": "backend"
-    },
-    {
       "id": "edge_gemini-generate",
       "label": "Function: gemini-generate",
-      "type": "backend"
-    },
-    {
-      "id": "edge_sms-dispatch",
-      "label": "Function: sms-dispatch",
       "type": "backend"
     },
     {
@@ -51,18 +51,13 @@
       "type": "module"
     },
     {
-      "id": "file_bluetooth_vehicle_monitor",
-      "label": "bluetooth_vehicle_monitor",
+      "id": "file_ai_triage_service",
+      "label": "ai_triage_service",
       "type": "file"
     },
     {
-      "id": "file_india_offline_dispatch",
-      "label": "india_offline_dispatch",
-      "type": "file"
-    },
-    {
-      "id": "file_facility_sync_service",
-      "label": "facility_sync_service",
+      "id": "file_nearby_sos_preferences",
+      "label": "nearby_sos_preferences",
       "type": "file"
     },
     {
@@ -71,8 +66,13 @@
       "type": "file"
     },
     {
-      "id": "file_nearby_sos_push_service",
-      "label": "nearby_sos_push_service",
+      "id": "file_crash_confidence_engine",
+      "label": "crash_confidence_engine",
+      "type": "file"
+    },
+    {
+      "id": "file_wake_lock_service",
+      "label": "wake_lock_service",
       "type": "file"
     },
     {
@@ -81,28 +81,28 @@
       "type": "module"
     },
     {
-      "id": "file_medical_card_screen",
-      "label": "medical_card_screen",
-      "type": "file"
-    },
-    {
-      "id": "file_safe_walk_overlay",
-      "label": "safe_walk_overlay",
-      "type": "file"
-    },
-    {
       "id": "file_map_widget",
       "label": "map_widget",
       "type": "file"
     },
     {
-      "id": "file_mesh_radar",
-      "label": "mesh_radar",
+      "id": "file_responder_dashboard",
+      "label": "responder_dashboard",
       "type": "file"
     },
     {
-      "id": "file_safe_walk_navigator_screen",
-      "label": "safe_walk_navigator_screen",
+      "id": "file_incident_reporting_screen",
+      "label": "incident_reporting_screen",
+      "type": "file"
+    },
+    {
+      "id": "file_consent_screen",
+      "label": "consent_screen",
+      "type": "file"
+    },
+    {
+      "id": "file_first_aid_screen",
+      "label": "first_aid_screen",
       "type": "file"
     },
     {
@@ -116,13 +116,13 @@
       "type": "file"
     },
     {
-      "id": "file_facility",
-      "label": "facility",
+      "id": "file_dispatch_channel_status",
+      "label": "dispatch_channel_status",
       "type": "file"
     },
     {
-      "id": "file_dispatch_channel_status",
-      "label": "dispatch_channel_status",
+      "id": "file_facility",
+      "label": "facility",
       "type": "file"
     },
     {
@@ -194,6 +194,16 @@
     },
     {
       "source": "flutter_app",
+      "target": "edge_sms-dispatch",
+      "relation": "calls API"
+    },
+    {
+      "source": "flutter_app",
+      "target": "edge_sync-osm-facilities",
+      "relation": "calls API"
+    },
+    {
+      "source": "flutter_app",
       "target": "edge_family-track",
       "relation": "calls API"
     },
@@ -204,17 +214,7 @@
     },
     {
       "source": "flutter_app",
-      "target": "edge_sync-osm-facilities",
-      "relation": "calls API"
-    },
-    {
-      "source": "flutter_app",
       "target": "edge_gemini-generate",
-      "relation": "calls API"
-    },
-    {
-      "source": "flutter_app",
-      "target": "edge_sms-dispatch",
       "relation": "calls API"
     },
     {
@@ -224,17 +224,12 @@
     },
     {
       "source": "module_services",
-      "target": "file_bluetooth_vehicle_monitor",
+      "target": "file_ai_triage_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_india_offline_dispatch",
-      "relation": "implements"
-    },
-    {
-      "source": "module_services",
-      "target": "file_facility_sync_service",
+      "target": "file_nearby_sos_preferences",
       "relation": "implements"
     },
     {
@@ -244,7 +239,12 @@
     },
     {
       "source": "module_services",
-      "target": "file_nearby_sos_push_service",
+      "target": "file_crash_confidence_engine",
+      "relation": "implements"
+    },
+    {
+      "source": "module_services",
+      "target": "file_wake_lock_service",
       "relation": "implements"
     },
     {
@@ -254,27 +254,27 @@
     },
     {
       "source": "module_ui",
-      "target": "file_medical_card_screen",
-      "relation": "implements"
-    },
-    {
-      "source": "module_ui",
-      "target": "file_safe_walk_overlay",
-      "relation": "implements"
-    },
-    {
-      "source": "module_ui",
       "target": "file_map_widget",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_mesh_radar",
+      "target": "file_responder_dashboard",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_safe_walk_navigator_screen",
+      "target": "file_incident_reporting_screen",
+      "relation": "implements"
+    },
+    {
+      "source": "module_ui",
+      "target": "file_consent_screen",
+      "relation": "implements"
+    },
+    {
+      "source": "module_ui",
+      "target": "file_first_aid_screen",
       "relation": "implements"
     },
     {
@@ -289,12 +289,12 @@
     },
     {
       "source": "module_models",
-      "target": "file_facility",
+      "target": "file_dispatch_channel_status",
       "relation": "implements"
     },
     {
       "source": "module_models",
-      "target": "file_dispatch_channel_status",
+      "target": "file_facility",
       "relation": "implements"
     },
     {
