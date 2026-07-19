@@ -951,6 +951,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     String selectedDestination = '';
     LatLng? selectedDestinationLatLng;
 
+    // ⚡ Bolt Optimization: Track the latest query to avoid fetching stale data and exceeding rate limits
+    String latestQuery = '';
+
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -978,12 +981,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               Autocomplete<_NominatimHit>(
                 displayStringForOption: (h) => h.displayName,
                 optionsBuilder: (TextEditingValue textEditingValue) async {
-                  if (textEditingValue.text.length < 3) {
+                  final currentQuery = textEditingValue.text;
+                  latestQuery = currentQuery;
+
+                  if (currentQuery.length < 3) {
                     return const Iterable<_NominatimHit>.empty();
                   }
+
+                  // ⚡ Bolt Optimization: Wait 1 second (Nominatim requires 1 request/sec max).
+                  // If the user keeps typing, currentQuery will no longer match latestQuery.
+                  await Future.delayed(const Duration(milliseconds: 1000));
+
+                  // ⚡ Bolt Optimization: Verify against the tracked latest query,
+                  // NOT textEditingValue.text which is @immutable and will never reflect subsequent typing!
+                  if (latestQuery != currentQuery) {
+                    return const Iterable<_NominatimHit>.empty();
+                  }
+
                   try {
                     final uri = Uri.parse(
-                      'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5',
+                      'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(currentQuery)}&format=json&addressdetails=1&limit=5',
                     );
                     final response = await http.get(
                       uri,
