@@ -950,7 +950,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
     String selectedDestination = '';
     LatLng? selectedDestinationLatLng;
-    int queryId = 0;
+    String latestQuery = '';
 
     await showModalBottomSheet<void>(
       context: context,
@@ -980,7 +980,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 displayStringForOption: (h) => h.displayName,
                 optionsBuilder: (TextEditingValue textEditingValue) async {
                   final currentQuery = textEditingValue.text;
-                  final currentId = ++queryId;
+                  latestQuery = currentQuery;
 
                   if (currentQuery.length < 3) {
                     return const Iterable<_NominatimHit>.empty();
@@ -988,7 +988,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
                   // ⚡ Bolt Optimization: Debounce Nominatim API queries to 1s to respect rate limits
                   await Future.delayed(const Duration(milliseconds: 1000));
-                  if (queryId != currentId) {
+                  if (latestQuery != currentQuery) {
                     return const Iterable<_NominatimHit>.empty();
                   }
 
