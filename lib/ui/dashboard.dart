@@ -53,6 +53,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with TickerProviderStateMixin {
   int _tab = 0;
+  int _nominatimQueryId = 0;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -981,6 +982,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   if (textEditingValue.text.length < 3) {
                     return const Iterable<_NominatimHit>.empty();
                   }
+
+                  final currentQueryId = ++_nominatimQueryId;
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 1000),
+                  );
+
+                  if (currentQueryId != _nominatimQueryId) {
+                    return const Iterable<_NominatimHit>.empty();
+                  }
+
                   try {
                     final uri = Uri.parse(
                       'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5',
