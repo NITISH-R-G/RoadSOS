@@ -937,6 +937,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   Future<void> _showSafeWalkDialog(BuildContext context) async {
     final monitor = ref.read(proactiveMonitorProvider);
+    int nominatimQueryId = 0;
 
     if (monitor.isMonitoring) {
       ref.read(proactiveMonitorProvider.notifier).endSafeWalk();
@@ -981,6 +982,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   if (textEditingValue.text.length < 3) {
                     return const Iterable<_NominatimHit>.empty();
                   }
+
+                  // ⚡ Bolt Optimization: Debounce rate-limited API calls
+                  final currentId = ++nominatimQueryId;
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 1000),
+                  );
+                  if (nominatimQueryId != currentId) {
+                    return const Iterable<_NominatimHit>.empty();
+                  }
+
                   try {
                     final uri = Uri.parse(
                       'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5',
