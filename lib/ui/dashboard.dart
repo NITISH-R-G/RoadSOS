@@ -951,6 +951,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     String selectedDestination = '';
     LatLng? selectedDestinationLatLng;
 
+    // ⚡ Bolt Optimization: State tracking variables to debounce Nominatim API calls.
+    // Tracking query ID instead of text value is required because textEditingValue.text
+    // is immutable and comparing against it after delay causes race conditions.
+    int nominatimQueryId = 0;
+    Iterable<_NominatimHit> lastNominatimOptions =
+        const Iterable<_NominatimHit>.empty();
+
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -978,9 +985,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               Autocomplete<_NominatimHit>(
                 displayStringForOption: (h) => h.displayName,
                 optionsBuilder: (TextEditingValue textEditingValue) async {
+                  nominatimQueryId++;
+                  final currentId = nominatimQueryId;
+
                   if (textEditingValue.text.length < 3) {
-                    return const Iterable<_NominatimHit>.empty();
+                    lastNominatimOptions =
+                        const Iterable<_NominatimHit>.empty();
+                    return lastNominatimOptions;
                   }
+
+                  // ⚡ Bolt Optimization: Debounce Nominatim calls by 1000ms.
+                  // This is mandatory to prevent getting IP banned by OpenStreetMap's
+                  // strict 1-request-per-second rate limit policy, and it significantly
+                  // reduces unnecessary UI network thrashing on each keystroke.
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 1000),
+                  );
+
+                  if (currentId != nominatimQueryId) {
+                    return lastNominatimOptions;
+                  }
+
                   try {
                     final uri = Uri.parse(
                       'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5',
@@ -991,18 +1016,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     );
                     if (response.statusCode == 200) {
                       final List<dynamic> data = json.decode(response.body);
-                      return data.whereType<Map>().map(
+                      lastNominatimOptions = data.whereType<Map>().map(
                         (m) => _NominatimHit(
                           displayName: m['display_name'] as String,
                           lat: double.tryParse(m['lat']?.toString() ?? '') ?? 0,
                           lon: double.tryParse(m['lon']?.toString() ?? '') ?? 0,
                         ),
                       );
+                      return lastNominatimOptions;
                     }
                   } on Object catch (e) {
                     appLog.w('Error fetching location suggestions: $e');
                   }
-                  return const Iterable<_NominatimHit>.empty();
+                  lastNominatimOptions = const Iterable<_NominatimHit>.empty();
+                  return lastNominatimOptions;
                 },
                 onSelected: (hit) {
                   selectedDestination = hit.displayName;
