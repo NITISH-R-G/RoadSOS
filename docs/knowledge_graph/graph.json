@@ -21,18 +21,8 @@
       "type": "config"
     },
     {
-      "id": "edge_sms-dispatch",
-      "label": "Function: sms-dispatch",
-      "type": "backend"
-    },
-    {
-      "id": "edge_sync-osm-facilities",
-      "label": "Function: sync-osm-facilities",
-      "type": "backend"
-    },
-    {
-      "id": "edge_family-track",
-      "label": "Function: family-track",
+      "id": "edge_gemini-generate",
+      "label": "Function: gemini-generate",
       "type": "backend"
     },
     {
@@ -41,8 +31,18 @@
       "type": "backend"
     },
     {
-      "id": "edge_gemini-generate",
-      "label": "Function: gemini-generate",
+      "id": "edge_sms-dispatch",
+      "label": "Function: sms-dispatch",
+      "type": "backend"
+    },
+    {
+      "id": "edge_family-track",
+      "label": "Function: family-track",
+      "type": "backend"
+    },
+    {
+      "id": "edge_sync-osm-facilities",
+      "label": "Function: sync-osm-facilities",
       "type": "backend"
     },
     {
@@ -51,28 +51,28 @@
       "type": "module"
     },
     {
-      "id": "file_ai_triage_service",
-      "label": "ai_triage_service",
+      "id": "file_scene_security_service",
+      "label": "scene_security_service",
       "type": "file"
     },
     {
-      "id": "file_nearby_sos_preferences",
-      "label": "nearby_sos_preferences",
+      "id": "file_government_facility_seed_service",
+      "label": "government_facility_seed_service",
       "type": "file"
     },
     {
-      "id": "file_hardware_trigger_service",
-      "label": "hardware_trigger_service",
+      "id": "file_safe_walk_navigator_service",
+      "label": "safe_walk_navigator_service",
       "type": "file"
     },
     {
-      "id": "file_crash_confidence_engine",
-      "label": "crash_confidence_engine",
+      "id": "file_facility_sync_service",
+      "label": "facility_sync_service",
       "type": "file"
     },
     {
-      "id": "file_wake_lock_service",
-      "label": "wake_lock_service",
+      "id": "file_sms_permission_bootstrap_stub",
+      "label": "sms_permission_bootstrap_stub",
       "type": "file"
     },
     {
@@ -81,28 +81,28 @@
       "type": "module"
     },
     {
-      "id": "file_map_widget",
-      "label": "map_widget",
+      "id": "file_onboarding_gate",
+      "label": "onboarding_gate",
       "type": "file"
     },
     {
-      "id": "file_responder_dashboard",
-      "label": "responder_dashboard",
+      "id": "file_bystander_coach_screen",
+      "label": "bystander_coach_screen",
       "type": "file"
     },
     {
-      "id": "file_incident_reporting_screen",
-      "label": "incident_reporting_screen",
+      "id": "file_triage_result_card",
+      "label": "triage_result_card",
       "type": "file"
     },
     {
-      "id": "file_consent_screen",
-      "label": "consent_screen",
+      "id": "file_mesh_chat_screen",
+      "label": "mesh_chat_screen",
       "type": "file"
     },
     {
-      "id": "file_first_aid_screen",
-      "label": "first_aid_screen",
+      "id": "file_vital_scan_screen",
+      "label": "vital_scan_screen",
       "type": "file"
     },
     {
@@ -111,8 +111,8 @@
       "type": "module"
     },
     {
-      "id": "file_sos_activity_record",
-      "label": "sos_activity_record",
+      "id": "file_facility",
+      "label": "facility",
       "type": "file"
     },
     {
@@ -121,8 +121,8 @@
       "type": "file"
     },
     {
-      "id": "file_facility",
-      "label": "facility",
+      "id": "file_sos_activity_record",
+      "label": "sos_activity_record",
       "type": "file"
     },
     {
@@ -194,17 +194,7 @@
     },
     {
       "source": "flutter_app",
-      "target": "edge_sms-dispatch",
-      "relation": "calls API"
-    },
-    {
-      "source": "flutter_app",
-      "target": "edge_sync-osm-facilities",
-      "relation": "calls API"
-    },
-    {
-      "source": "flutter_app",
-      "target": "edge_family-track",
+      "target": "edge_gemini-generate",
       "relation": "calls API"
     },
     {
@@ -214,7 +204,17 @@
     },
     {
       "source": "flutter_app",
-      "target": "edge_gemini-generate",
+      "target": "edge_sms-dispatch",
+      "relation": "calls API"
+    },
+    {
+      "source": "flutter_app",
+      "target": "edge_family-track",
+      "relation": "calls API"
+    },
+    {
+      "source": "flutter_app",
+      "target": "edge_sync-osm-facilities",
       "relation": "calls API"
     },
     {
@@ -224,27 +224,27 @@
     },
     {
       "source": "module_services",
-      "target": "file_ai_triage_service",
+      "target": "file_scene_security_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_nearby_sos_preferences",
+      "target": "file_government_facility_seed_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_hardware_trigger_service",
+      "target": "file_safe_walk_navigator_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_crash_confidence_engine",
+      "target": "file_facility_sync_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_wake_lock_service",
+      "target": "file_sms_permission_bootstrap_stub",
       "relation": "implements"
     },
     {
@@ -254,27 +254,27 @@
     },
     {
       "source": "module_ui",
-      "target": "file_map_widget",
+      "target": "file_onboarding_gate",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_responder_dashboard",
+      "target": "file_bystander_coach_screen",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_incident_reporting_screen",
+      "target": "file_triage_result_card",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_consent_screen",
+      "target": "file_mesh_chat_screen",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_first_aid_screen",
+      "target": "file_vital_scan_screen",
       "relation": "implements"
     },
     {
@@ -284,7 +284,7 @@
     },
     {
       "source": "module_models",
-      "target": "file_sos_activity_record",
+      "target": "file_facility",
       "relation": "implements"
     },
     {
@@ -294,7 +294,7 @@
     },
     {
       "source": "module_models",
-      "target": "file_facility",
+      "target": "file_sos_activity_record",
       "relation": "implements"
     },
     {
