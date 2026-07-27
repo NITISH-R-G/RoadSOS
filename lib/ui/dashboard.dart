@@ -950,6 +950,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
     String selectedDestination = '';
     LatLng? selectedDestinationLatLng;
+    int _nominatimQueryId = 0;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -981,6 +982,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   if (textEditingValue.text.length < 3) {
                     return const Iterable<_NominatimHit>.empty();
                   }
+
+                  // ⚡ Bolt Optimization: Debounce Nominatim API requests by 1000ms.
+                  // We track the latest query using a state variable (queryId) rather than checking textEditingValue.text
+                  // because textEditingValue.text is an @immutable string value captured in this closure scope and wouldn't change.
+                  // This reduces unnecessary remote network calls and complies with Nominatim's strict usage policy of max 1 request/sec.
+                  final currentId = ++_nominatimQueryId;
+                  await Future.delayed(const Duration(milliseconds: 1000));
+                  if (currentId != _nominatimQueryId) {
+                    return const Iterable<_NominatimHit>.empty();
+                  }
+
                   try {
                     final uri = Uri.parse(
                       'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5',
