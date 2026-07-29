@@ -53,6 +53,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with TickerProviderStateMixin {
   int _tab = 0;
+  int _autocompleteQueryId = 0;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -978,9 +979,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               Autocomplete<_NominatimHit>(
                 displayStringForOption: (h) => h.displayName,
                 optionsBuilder: (TextEditingValue textEditingValue) async {
+                  final currentId = ++_autocompleteQueryId;
                   if (textEditingValue.text.length < 3) {
                     return const Iterable<_NominatimHit>.empty();
                   }
+
+                  // ⚡ Bolt Optimization: Enforce a 1000ms debounce to comply with Nominatim's strict usage policy (1 request/s).
+                  // This reduces redundant API calls and prevents the app from being blocked by the service.
+                  await Future.delayed(const Duration(milliseconds: 1000));
+
+                  if (currentId != _autocompleteQueryId) {
+                    return const Iterable<_NominatimHit>.empty();
+                  }
+
                   try {
                     final uri = Uri.parse(
                       'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5',
