@@ -53,6 +53,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with TickerProviderStateMixin {
   int _tab = 0;
+  int _nominatimQueryId = 0;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -981,6 +982,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   if (textEditingValue.text.length < 3) {
                     return const Iterable<_NominatimHit>.empty();
                   }
+
+                  // ⚡ Bolt Optimization: Debounce Nominatim API calls to prevent
+                  // getting blocked by rate limits (1 req/sec) and to avoid race conditions.
+                  _nominatimQueryId++;
+                  final int currentQueryId = _nominatimQueryId;
+
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 1000),
+                  );
+
+                  if (currentQueryId != _nominatimQueryId) {
+                    return const Iterable<_NominatimHit>.empty();
+                  }
+
                   try {
                     final uri = Uri.parse(
                       'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5',
@@ -989,6 +1004,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       uri,
                       headers: {'User-Agent': 'RoadSOS/1.0'},
                     );
+
+                    if (currentQueryId != _nominatimQueryId) {
+                      return const Iterable<_NominatimHit>.empty();
+                    }
+
                     if (response.statusCode == 200) {
                       final List<dynamic> data = json.decode(response.body);
                       return data.whereType<Map>().map(
