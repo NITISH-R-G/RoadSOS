@@ -41,7 +41,7 @@ def update_readme():
     )
 
     # 3. Insert Badges (Mockup of dynamic badges based on analysis)
-    badges = "[![CI/CD Automation](https://github.com/USERNAME/REPO/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/USERNAME/REPO/actions/workflows/ci_cd.yml)"
+    badges = "[![CI/CD Automation](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml)"
     content = re.sub(
         r"(<!-- AUTO-GEN: BADGES -->).*?(<!-- /AUTO-GEN: BADGES -->)",
         f"\\1\n{badges}\n\\2",
