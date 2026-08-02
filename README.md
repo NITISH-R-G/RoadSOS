@@ -307,5 +307,5 @@ MIT — open-weight AI, open-source code, open to any state emergency service in
 [View Detailed Architecture Diagrams](docs/architecture/architecture.md)
 <!-- /AUTO-GEN: ARCHITECTURE -->
 <!-- AUTO-GEN: BADGES -->
-[![CI/CD Automation](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml)
+[![CI/CD Automation](https://github.com/USERNAME/REPO/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/USERNAME/REPO/actions/workflows/ci_cd.yml)
 <!-- /AUTO-GEN: BADGES -->
