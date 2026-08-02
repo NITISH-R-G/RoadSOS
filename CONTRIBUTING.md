@@ -22,6 +22,6 @@ Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/):
 
 ## Getting Started
 1. Fork the repo.
-2. Run `./scripts/setup.sh` (or `setup.ps1`).
+2. Run `./scripts/setup.ps1` (PowerShell — Windows, or `pwsh` on macOS/Linux).
 3. Create your branch.
 4. Submit a PR!

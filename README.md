@@ -15,7 +15,7 @@
 
 ## 🚨 [Live Demo →](./demo/index.html) · Open in browser, enter a Google AI key, run Gemma 4 triage instantly
 
-> **Open the demo file** (`roadsos/demo/index.html`) in any browser.
+> **Open the demo file** (`demo/index.html`) in any browser.
 > Enter a [free Google AI Studio key](https://aistudio.google.com/app/apikey).
 > Type or click a scenario. Watch Gemma 4 triage a road emergency live.
 
@@ -256,7 +256,7 @@ The notebook includes pre-run outputs (8/10 exact severity match, 10/10 within �
 4. Edit `notebooks/kernel-metadata.json` — replace `YOUR_KAGGLE_USERNAME` with your Kaggle username
 5. Push the notebook:
    ```bash
-   kaggle kernels push -p roadsos/notebooks/
+   kaggle kernels push -p notebooks/
    ```
 6. Open the kernel on Kaggle, click **Run All**, wait for all 13 cells to complete
 7. Link the kernel URL in the [competition submission form](https://www.kaggle.com/competitions/gemma-4-good-hackathon)
