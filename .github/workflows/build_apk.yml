@@ -14,6 +14,10 @@ on:
         type: choice
         options: [release, debug]
 
+permissions:
+  contents: read
+  actions: write
+
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true

@@ -116,9 +116,9 @@ Deno.serve(async (req: Request) => {
       );
       return json(200, { text: out, model_used: FALLBACK_MODEL });
     } catch (e2) {
+      console.error(`Fallback model ${FALLBACK_MODEL} also failed:`, e2);
       return json(502, {
         error: "gemma_fetch_failed",
-        detail: String(e2),
       });
     }
   }

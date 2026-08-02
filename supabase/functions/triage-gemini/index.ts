@@ -254,9 +254,9 @@ Deno.serve(async (req: Request) => {
       gemmaJson = await callGemmaApi(apiKey, GEMMA_3_FALLBACK, promptText);
       modelUsed = GEMMA_3_FALLBACK;
     } catch (e2) {
+      console.error(`Fallback model ${GEMMA_3_FALLBACK} also failed:`, safeDetail(e2));
       return json(502, {
         error: "gemma_fetch_failed",
-        detail: safeDetail(e2),
         models_tried: [GEMMA_4_MODEL, GEMMA_3_FALLBACK],
       });
     }
@@ -271,9 +271,9 @@ Deno.serve(async (req: Request) => {
       _vision_used: visionUsed,
     });
   } catch (e) {
+    console.error("gemma_parse_failed:", safeDetail(e));
     return json(502, {
       error: "gemma_parse_failed",
-      detail: safeDetail(e),
       model_used: modelUsed,
     });
   }

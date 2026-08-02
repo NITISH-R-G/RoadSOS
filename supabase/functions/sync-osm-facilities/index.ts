@@ -139,15 +139,17 @@ Deno.serve(async (req: Request) => {
     });
     if (!res.ok) {
       const t = await res.text();
+      console.error(`Overpass HTTP error ${res.status}:`, t);
       return new Response(
-        JSON.stringify({ error: "Overpass HTTP error", status: res.status, body: t }),
+        JSON.stringify({ error: "Overpass HTTP error", status: res.status }),
         { status: 502, headers: { "Content-Type": "application/json" } },
       );
     }
     osmJson = await res.json();
   } catch (e) {
+    console.error("Overpass fetch failed:", e);
     return new Response(
-      JSON.stringify({ error: "Overpass fetch failed", detail: String(e) }),
+      JSON.stringify({ error: "Overpass fetch failed" }),
       { status: 502, headers: { "Content-Type": "application/json" } },
     );
   }
