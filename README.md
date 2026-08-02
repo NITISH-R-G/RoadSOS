@@ -9,6 +9,8 @@
 [![Last Commit](https://img.shields.io/github/last-commit/NITISH-R-G/RoadSOS)](https://github.com/NITISH-R-G/RoadSOS/commits/main)
 [![Contributors](https://img.shields.io/github/contributors/NITISH-R-G/RoadSOS)](https://github.com/NITISH-R-G/RoadSOS/graphs/contributors)
 
+**[Latest Release](https://github.com/NITISH-R-G/RoadSOS/releases/latest)** · **[Roadmap](ROADMAP.md)** · **[Changelog](CHANGELOG.md)** · **[Architecture Diagrams](docs/DIAGRAMS.md)** · **[Contributing](CONTRIBUTING.md)** · **[Security](SECURITY.md)**
+
 ---
 
 ## 🚨 [Live Demo →](./demo/index.html) · Open in browser, enter a Google AI key, run Gemma 4 triage instantly
