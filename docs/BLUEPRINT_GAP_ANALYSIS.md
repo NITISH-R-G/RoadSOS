@@ -64,7 +64,7 @@ Honest mapping of the product blueprint to this repository (`lib/`, `supabase/`)
 | Play Store / App Store | **Not started** | `publish_to: 'none'` is pub.dev only; store listing separate |
 | Automated quality gate | **Real** | GitHub Actions: `dart analyze` + `flutter test` (see `.github/workflows/flutter_ci.yml`) |
 | E2E benchmark suite | **Partial** | Unit/widget tests; full E2E on device not in CI |
-| Case-study video | **Out of repo** | `VIDEO_SCRIPT.md` + manual production |
+| Case-study video | **Out of repo** | `docs/VIDEO_SCRIPT.md` + manual production |
 
 ---
 

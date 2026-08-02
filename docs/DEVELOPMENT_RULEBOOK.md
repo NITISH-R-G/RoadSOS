@@ -10,7 +10,7 @@
 
 - Work through phases in order — Phase 1 and Phase 5 before writing any code.
 - In code review, the reviewer must check every `[CRITICAL]` rule for the files touched in the PR.
-- This file lives in the repo root. Update it when new rules are agreed upon in architecture syncs.
+- This file lives in `docs/`. Update it when new rules are agreed upon in architecture syncs.
 - Every rule that is "done" for your current sprint can be marked with `[x]` in your local copy.
 
 ---

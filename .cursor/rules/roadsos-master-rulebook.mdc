@@ -1,11 +1,11 @@
 ---
-description: RoadSOS master rulebook — phase order, CRITICAL checks, pointer to canonical checklist at repo root.
+description: RoadSOS master rulebook — phase order, CRITICAL checks, pointer to canonical checklist in docs/.
 alwaysApply: true
 ---
 
 # RoadSOS Master Development Rulebook
 
-The canonical checklist is **`ROADSOS_MASTER_DEVELOPMENT_RULEBOOK.md`** at the repo root (200+ rules, 9 phases). Follow phases in the **priority order** in that file’s “Quick reference — priority order” section (Security and Planning before implementation).
+The canonical checklist is **`docs/DEVELOPMENT_RULEBOOK.md`** (200+ rules, 9 phases). Follow phases in the **priority order** in that file’s “Quick reference — priority order” section (Security and Planning before implementation).
 
 ## Definitions
 
@@ -19,4 +19,4 @@ The canonical checklist is **`ROADSOS_MASTER_DEVELOPMENT_RULEBOOK.md`** at the r
 3. Never ship **Simulated** behavior as **Real**; document honest feature status (README / internal table per rulebook Phase 8).
 4. Prefer small, reviewable PRs and Conventional Commits per Phase 8; two reviewers for `EmergencyOrchestrator` changes.
 
-When in doubt, open the repo root checklist and quote the relevant phase and tag in the PR or commit message context.
+When in doubt, open the `docs/` checklist and quote the relevant phase and tag in the PR or commit message context.

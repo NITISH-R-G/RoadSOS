@@ -6,7 +6,7 @@ alwaysApply: false
 
 # RoadSOS — `lib/` emergency and app rules
 
-Use with **`ROADSOS_MASTER_DEVELOPMENT_RULEBOOK.md`**. Highlights for Dart code:
+Use with **`docs/DEVELOPMENT_RULEBOOK.md`**. Highlights for Dart code:
 
 ## Dispatch and orchestration `[CRITICAL]`
 

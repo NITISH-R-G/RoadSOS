@@ -6,7 +6,7 @@ alwaysApply: false
 
 # RoadSOS — Supabase and backend rules
 
-Canonical detail: **`ROADSOS_MASTER_DEVELOPMENT_RULEBOOK.md`** (Phase 2 Data architecture, Phase 5 Security, Phase 4 Location / Overpass).
+Canonical detail: **`docs/DEVELOPMENT_RULEBOOK.md`** (Phase 2 Data architecture, Phase 5 Security, Phase 4 Location / Overpass).
 
 ## Mandatory `[SECURITY]` `[CRITICAL]`
 
