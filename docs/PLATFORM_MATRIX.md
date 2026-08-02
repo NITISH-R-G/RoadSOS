@@ -8,7 +8,7 @@ What works **where**, for judges and PMs. Update when adding native features.
 |------|--------|-------|
 | SOS / orchestrator | **Supported** | Primary target |
 | Crash detection (accel + GPS + stillness) | **Supported** | Foreground service path |
-| Background crash | **Partial** | OS limits; see `AUDIT_REPORT.md` |
+| Background crash | **Partial** | OS limits; see `docs/project-history/AUDIT_REPORT.md` |
 | Automated SMS (Twilio relay) | **Supported** | Needs Edge + secrets |
 | Direct SMS fallback | **Supported** | Permission-dependent |
 | BLE mesh / radar | **Supported** | Foreground service helps scanning |

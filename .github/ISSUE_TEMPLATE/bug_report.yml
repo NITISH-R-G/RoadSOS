@@ -14,14 +14,22 @@ body:
       placeholder: Tell us what you see!
     validations:
       required: true
-  - type: dropdown
+  - type: input
     id: version
     attributes:
-      label: Version
+      label: Version / commit
+      description: App version (pubspec.yaml) or commit SHA you're running
+      placeholder: "1.0.0+1 or 0bfc21f"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
       options:
-        - v1.0.0
-        - v2.0.0 (Hardened)
-        - v3.0.0 (Enterprise)
+        - Android
+        - iOS
+        - Web
     validations:
       required: true
   - type: textarea

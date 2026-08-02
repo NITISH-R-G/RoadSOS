@@ -43,7 +43,7 @@ Reproducible flow for hackathon / sponsor demos. Complete **pre-flight** before 
 
 ## What not to claim live
 
-- **iOS background crash** parity with Android — say “limited by OS policy” (`AUDIT_REPORT.md`).
+- **iOS background crash** parity with Android — say “limited by OS policy” (`docs/project-history/AUDIT_REPORT.md`).
 - **BLE mesh** — “bonus when nearby users have the app”; not a substitute for 108/112/SMS.
 - **Medical diagnosis** — triage is **decision support**, not a clinician.
 

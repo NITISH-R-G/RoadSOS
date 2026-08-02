@@ -174,7 +174,7 @@ Gemma 4's function calling is what makes the PLAN → ACT step real. The model d
 | Judging Criterion | Weight | RoadSOS evidence |
 |------------------|--------|-----------------|
 | **Impact & Vision** | 40% | 170,000 deaths/year. 350M+ target users. MIT licensed for any state EMS. Deployable with zero custom infra. |
-| **Video Storytelling** | 30% | Full 3-min script in `VIDEO_SCRIPT.md`. Emotional hook → live demo → wow moment → scale. Keyword vs Gemma split-screen. |
+| **Video Storytelling** | 30% | Full 3-min script in `docs/VIDEO_SCRIPT.md`. Emotional hook → live demo → wow moment → scale. Keyword vs Gemma split-screen. |
 | **Technical Depth** | 30% | 4-tier inference routing. Real flutter_gemma LiteRT integration. Function calling agent (Cell 11). BLE AES-GCM mesh. Server-side Twilio SMS. 80-entry RAG corpus. |
 
 **Track alignment:**
@@ -290,7 +290,7 @@ MIT license. No dependency on US cloud providers. Runs on existing 108/112 infra
 
 ## Video
 
-3-minute demo script in [`VIDEO_SCRIPT.md`](./VIDEO_SCRIPT.md) — includes exact narration, shot list, scene transitions, and the "wow moment" design for the judge split-screen comparison.
+3-minute demo script in [`docs/VIDEO_SCRIPT.md`](./docs/VIDEO_SCRIPT.md) — includes exact narration, shot list, scene transitions, and the "wow moment" design for the judge split-screen comparison.
 
 ---
 

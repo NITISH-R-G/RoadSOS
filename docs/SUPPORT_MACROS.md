@@ -20,7 +20,7 @@ Copy-paste for **Discord / email / GitHub issues**. Adjust tone for audience.
 
 ## iOS vs Android differences
 
-> **Android** is the reference platform for **foreground crash detection and SMS automation**. **iOS** has stricter background rules — see `docs/PLATFORM_MATRIX.md` and `AUDIT_REPORT.md`. We recommend **Android for field demos** of the full pipeline.
+> **Android** is the reference platform for **foreground crash detection and SMS automation**. **iOS** has stricter background rules — see `docs/PLATFORM_MATRIX.md` and `docs/project-history/AUDIT_REPORT.md`. We recommend **Android for field demos** of the full pipeline.
 
 ## Privacy / data
 

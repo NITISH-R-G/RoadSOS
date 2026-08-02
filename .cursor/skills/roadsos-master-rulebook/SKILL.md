@@ -1,13 +1,13 @@
 ---
 name: roadsos-master-rulebook
-description: Applies the RoadSOS Master Development Rulebook (200+ checklist items across 9 phases in ROADSOS_MASTER_DEVELOPMENT_RULEBOOK.md). Use when planning or implementing SOS, emergency dispatch, India compliance (112/108/DPDP), AI triage tiers, BLE mesh, crash detection, Supabase/RLS, localization, security, testing, launch gates, or when the user mentions RoadSOS rulebook, CRITICAL rules, Phase 1–9, or master checklist.
+description: Applies the RoadSOS Master Development Rulebook (200+ checklist items across 9 phases in docs/DEVELOPMENT_RULEBOOK.md). Use when planning or implementing SOS, emergency dispatch, India compliance (112/108/DPDP), AI triage tiers, BLE mesh, crash detection, Supabase/RLS, localization, security, testing, launch gates, or when the user mentions RoadSOS rulebook, CRITICAL rules, Phase 1–9, or master checklist.
 ---
 
 # RoadSOS Master Rulebook Skill
 
 ## Canonical source
 
-Read **`ROADSOS_MASTER_DEVELOPMENT_RULEBOOK.md`** at the repository root for the full numbered checklist, tag legend (`[CRITICAL]`, `[COLLAB]`, `[INDIA]`, `[AI/ML]`, `[SECURITY]`), and sprint checkbox updates.
+Read **`docs/DEVELOPMENT_RULEBOOK.md`** in `docs/` for the full numbered checklist, tag legend (`[CRITICAL]`, `[COLLAB]`, `[INDIA]`, `[AI/ML]`, `[SECURITY]`), and sprint checkbox updates.
 
 ## When to load which phase
 

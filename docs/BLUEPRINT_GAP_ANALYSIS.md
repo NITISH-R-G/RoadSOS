@@ -2,7 +2,7 @@
 
 Honest mapping of the product blueprint to this repository (`lib/`, `supabase/`). Status is **Real** (implemented end-to-end), **Partial** (env-gated, platform-specific, or incomplete vs blueprint), or **Not started** (spec only).
 
-**Canonical implementation references:** `lib/services/ai_triage_service.dart` (4-tier Gemma stack), `lib/services/gemma_local_service.dart` (Tier 2 on-device), `supabase/functions/triage-gemini/index.ts` (Tier 1 cloud + vision), `AUDIT_REPORT.md` (issue ledger).
+**Canonical implementation references:** `lib/services/ai_triage_service.dart` (4-tier Gemma stack), `lib/services/gemma_local_service.dart` (Tier 2 on-device), `supabase/functions/triage-gemini/index.ts` (Tier 1 cloud + vision), `docs/project-history/AUDIT_REPORT.md` (issue ledger).
 
 ---
 
@@ -84,5 +84,5 @@ Honest mapping of the product blueprint to this repository (`lib/`, `supabase/`)
 ## Maintenance
 
 - Revisit this file when merging **triage, dispatch, or schema** changes.
-- Keep **Real vs Simulated** honest for judges and `ROADSOS_MASTER_DEVELOPMENT_RULEBOOK.md` Phase 8.
+- Keep **Real vs Simulated** honest for judges and `docs/DEVELOPMENT_RULEBOOK.md` Phase 8.
 - **Do not** reintroduce outdated rows (“Gemini HTTP only”, “no on-device Gemma”) without verifying `ai_triage_service.dart` and `gemma_local_service.dart`.
