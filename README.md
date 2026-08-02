@@ -3,6 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Gemma 4](https://img.shields.io/badge/AI-Gemma%204-blue)](https://ai.google.dev/gemma)
 [![Hackathon](https://img.shields.io/badge/Gemma%204%20Good%20Hackathon-2026-orange)](https://www.kaggle.com/competitions/gemma-4-good-hackathon)
+[![CodeQL](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/codeql.yml/badge.svg)](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/codeql.yml)
+[![Flutter CI](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/flutter_ci.yml/badge.svg)](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/flutter_ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/NITISH-R-G/RoadSOS)](https://github.com/NITISH-R-G/RoadSOS/releases/latest)
+[![Last Commit](https://img.shields.io/github/last-commit/NITISH-R-G/RoadSOS)](https://github.com/NITISH-R-G/RoadSOS/commits/main)
+[![Contributors](https://img.shields.io/github/contributors/NITISH-R-G/RoadSOS)](https://github.com/NITISH-R-G/RoadSOS/graphs/contributors)
 
 ---
 
@@ -294,6 +299,20 @@ MIT license. No dependency on US cloud providers. Runs on existing 108/112 infra
 
 ---
 
+## Contributing & Roadmap
+
+Contributions are welcome — see [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow and
+[`ROADMAP.md`](ROADMAP.md) for what's planned next. New here? Look for issues labeled
+[`good first issue`](https://github.com/NITISH-R-G/RoadSOS/labels/good%20first%20issue).
+This project follows a [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+Found a vulnerability? Please see [`SECURITY.md`](SECURITY.md) — it includes our threat model and
+encryption/privacy design — rather than opening a public issue.
+
+---
+
 ## License
 
 MIT — open-weight AI, open-source code, open to any state emergency service in India.
@@ -304,7 +323,7 @@ MIT — open-weight AI, open-source code, open to any state emergency service in
 - Deno/TypeScript
 <!-- /AUTO-GEN: TECH-STACK -->
 <!-- AUTO-GEN: ARCHITECTURE -->
-[View Detailed Architecture Diagrams](docs/architecture/architecture.md)
+[View Detailed Architecture Diagrams](docs/architecture/architecture.md) · [Emergency workflow, AI tiers, mesh & sync diagrams](docs/DIAGRAMS.md)
 <!-- /AUTO-GEN: ARCHITECTURE -->
 <!-- AUTO-GEN: BADGES -->
 [![CI/CD Automation](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml)
