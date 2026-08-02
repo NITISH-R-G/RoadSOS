@@ -316,6 +316,7 @@ encryption/privacy design — rather than opening a public issue.
 ## License
 
 MIT — open-weight AI, open-source code, open to any state emergency service in India.
+See [`CHANGELOG.md`](CHANGELOG.md) for release history.
 <!-- AUTO-GEN: TECH-STACK -->
 - Flutter
 - Dart
