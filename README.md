@@ -203,7 +203,7 @@ Gemma 4's function calling is what makes the PLAN → ACT step real. The model d
 No build required:
 
 ```
-open roadsos/demo/index.html   # or double-click in file manager
+open demo/index.html   # or double-click in file manager
 ```
 
 1. Get a free [Google AI Studio key](https://aistudio.google.com/app/apikey) (no billing required)
@@ -219,7 +219,6 @@ open roadsos/demo/index.html   # or double-click in file manager
 Requirements: Flutter 3.29+, Dart 3.7+, Android SDK 34+ or iOS 17+
 
 ```bash
-cd roadsos
 cp assets/env.template assets/.env    # fill in SUPABASE_URL, SUPABASE_ANON_KEY, GEMMA_API_KEY
 flutter pub get
 flutter run
@@ -308,5 +307,5 @@ MIT — open-weight AI, open-source code, open to any state emergency service in
 [View Detailed Architecture Diagrams](docs/architecture/architecture.md)
 <!-- /AUTO-GEN: ARCHITECTURE -->
 <!-- AUTO-GEN: BADGES -->
-[![CI/CD Automation](https://github.com/USERNAME/REPO/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/USERNAME/REPO/actions/workflows/ci_cd.yml)
+[![CI/CD Automation](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml)
 <!-- /AUTO-GEN: BADGES -->
