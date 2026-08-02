@@ -34,7 +34,7 @@ jobs:
     steps:
       # ── Checkout ────────────────────────────────────────────────────────────
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # ── Java ────────────────────────────────────────────────────────────────
       - name: Set up Java ${{ env.JAVA_VERSION }}
