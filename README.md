@@ -323,7 +323,7 @@ MIT — open-weight AI, open-source code, open to any state emergency service in
 - Deno/TypeScript
 <!-- /AUTO-GEN: TECH-STACK -->
 <!-- AUTO-GEN: ARCHITECTURE -->
-[View Detailed Architecture Diagrams](docs/architecture/architecture.md) · [Emergency workflow, AI tiers, mesh & sync diagrams](docs/DIAGRAMS.md)
+[View Detailed Architecture Diagrams](docs/architecture/architecture.md)
 <!-- /AUTO-GEN: ARCHITECTURE -->
 <!-- AUTO-GEN: BADGES -->
 [![CI/CD Automation](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml)
