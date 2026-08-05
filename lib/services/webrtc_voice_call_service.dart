@@ -96,8 +96,6 @@ class WebRtcVoiceCallService extends StateNotifier<VoiceCallState> {
     _bootstrap();
   }
 
-
-
   RTCPeerConnection? _pc;
   MediaStream? _localStream;
   RealtimeChannel? _ringChannel;

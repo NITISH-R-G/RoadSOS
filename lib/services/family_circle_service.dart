@@ -168,8 +168,6 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
     _bootstrap();
   }
 
-
-
   RealtimeChannel? _peerChannel;
   Timer? _publishTimer;
   StreamSubscription<Position>? _positionSub;
