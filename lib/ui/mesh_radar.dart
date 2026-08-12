@@ -218,5 +218,6 @@ class _SweepingDotPainter extends CustomPainter {
   // returning `true` here unconditionally would cause unnecessary canvas repaints
   // whenever the parent widget rebuilds.
   @override
-  bool shouldRepaint(covariant _SweepingDotPainter oldDelegate) => oldDelegate.orbitRadius != orbitRadius;
+  bool shouldRepaint(covariant _SweepingDotPainter oldDelegate) =>
+      oldDelegate.orbitRadius != orbitRadius;
 }
