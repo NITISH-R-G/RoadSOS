@@ -985,7 +985,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
                   // ⚡ Bolt Optimization: Debounce Nominatim API requests to reduce network usage and comply with 1 req/sec limit.
                   final int currentId = ++queryId;
-                  await Future<void>.delayed(const Duration(milliseconds: 1000));
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 1000),
+                  );
                   if (queryId != currentId) {
                     return const Iterable<_NominatimHit>.empty();
                   }
