@@ -21,23 +21,8 @@
       "type": "config"
     },
     {
-      "id": "edge_gemini-generate",
-      "label": "Function: gemini-generate",
-      "type": "backend"
-    },
-    {
       "id": "edge_triage-gemini",
       "label": "Function: triage-gemini",
-      "type": "backend"
-    },
-    {
-      "id": "edge_sms-dispatch",
-      "label": "Function: sms-dispatch",
-      "type": "backend"
-    },
-    {
-      "id": "edge_family-track",
-      "label": "Function: family-track",
       "type": "backend"
     },
     {
@@ -46,33 +31,48 @@
       "type": "backend"
     },
     {
+      "id": "edge_family-track",
+      "label": "Function: family-track",
+      "type": "backend"
+    },
+    {
+      "id": "edge_sms-dispatch",
+      "label": "Function: sms-dispatch",
+      "type": "backend"
+    },
+    {
+      "id": "edge_gemini-generate",
+      "label": "Function: gemini-generate",
+      "type": "backend"
+    },
+    {
       "id": "module_services",
       "label": "Library: services",
       "type": "module"
     },
     {
-      "id": "file_scene_security_service",
-      "label": "scene_security_service",
+      "id": "file_gemma_local_service",
+      "label": "gemma_local_service",
       "type": "file"
     },
     {
-      "id": "file_government_facility_seed_service",
-      "label": "government_facility_seed_service",
+      "id": "file_ios_lifecycle_service",
+      "label": "ios_lifecycle_service",
       "type": "file"
     },
     {
-      "id": "file_safe_walk_navigator_service",
-      "label": "safe_walk_navigator_service",
+      "id": "file_sms_permission_bootstrap",
+      "label": "sms_permission_bootstrap",
       "type": "file"
     },
     {
-      "id": "file_facility_sync_service",
-      "label": "facility_sync_service",
+      "id": "file_bluetooth_vehicle_monitor",
+      "label": "bluetooth_vehicle_monitor",
       "type": "file"
     },
     {
-      "id": "file_sms_permission_bootstrap_stub",
-      "label": "sms_permission_bootstrap_stub",
+      "id": "file_sms_direct_send_stub",
+      "label": "sms_direct_send_stub",
       "type": "file"
     },
     {
@@ -81,39 +81,34 @@
       "type": "module"
     },
     {
-      "id": "file_onboarding_gate",
-      "label": "onboarding_gate",
+      "id": "file_gemma_status_banner",
+      "label": "gemma_status_banner",
       "type": "file"
     },
     {
-      "id": "file_bystander_coach_screen",
-      "label": "bystander_coach_screen",
+      "id": "file_map_widget",
+      "label": "map_widget",
       "type": "file"
     },
     {
-      "id": "file_triage_result_card",
-      "label": "triage_result_card",
+      "id": "file_dashboard",
+      "label": "dashboard",
       "type": "file"
     },
     {
-      "id": "file_mesh_chat_screen",
-      "label": "mesh_chat_screen",
+      "id": "file_incident_reporting_screen",
+      "label": "incident_reporting_screen",
       "type": "file"
     },
     {
-      "id": "file_vital_scan_screen",
-      "label": "vital_scan_screen",
+      "id": "file_sos_activity_log_screen",
+      "label": "sos_activity_log_screen",
       "type": "file"
     },
     {
       "id": "module_models",
       "label": "Library: models",
       "type": "module"
-    },
-    {
-      "id": "file_facility",
-      "label": "facility",
-      "type": "file"
     },
     {
       "id": "file_dispatch_channel_status",
@@ -123,6 +118,11 @@
     {
       "id": "file_sos_activity_record",
       "label": "sos_activity_record",
+      "type": "file"
+    },
+    {
+      "id": "file_facility",
+      "label": "facility",
       "type": "file"
     },
     {
@@ -194,22 +194,7 @@
     },
     {
       "source": "flutter_app",
-      "target": "edge_gemini-generate",
-      "relation": "calls API"
-    },
-    {
-      "source": "flutter_app",
       "target": "edge_triage-gemini",
-      "relation": "calls API"
-    },
-    {
-      "source": "flutter_app",
-      "target": "edge_sms-dispatch",
-      "relation": "calls API"
-    },
-    {
-      "source": "flutter_app",
-      "target": "edge_family-track",
       "relation": "calls API"
     },
     {
@@ -219,32 +204,47 @@
     },
     {
       "source": "flutter_app",
+      "target": "edge_family-track",
+      "relation": "calls API"
+    },
+    {
+      "source": "flutter_app",
+      "target": "edge_sms-dispatch",
+      "relation": "calls API"
+    },
+    {
+      "source": "flutter_app",
+      "target": "edge_gemini-generate",
+      "relation": "calls API"
+    },
+    {
+      "source": "flutter_app",
       "target": "module_services",
       "relation": "contains"
     },
     {
       "source": "module_services",
-      "target": "file_scene_security_service",
+      "target": "file_gemma_local_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_government_facility_seed_service",
+      "target": "file_ios_lifecycle_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_safe_walk_navigator_service",
+      "target": "file_sms_permission_bootstrap",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_facility_sync_service",
+      "target": "file_bluetooth_vehicle_monitor",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_sms_permission_bootstrap_stub",
+      "target": "file_sms_direct_send_stub",
       "relation": "implements"
     },
     {
@@ -254,27 +254,27 @@
     },
     {
       "source": "module_ui",
-      "target": "file_onboarding_gate",
+      "target": "file_gemma_status_banner",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_bystander_coach_screen",
+      "target": "file_map_widget",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_triage_result_card",
+      "target": "file_dashboard",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_mesh_chat_screen",
+      "target": "file_incident_reporting_screen",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_vital_scan_screen",
+      "target": "file_sos_activity_log_screen",
       "relation": "implements"
     },
     {
@@ -284,17 +284,17 @@
     },
     {
       "source": "module_models",
-      "target": "file_facility",
-      "relation": "implements"
-    },
-    {
-      "source": "module_models",
       "target": "file_dispatch_channel_status",
       "relation": "implements"
     },
     {
       "source": "module_models",
       "target": "file_sos_activity_record",
+      "relation": "implements"
+    },
+    {
+      "source": "module_models",
+      "target": "file_facility",
       "relation": "implements"
     },
     {
