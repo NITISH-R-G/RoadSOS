@@ -26,3 +26,9 @@ linter:
     avoid_catches_without_on_clauses: true
     curly_braces_in_flow_control_structures: true
     control_flow_in_finally: true
+
+analyzer:
+  exclude:
+    - "lib/l10n/**"
+  errors:
+    experimental_member_use: ignore
