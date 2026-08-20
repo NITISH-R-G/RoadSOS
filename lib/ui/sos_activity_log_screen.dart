@@ -86,7 +86,8 @@ class SosActivityLogScreen extends ConsumerWidget {
                 }
                 return SliverList.builder(
                   itemCount: items.length,
-                  itemBuilder: (context, index) => _historyCard(context, items[index]),
+                  itemBuilder: (context, index) =>
+                      _historyCard(context, items[index]),
                 );
               },
               loading: () => const SliverToBoxAdapter(
