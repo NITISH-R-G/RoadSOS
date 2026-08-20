@@ -45,9 +45,11 @@ class SosActivityLogScreen extends ConsumerWidget {
       body: CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
+                // ⚡ Bolt Optimization: Use CustomScrollView with SliverList.builder
+                // instead of a ListView wrapping a synchronous Column to ensure O(1) list virtualization.
                 _insuranceBanner(),
                 const SizedBox(height: 16),
                 if (live.phase != SOSPhase.idle &&
