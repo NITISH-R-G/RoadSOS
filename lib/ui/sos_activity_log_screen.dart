@@ -87,12 +87,18 @@ class SosActivityLogScreen extends ConsumerWidget {
                 }
                 return SliverList.builder(
                   itemCount: items.length,
-                  itemBuilder: (context, index) => _historyCard(context, items[index]),
+                  itemBuilder: (context, index) =>
+                      _historyCard(context, items[index]),
                 );
               },
-              loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
+              loading: () => const SliverToBoxAdapter(
+                child: Center(child: CircularProgressIndicator()),
+              ),
               error: (e, _) => SliverToBoxAdapter(
-                child: Text('Could not load history: $e', style: const TextStyle(color: Colors.redAccent)),
+                child: Text(
+                  'Could not load history: $e',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
               ),
             ),
           ),
