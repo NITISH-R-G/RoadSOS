@@ -42,45 +42,64 @@ class SosActivityLogScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          _insuranceBanner(),
-          const SizedBox(height: 16),
-          if (live.phase != SOSPhase.idle &&
-              live.dispatchChannels.isNotEmpty) ...[
-            _sectionTitle('CURRENT SESSION'),
-            const SizedBox(height: 8),
-            Text(
-              live.incidentId ?? '—',
-              style: const TextStyle(
-                color: Colors.white38,
-                fontSize: 11,
-                fontFamily: 'monospace',
-              ),
+      // ⚡ Bolt Optimization: Replace ListView + Column with CustomScrollView + SliverList
+      // This prevents O(n) rendering of the entire history list
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _insuranceBanner(),
+                const SizedBox(height: 16),
+                if (live.phase != SOSPhase.idle &&
+                    live.dispatchChannels.isNotEmpty) ...[
+                  _sectionTitle('CURRENT SESSION'),
+                  const SizedBox(height: 8),
+                  Text(
+                    live.incidentId ?? '—',
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DispatchStatusPanel(channels: live.dispatchChannels),
+                  const Divider(color: Colors.white12, height: 32),
+                ],
+                _sectionTitle('SAVED INCIDENTS'),
+                const SizedBox(height: 8),
+              ]),
             ),
-            const SizedBox(height: 12),
-            DispatchStatusPanel(channels: live.dispatchChannels),
-            const Divider(color: Colors.white12, height: 32),
-          ],
-          _sectionTitle('SAVED INCIDENTS'),
-          const SizedBox(height: 8),
-          history.when(
-            data: (items) {
-              if (items.isEmpty) {
-                return const Text(
-                  'No completed incidents stored yet. After an SOS finishes dispatch, a summary is saved here automatically.',
-                  style: TextStyle(color: Colors.white54, height: 1.4),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+            sliver: history.when(
+              data: (items) {
+                if (items.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Text(
+                      'No completed incidents stored yet. After an SOS finishes dispatch, a summary is saved here automatically.',
+                      style: TextStyle(color: Colors.white54, height: 1.4),
+                    ),
+                  );
+                }
+                return SliverList.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) =>
+                      _historyCard(context, items[index]),
                 );
-              }
-              return Column(
-                children: items.map((e) => _historyCard(context, e)).toList(),
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text(
-              'Could not load history: $e',
-              style: const TextStyle(color: Colors.redAccent),
+              },
+              loading: () => const SliverToBoxAdapter(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, _) => SliverToBoxAdapter(
+                child: Text(
+                  'Could not load history: $e',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              ),
             ),
           ),
         ],
