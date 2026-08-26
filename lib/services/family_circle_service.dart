@@ -165,12 +165,11 @@ class FamilyCircleService extends StateNotifier<FamilyCircleState> {
     // Ref is currently unused but kept in the constructor so future work
     // (FCM push, profile sync) can read other providers without changing the
     // call-site contract.
-    _ref = ref;
+    _ = ref;
     _bootstrap();
   }
 
-  // ignore: unused_field
-  Ref? _ref;
+  Ref? _;
 
   RealtimeChannel? _peerChannel;
   Timer? _publishTimer;
