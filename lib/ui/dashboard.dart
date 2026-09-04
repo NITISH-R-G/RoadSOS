@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' show min;
 
@@ -52,6 +53,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with TickerProviderStateMixin {
+  int _nominatimQueryId = 0;
   int _tab = 0;
 
   late AnimationController _pulseController;
@@ -981,6 +983,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   if (textEditingValue.text.length < 3) {
                     return const Iterable<_NominatimHit>.empty();
                   }
+
+                  final currentQueryId = ++_nominatimQueryId;
+
+                  // ⚡ Bolt Optimization: Debounce Nominatim API requests by 1000ms to prevent exceeding usage limits and reduce redundant network calls.
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 1000),
+                  );
+
+                  if (currentQueryId != _nominatimQueryId) {
+                    // Another query has been initiated, discard this one
+                    return const Iterable<_NominatimHit>.empty();
+                  }
+
                   try {
                     final uri = Uri.parse(
                       'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5',
