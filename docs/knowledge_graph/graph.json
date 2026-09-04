@@ -21,23 +21,13 @@
       "type": "config"
     },
     {
-      "id": "edge_triage-gemini",
-      "label": "Function: triage-gemini",
-      "type": "backend"
-    },
-    {
       "id": "edge_sync-osm-facilities",
       "label": "Function: sync-osm-facilities",
       "type": "backend"
     },
     {
-      "id": "edge_family-track",
-      "label": "Function: family-track",
-      "type": "backend"
-    },
-    {
-      "id": "edge_sms-dispatch",
-      "label": "Function: sms-dispatch",
+      "id": "edge_triage-gemini",
+      "label": "Function: triage-gemini",
       "type": "backend"
     },
     {
@@ -46,33 +36,43 @@
       "type": "backend"
     },
     {
+      "id": "edge_sms-dispatch",
+      "label": "Function: sms-dispatch",
+      "type": "backend"
+    },
+    {
+      "id": "edge_family-track",
+      "label": "Function: family-track",
+      "type": "backend"
+    },
+    {
       "id": "module_services",
       "label": "Library: services",
       "type": "module"
     },
     {
-      "id": "file_gemma_local_service",
-      "label": "gemma_local_service",
+      "id": "file_first_aid_repository",
+      "label": "first_aid_repository",
       "type": "file"
     },
     {
-      "id": "file_ios_lifecycle_service",
-      "label": "ios_lifecycle_service",
+      "id": "file_roadsos_assistant_service",
+      "label": "roadsos_assistant_service",
       "type": "file"
     },
     {
-      "id": "file_sms_permission_bootstrap",
-      "label": "sms_permission_bootstrap",
+      "id": "file_wake_lock_service",
+      "label": "wake_lock_service",
       "type": "file"
     },
     {
-      "id": "file_bluetooth_vehicle_monitor",
-      "label": "bluetooth_vehicle_monitor",
+      "id": "file_safe_walk_notification_service",
+      "label": "safe_walk_notification_service",
       "type": "file"
     },
     {
-      "id": "file_sms_direct_send_stub",
-      "label": "sms_direct_send_stub",
+      "id": "file_emergency_sms_dispatch_service",
+      "label": "emergency_sms_dispatch_service",
       "type": "file"
     },
     {
@@ -81,13 +81,8 @@
       "type": "module"
     },
     {
-      "id": "file_gemma_status_banner",
-      "label": "gemma_status_banner",
-      "type": "file"
-    },
-    {
-      "id": "file_map_widget",
-      "label": "map_widget",
+      "id": "file_profile_editor_screen",
+      "label": "profile_editor_screen",
       "type": "file"
     },
     {
@@ -96,13 +91,18 @@
       "type": "file"
     },
     {
-      "id": "file_incident_reporting_screen",
-      "label": "incident_reporting_screen",
+      "id": "file_map_widget",
+      "label": "map_widget",
       "type": "file"
     },
     {
-      "id": "file_sos_activity_log_screen",
-      "label": "sos_activity_log_screen",
+      "id": "file_safe_walk_overlay",
+      "label": "safe_walk_overlay",
+      "type": "file"
+    },
+    {
+      "id": "file_privacy_policy_screen",
+      "label": "privacy_policy_screen",
       "type": "file"
     },
     {
@@ -194,22 +194,12 @@
     },
     {
       "source": "flutter_app",
-      "target": "edge_triage-gemini",
-      "relation": "calls API"
-    },
-    {
-      "source": "flutter_app",
       "target": "edge_sync-osm-facilities",
       "relation": "calls API"
     },
     {
       "source": "flutter_app",
-      "target": "edge_family-track",
-      "relation": "calls API"
-    },
-    {
-      "source": "flutter_app",
-      "target": "edge_sms-dispatch",
+      "target": "edge_triage-gemini",
       "relation": "calls API"
     },
     {
@@ -219,32 +209,42 @@
     },
     {
       "source": "flutter_app",
+      "target": "edge_sms-dispatch",
+      "relation": "calls API"
+    },
+    {
+      "source": "flutter_app",
+      "target": "edge_family-track",
+      "relation": "calls API"
+    },
+    {
+      "source": "flutter_app",
       "target": "module_services",
       "relation": "contains"
     },
     {
       "source": "module_services",
-      "target": "file_gemma_local_service",
+      "target": "file_first_aid_repository",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_ios_lifecycle_service",
+      "target": "file_roadsos_assistant_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_sms_permission_bootstrap",
+      "target": "file_wake_lock_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_bluetooth_vehicle_monitor",
+      "target": "file_safe_walk_notification_service",
       "relation": "implements"
     },
     {
       "source": "module_services",
-      "target": "file_sms_direct_send_stub",
+      "target": "file_emergency_sms_dispatch_service",
       "relation": "implements"
     },
     {
@@ -254,12 +254,7 @@
     },
     {
       "source": "module_ui",
-      "target": "file_gemma_status_banner",
-      "relation": "implements"
-    },
-    {
-      "source": "module_ui",
-      "target": "file_map_widget",
+      "target": "file_profile_editor_screen",
       "relation": "implements"
     },
     {
@@ -269,12 +264,17 @@
     },
     {
       "source": "module_ui",
-      "target": "file_incident_reporting_screen",
+      "target": "file_map_widget",
       "relation": "implements"
     },
     {
       "source": "module_ui",
-      "target": "file_sos_activity_log_screen",
+      "target": "file_safe_walk_overlay",
+      "relation": "implements"
+    },
+    {
+      "source": "module_ui",
+      "target": "file_privacy_policy_screen",
       "relation": "implements"
     },
     {
