@@ -331,3 +331,5 @@ See [`CHANGELOG.md`](CHANGELOG.md) for release history.
 <!-- AUTO-GEN: BADGES -->
 [![CI/CD Automation](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/NITISH-R-G/RoadSOS/actions/workflows/ci_cd.yml)
 <!-- /AUTO-GEN: BADGES -->
+![Alt](https://repobeats.axiom.co/api/embed/c2dc59ddd594ef4222204eb75bd29f3e0612ed41.svg "Repobeats analytics image")
+
