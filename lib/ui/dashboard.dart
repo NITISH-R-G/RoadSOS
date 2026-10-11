@@ -247,6 +247,117 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // Tab 0 — SOS (panic button)
   // ─────────────────────────────────────────────────────────────────────────
 
+  Widget _buildDrivingBanner() {
+    return Container(
+      height: 36,
+      color: const Color(0xFFFF9500),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.directions_car, color: Colors.black, size: 16),
+          SizedBox(width: 6),
+          Text(
+            'DRIVING MODE — Crash detection armed',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSosButton(double btnH, double titleSize, AppLocalizations l10n) {
+    return Expanded(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => ref
+                .read(emergencyOrchestratorProvider.notifier)
+                .triggerSOS(),
+            // ⚡ Bolt Optimization: Use ScaleTransition instead of AnimatedBuilder + Transform.scale.
+            // This delegates the transformation to the rendering engine and prevents costly widget rebuilds on every frame.
+            child: ScaleTransition(
+              scale: _pulseAnimation,
+              child: SizedBox(
+                height: btnH,
+                width: double.infinity,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(52),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFFFF453A), Color(0xFFB00020)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF453A).withAlpha(107),
+                          blurRadius: 40,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          l10n.sosButton,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          child: Text(
+                            l10n.sosButtonSub,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Color(0xF0FFFFFF),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDiscoveryHint() {
+    return SafeArea(
+      minimum: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        'All safety features are in "Safety Tools" below',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Colors.white.withAlpha(80),
+          fontSize: 13,
+        ),
+      ),
+    );
+  }
+
   Widget _sosTab(BuildContext context, DrivingMode drivingMode) {
     final l10n = AppLocalizations.of(context)!;
     final isDriving = drivingMode == DrivingMode.driving;
@@ -261,113 +372,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         return Column(
           children: [
             // Driving mode banner
-            if (isDriving)
-              Container(
-                height: 36,
-                color: const Color(0xFFFF9500),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.directions_car, color: Colors.black, size: 16),
-                    SizedBox(width: 6),
-                    Text(
-                      'DRIVING MODE — Crash detection armed',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            if (isDriving) _buildDrivingBanner(),
 
             // SOS button — takes up most of the screen
-            Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => ref
-                        .read(emergencyOrchestratorProvider.notifier)
-                        .triggerSOS(),
-                    // ⚡ Bolt Optimization: Use ScaleTransition instead of AnimatedBuilder + Transform.scale.
-                    // This delegates the transformation to the rendering engine and prevents costly widget rebuilds on every frame.
-                    child: ScaleTransition(
-                      scale: _pulseAnimation,
-                      child: SizedBox(
-                        height: btnH,
-                        width: double.infinity,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(52),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [Color(0xFFFF453A), Color(0xFFB00020)],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF453A).withAlpha(107),
-                                  blurRadius: 40,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            alignment: Alignment.center,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  l10n.sosButton,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: titleSize,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  child: Text(
-                                    l10n.sosButtonSub,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Color(0xF0FFFFFF),
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            _buildSosButton(btnH, titleSize, l10n),
 
             // Discovery hint
-            SafeArea(
-              minimum: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                'All safety features are in "Safety Tools" below',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withAlpha(80),
-                  fontSize: 13,
-                ),
-              ),
-            ),
+            _buildDiscoveryHint(),
           ],
         );
       },
