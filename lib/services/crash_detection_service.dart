@@ -337,6 +337,8 @@ class CrashDetectionService {
     _positionSub?.cancel();
     _positionSub = null;
   }
+
+  void dispose() => stopMonitoring();
 }
 
 final crashDetectionServiceProvider = Provider<CrashDetectionService>((ref) {
