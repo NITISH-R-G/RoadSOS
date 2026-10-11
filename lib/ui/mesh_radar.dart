@@ -214,5 +214,12 @@ class _SweepingDotPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SweepingDotPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _SweepingDotPainter oldDelegate) {
+    // ⚡ Bolt Optimization: Only repaint if the animation object or radius changes.
+    // Returning `true` unconditionally is an anti-pattern when delegating animation
+    // to the canvas via `super(repaint: animation)`, as it forces redundant repaints
+    // every time the parent widget (StreamBuilder/Riverpod) rebuilds for unrelated state.
+    return oldDelegate.animation != animation ||
+        oldDelegate.orbitRadius != orbitRadius;
+  }
 }
