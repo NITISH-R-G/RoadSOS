@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter_markdown/flutter_markdown.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/app_locale_controller.dart';
@@ -81,8 +82,7 @@ class _FirstAidScreenState extends ConsumerState<FirstAidScreen> {
         _result = res;
       });
       // Side-channel: keep FirstAidStore primed (used elsewhere) — best-effort.
-      // ignore: discarded_futures
-      FirstAidStore.getVerifiedAdvice(query);
+      unawaited(FirstAidStore.getVerifiedAdvice(query));
     } on Object {
       setState(() {
         _error = 'Could not load first-aid guidance on this device.';
