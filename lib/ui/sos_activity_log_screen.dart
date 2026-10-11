@@ -42,47 +42,74 @@ class SosActivityLogScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          _insuranceBanner(),
-          const SizedBox(height: 16),
-          if (live.phase != SOSPhase.idle &&
-              live.dispatchChannels.isNotEmpty) ...[
-            _sectionTitle('CURRENT SESSION'),
-            const SizedBox(height: 8),
-            Text(
-              live.incidentId ?? '—',
-              style: const TextStyle(
-                color: Colors.white38,
-                fontSize: 11,
-                fontFamily: 'monospace',
-              ),
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ⚡ Bolt Optimization: Use CustomScrollView with SliverList.builder
+                // instead of a ListView wrapping a synchronous Column to ensure O(1) list virtualization.
+                _insuranceBanner(),
+                const SizedBox(height: 16),
+                if (live.phase != SOSPhase.idle &&
+                    live.dispatchChannels.isNotEmpty) ...[
+                  _sectionTitle('CURRENT SESSION'),
+                  const SizedBox(height: 8),
+                  Text(
+                    live.incidentId ?? '—',
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DispatchStatusPanel(channels: live.dispatchChannels),
+                  const Divider(color: Colors.white12, height: 32),
+                ],
+                _sectionTitle('SAVED INCIDENTS'),
+                const SizedBox(height: 8),
+              ]),
             ),
-            const SizedBox(height: 12),
-            DispatchStatusPanel(channels: live.dispatchChannels),
-            const Divider(color: Colors.white12, height: 32),
-          ],
-          _sectionTitle('SAVED INCIDENTS'),
-          const SizedBox(height: 8),
+          ),
           history.when(
             data: (items) {
               if (items.isEmpty) {
-                return const Text(
-                  'No completed incidents stored yet. After an SOS finishes dispatch, a summary is saved here automatically.',
-                  style: TextStyle(color: Colors.white54, height: 1.4),
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: const Text(
+                      'No completed incidents stored yet. After an SOS finishes dispatch, a summary is saved here automatically.',
+                      style: TextStyle(color: Colors.white54, height: 1.4),
+                    ),
+                  ),
                 );
               }
-              return Column(
-                children: items.map((e) => _historyCard(context, e)).toList(),
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverList.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    return _historyCard(context, items[index]);
+                  },
+                ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text(
-              'Could not load history: $e',
-              style: const TextStyle(color: Colors.redAccent),
+            loading: () => const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (e, _) => SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Could not load history: $e',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              ),
             ),
           ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 20)),
         ],
       ),
     );
