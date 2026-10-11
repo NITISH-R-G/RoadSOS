@@ -29,7 +29,9 @@ class Facility {
     return Facility(
       id: map['id'] ?? '',
       name: map['name'] ?? 'Unknown Facility',
-      type: map['type'] ?? 'emergency',
+      // ⚡ Bolt Optimization: Normalize type to lowercase during parsing instead of in the UI render loop.
+      // This saves O(N) redundant string allocations per frame when drawing N map markers.
+      type: (map['type'] as String? ?? 'emergency').toLowerCase(),
       latitude: (map['latitude'] as num).toDouble(),
       longitude: (map['longitude'] as num).toDouble(),
       contactNumber: map['contact_number'],
