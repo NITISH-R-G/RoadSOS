@@ -25,7 +25,7 @@ jobs:
     name: Generate & Deploy Dashboard
     runs-on: ubuntu-latest
     environment:
-      name: github-pages
+      name: ${{ github.event_name != 'pull_request' && 'github-pages' || '' }}
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
