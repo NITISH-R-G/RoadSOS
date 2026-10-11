@@ -950,6 +950,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
     String selectedDestination = '';
     LatLng? selectedDestinationLatLng;
+    int queryId = 0;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -981,6 +982,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   if (textEditingValue.text.length < 3) {
                     return const Iterable<_NominatimHit>.empty();
                   }
+
+                  // ⚡ Bolt Optimization: Debounce Nominatim API requests to reduce network usage and comply with 1 req/sec limit.
+                  final int currentId = ++queryId;
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 1000),
+                  );
+                  if (queryId != currentId) {
+                    return const Iterable<_NominatimHit>.empty();
+                  }
+
                   try {
                     final uri = Uri.parse(
                       'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(textEditingValue.text)}&format=json&addressdetails=1&limit=5',
