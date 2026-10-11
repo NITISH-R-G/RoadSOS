@@ -21,6 +21,16 @@ subprojects {
     }
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.browser:browser:1.8.0",
+                  "androidx.activity:activity-ktx:1.9.3",
+                  "androidx.activity:activity:1.9.3",
+                  "androidx.core:core-ktx:1.15.0",
+                  "androidx.core:core:1.15.0")
+        }
+    }
 }
 subprojects {
     project.evaluationDependsOn(":app")
