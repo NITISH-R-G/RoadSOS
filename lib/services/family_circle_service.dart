@@ -162,15 +162,8 @@ enum FamilyPublishMode { off, safeWalk, sos }
 /// string instead of throwing, so UI can render an actionable hint.
 class FamilyCircleService extends StateNotifier<FamilyCircleState> {
   FamilyCircleService(Ref ref) : super(const FamilyCircleState()) {
-    // Ref is currently unused but kept in the constructor so future work
-    // (FCM push, profile sync) can read other providers without changing the
-    // call-site contract.
-    _ref = ref;
     _bootstrap();
   }
-
-  // ignore: unused_field
-  Ref? _ref;
 
   RealtimeChannel? _peerChannel;
   Timer? _publishTimer;
