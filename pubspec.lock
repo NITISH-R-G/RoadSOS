@@ -1529,10 +1529,10 @@ packages:
     dependency: "direct main"
     description:
       name: powersync
-      sha256: cc20839f08aba3d27b03f29aeb374c5121bce3163e998aa896c7c342e8e19360
+      sha256: "0cd58b2fb4b2eec9b2952647c25b05801ec36cdd3f6ea0763c8f76e53345c18b"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.3"
   powersync_flutter_libs:
     dependency: transitive
     description:
@@ -1758,18 +1758,18 @@ packages:
     dependency: transitive
     description:
       name: sqlite3
-      sha256: "9488c7d2cdb1091c91cacf7e207cff81b28bff8e366f042bad3afe7d34afe189"
+      sha256: c73fd75df1332d76a6257f4823ae4df9c791f522b97e4a60cbcad214de1becf4
       url: "https://pub.dev"
     source: hosted
-    version: "3.3.2"
+    version: "3.5.0"
   sqlite3_connection_pool:
     dependency: transitive
     description:
       name: sqlite3_connection_pool
-      sha256: "90b25972c7699d84da97df1c5919804275560b4ab8a158bbec890434b9718f65"
+      sha256: "9c4f458c47f717be863d401168de60b3cf9fedd6b6d11e462f40239dbe1d5482"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.4"
+    version: "0.2.8"
   sqlite3_flutter_libs:
     dependency: "direct main"
     description:
@@ -1782,18 +1782,18 @@ packages:
     dependency: transitive
     description:
       name: sqlite3_web
-      sha256: b539a44e227dc8fd617b56923400a1e8b793325293c05393eab5a24b944cf975
+      sha256: aa6af15ef8bf8551d3a84203e3cbc022990567372e46ef98f91bdb2018fcfb0e
       url: "https://pub.dev"
     source: hosted
-    version: "0.8.0"
+    version: "0.9.4"
   sqlite_async:
     dependency: transitive
     description:
       name: sqlite_async
-      sha256: e3e486e536253e17260c52b6f824b749adff3f1fed878d4abe629796b858290b
+      sha256: "83aff15d2bb3b296d35e15419a85c3207df3baca62b64b778958a59eb291502d"
       url: "https://pub.dev"
     source: hosted
-    version: "0.14.2"
+    version: "0.14.4"
   stack_trace:
     dependency: transitive
     description:
@@ -1894,10 +1894,10 @@ packages:
     dependency: "direct main"
     description:
       name: torch_light
-      sha256: "6a2659cf413d11b838540d15f2a18ead0e7736250cecdacb153cff654beb5c4a"
+      sha256: a1397443a375c6991151547cb77361085df6cf8aa59999292e683db7385a0d15
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0"
+    version: "1.1.0"
   typed_data:
     dependency: transitive
     description:
